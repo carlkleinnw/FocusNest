@@ -12,6 +12,24 @@ class DemoPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appProvider);
     final controller = ref.read(appProvider.notifier);
+    if (!controller.simulated) {
+      return const PageFrame(
+        title: '手机体验说明',
+        subtitle: '手机使用真实时间，计划和记录保存在本机。',
+        children: [
+          SurfacePanel(
+            child: Text(
+              '应用锁定需要在「应用锁定」页开启无障碍权限。\n完成完整专注才会喂食。手机不提供快进或清空数据按钮。\n智能扩展接口已预留，尚未启用大模型和Agent。',
+            ),
+          ),
+        ],
+      );
+    }
+    Future<void> report(Future<dynamic> pending) async {
+      final result = await pending;
+      if (context.mounted) showResult(context, result);
+    }
+
     return PageFrame(
       title: '几分钟，体验一整个循环',
       subtitle: '这里控制虚拟时间。快进结果会标记为演示，刷新恢复初始数据。',
@@ -46,8 +64,7 @@ class DemoPage extends ConsumerWidget {
                     '完成当前专注（模拟）',
                     icon: Icons.fast_forward,
                     onPressed: state.focusing
-                        ? () => showResult(
-                            context,
+                        ? () => report(
                             controller.advanceMinutes(
                               (state.session!.remainingSeconds(state.now) / 60)
                                   .ceil()
@@ -58,8 +75,7 @@ class DemoPage extends ConsumerWidget {
                   ),
                   OutlinedButton(
                     onPressed: state.focusing
-                        ? () =>
-                              showResult(context, controller.advanceMinutes(10))
+                        ? () => report(controller.advanceMinutes(10))
                         : null,
                     child: const Text('快进10分钟'),
                   ),
@@ -90,7 +106,7 @@ class DemoPage extends ConsumerWidget {
                     icon: Icons.wb_sunny_outlined,
                     onPressed: state.focusing
                         ? null
-                        : () => showResult(context, controller.advanceDay()),
+                        : () => report(controller.advanceDay()),
                   ),
                   TextButton(
                     onPressed: () => context.go('/rest'),

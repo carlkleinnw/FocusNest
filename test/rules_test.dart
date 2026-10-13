@@ -13,64 +13,67 @@ void main() {
     app = container.read(appProvider.notifier);
   });
   tearDown(() => container.dispose());
-  test('setting a rest date twice is safe for future Agent retries', () {
+  test('setting a rest date twice is safe for future Agent retries', () async {
     final day = container.read(appProvider).now.add(const Duration(days: 1));
     final actions = container.read(actionsProvider);
     expect(actions.setRest(day, true).ok, true);
     expect(actions.setRest(day, true).ok, true);
     expect(container.read(appProvider).restDates.contains(dateKey(day)), true);
   });
-  test('reject sessions under 30 minutes', () {
+  test('reject sessions under 30 minutes', () async {
     expect(
-      app
-          .start(
-            const Plan(id: 'short', title: '过短任务', minutes: 29, time: '09:00'),
-          )
-          .ok,
+      (await app.start(
+        const Plan(id: 'short', title: '过短任务', minutes: 29, time: '09:00'),
+      )).ok,
       false,
     );
     expect(container.read(appProvider).focusing, false);
   });
-  test('deadline feeds once even when repeatedly ticked', () {
-    app.start(plan);
-    app.advanceMinutes(29);
+  test('deadline feeds once even when repeatedly ticked', () async {
+    await app.start(plan);
+    await app.advanceMinutes(29);
     expect(container.read(appProvider).pet.meals, 8);
-    app.advanceMinutes(1);
+    await app.advanceMinutes(1);
     expect(container.read(appProvider).session!.status, FocusStatus.completed);
     expect(container.read(appProvider).pet.meals, 9);
-    app.tick();
-    app.tick();
+    await app.tick();
+    await app.tick();
     expect(container.read(appProvider).pet.meals, 9);
     expect(container.read(appProvider).records.first.virtual, true);
   });
-  test('30 minutes of a 60 minute session gives no reward if cancelled', () {
-    app.start(const Plan(id: 'long', title: '长任务', minutes: 60, time: '10:00'));
-    app.advanceMinutes(30);
-    app.cancelFocus();
-    expect(container.read(appProvider).pet.meals, 8);
-    expect(container.read(appProvider).todayFed, false);
-    expect(container.read(appProvider).records.first.completed, false);
-  });
-  test('future rest freezes hunger, today and past cannot be edited', () {
+  test(
+    '30 minutes of a 60 minute session gives no reward if cancelled',
+    () async {
+      await app.start(
+        const Plan(id: 'long', title: '长任务', minutes: 60, time: '10:00'),
+      );
+      await app.advanceMinutes(30);
+      await app.cancelFocus();
+      expect(container.read(appProvider).pet.meals, 8);
+      expect(container.read(appProvider).todayFed, false);
+      expect(container.read(appProvider).records.first.completed, false);
+    },
+  );
+  test('future rest freezes hunger, today and past cannot be edited', () async {
     final today = container.read(appProvider).now;
     expect(app.toggleRest(today).ok, false);
     expect(app.toggleRest(today.subtract(const Duration(days: 1))).ok, false);
     app.toggleRest(today.add(const Duration(days: 1)));
-    app.advanceDay();
+    await app.advanceDay();
     expect(container.read(appProvider).pet.hungryDays, 1);
-    app.advanceDay();
+    await app.advanceDay();
     expect(container.read(appProvider).pet.hungryDays, 1);
   });
-  test('death, gated restart, adoption preserve history', () {
+  test('death, gated restart, adoption preserve history', () async {
     for (var i = 0; i < 7; i++) {
-      app.advanceDay();
+      await app.advanceDay();
     }
     expect(container.read(appProvider).pet.dead, true);
     expect(app.adopt('小满', 0).ok, false);
-    expect(app.start(plan).ok, false);
+    expect((await app.start(plan)).ok, false);
     final count = container.read(appProvider).records.length;
-    app.start(plan, restart: true);
-    app.advanceMinutes(30);
+    await app.start(plan, restart: true);
+    await app.advanceMinutes(30);
     expect(container.read(appProvider).adoptionReady, true);
     expect(app.adopt('小满', 1).ok, true);
     final state = container.read(appProvider);
@@ -81,11 +84,11 @@ void main() {
     expect(state.records.length, count + 1);
     expect(app.adopt('第三只', 0).ok, false);
   });
-  test('interaction never feeds, active focus prevents changes', () {
+  test('interaction never feeds, active focus prevents changes', () async {
     app.interact('pet');
     expect(container.read(appProvider).pet.meals, 8);
-    app.start(plan);
-    expect(app.advanceDay().ok, false);
+    await app.start(plan);
+    expect((await app.advanceDay()).ok, false);
     expect(
       app
           .toggleRest(

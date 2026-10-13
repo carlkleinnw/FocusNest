@@ -59,12 +59,12 @@ class _AdoptPageState extends ConsumerState<AdoptPage> {
                 const SizedBox(height: 28),
                 MainButton(
                   state.focusing ? '继续重启专注' : '开始30分钟重启专注',
-                  onPressed: () {
+                  onPressed: () async {
                     if (state.focusing) {
                       context.go('/focus');
                       return;
                     }
-                    final result = controller.start(
+                    final result = await controller.start(
                       const Plan(
                         id: 'restart',
                         title: '重新出发 · 专注一个小任务',
@@ -73,6 +73,7 @@ class _AdoptPageState extends ConsumerState<AdoptPage> {
                       ),
                       restart: true,
                     );
+                    if (!context.mounted) return;
                     if (result.ok) {
                       context.go('/focus');
                     } else {

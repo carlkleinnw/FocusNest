@@ -1,3 +1,5 @@
+import 'planning.dart';
+
 enum FocusStatus { idle, running, completed, cancelled }
 
 class Plan {
@@ -7,15 +9,41 @@ class Plan {
     required this.minutes,
     required this.time,
     this.category = '学习',
+    this.date = '',
+    this.goalId,
+    this.milestoneId,
+    this.units = 1,
+    this.doneUnits = 0,
   });
   final String id, title, time, category;
   final int minutes;
+  final String date;
+  final String? goalId, milestoneId;
+  final int units, doneUnits;
+  bool get done => doneUnits >= units;
+  Plan copyWith({String? date, int? doneUnits}) => Plan(
+    id: id,
+    title: title,
+    minutes: minutes,
+    time: time,
+    category: category,
+    date: date ?? this.date,
+    goalId: goalId,
+    milestoneId: milestoneId,
+    units: units,
+    doneUnits: doneUnits ?? this.doneUnits,
+  );
   Map<String, Object> toJson() => {
     'id': id,
     'title': title,
     'minutes': minutes,
     'time': time,
     'category': category,
+    'date': date,
+    'goalId': goalId ?? '',
+    'milestoneId': milestoneId ?? '',
+    'units': units,
+    'doneUnits': doneUnits,
   };
 }
 
@@ -27,12 +55,14 @@ class FocusSession {
     required this.startedAt,
     this.status = FocusStatus.running,
     this.restart = false,
+    this.planId,
   });
   final String id, title;
   final int minutes;
   final DateTime startedAt;
   final FocusStatus status;
   final bool restart;
+  final String? planId;
   DateTime get deadline => startedAt.add(Duration(minutes: minutes));
   int remainingSeconds(DateTime now) =>
       deadline.difference(now).inSeconds.clamp(0, minutes * 60);
@@ -43,6 +73,7 @@ class FocusSession {
     startedAt: startedAt,
     status: result,
     restart: restart,
+    planId: planId,
   );
 }
 
@@ -54,11 +85,13 @@ class FocusRecord {
     required this.at,
     required this.completed,
     this.virtual = false,
+    this.planId,
   });
   final String id, title;
   final int minutes;
   final DateTime at;
   final bool completed, virtual;
+  final String? planId;
   Map<String, Object> toJson() => {
     'id': id,
     'title': title,
@@ -66,6 +99,7 @@ class FocusRecord {
     'at': at.toIso8601String(),
     'completed': completed,
     'virtual': virtual,
+    'planId': planId ?? '',
   };
 }
 
@@ -119,11 +153,21 @@ class AppState {
     this.message = '团子在等你一起开始新的一天。',
     this.achievement = 0,
     List<PetState> memorials = const [],
+    List<Goal> goals = const [],
+    List<Milestone> milestones = const [],
+    Set<String> blockedApps = const {},
+    this.appsInitialized = false,
+    this.protectionReady = false,
+    this.storageError = '',
+    this.dailyCapacity = 180,
   }) : plans = List.unmodifiable(plans),
        records = List.unmodifiable(records),
        restDates = Set.unmodifiable(restDates),
        allowedApps = Set.unmodifiable(allowedApps),
-       memorials = List.unmodifiable(memorials);
+       memorials = List.unmodifiable(memorials),
+       goals = List.unmodifiable(goals),
+       milestones = List.unmodifiable(milestones),
+       blockedApps = Set.unmodifiable(blockedApps);
   final DateTime now;
   final PetState pet;
   final List<Plan> plans;
@@ -134,6 +178,12 @@ class AppState {
   final bool todayFed, adoptionReady, floating;
   final String message;
   final int achievement;
+  final List<Goal> goals;
+  final List<Milestone> milestones;
+  final Set<String> blockedApps;
+  final bool appsInitialized, protectionReady;
+  final String storageError;
+  final int dailyCapacity;
   bool get focusing => session?.status == FocusStatus.running;
   String get dayKey => dateKey(now);
   bool get resting => restDates.contains(dayKey);
@@ -152,6 +202,13 @@ class AppState {
     String? message,
     int? achievement,
     List<PetState>? memorials,
+    List<Goal>? goals,
+    List<Milestone>? milestones,
+    Set<String>? blockedApps,
+    bool? appsInitialized,
+    bool? protectionReady,
+    String? storageError,
+    int? dailyCapacity,
   }) => AppState(
     now: now ?? this.now,
     pet: pet ?? this.pet,
@@ -166,6 +223,13 @@ class AppState {
     message: message ?? this.message,
     achievement: achievement ?? this.achievement,
     memorials: memorials ?? this.memorials,
+    goals: goals ?? this.goals,
+    milestones: milestones ?? this.milestones,
+    blockedApps: blockedApps ?? this.blockedApps,
+    appsInitialized: appsInitialized ?? this.appsInitialized,
+    protectionReady: protectionReady ?? this.protectionReady,
+    storageError: storageError ?? this.storageError,
+    dailyCapacity: dailyCapacity ?? this.dailyCapacity,
   );
 }
 

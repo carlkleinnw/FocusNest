@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../core/models.dart';
 import '../core/ports.dart';
+import '../core/planning.dart';
 
 class DemoClock implements ClockPort {
   DateTime _anchor = DateTime.now();
@@ -93,11 +94,41 @@ class SimulatedDevice implements DevicePort {
   @override
   bool get simulated => true;
   @override
-  OperationResult applyRestrictions(Set<String> allowedApps) =>
-      const OperationResult(true, 'SIMULATED', '已开启应用限制模拟');
+  OperationResult applyRestrictions(
+    Set<String> blockedPackages,
+    FocusSession session,
+    AppState snapshot,
+  ) => const OperationResult(true, 'SIMULATED', '已开启应用限制模拟');
   @override
-  OperationResult releaseRestrictions() =>
+  OperationResult releaseRestrictions([AppState? snapshot]) =>
       const OperationResult(true, 'SIMULATED', '已解除应用限制模拟');
+  @override
+  bool ready() => true;
+  @override
+  Future<void> openSettings() async {}
+  @override
+  Future<List<InstalledApp>> apps() async => const [
+    InstalledApp(package: 'demo.course', name: '课程平台', category: '学习'),
+    InstalledApp(package: 'demo.dictionary', name: '词典', category: '工具'),
+    InstalledApp(
+      package: 'demo.video',
+      name: '短视频',
+      category: '视频',
+      recommendedBlocked: true,
+    ),
+    InstalledApp(
+      package: 'demo.game',
+      name: '游戏',
+      category: '游戏',
+      recommendedBlocked: true,
+    ),
+    InstalledApp(
+      package: 'demo.phone',
+      name: '电话',
+      category: '通讯',
+      protected: true,
+    ),
+  ];
 }
 
 class DisabledIntelligence implements IntelligencePort {

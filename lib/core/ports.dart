@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'models.dart';
+import 'planning.dart';
 
 // Versioned local contracts. Future native/network adapters share JSON-safe data.
 abstract interface class ClockPort {
@@ -38,8 +39,15 @@ class OperationResult {
 
 abstract interface class DevicePort {
   bool get simulated;
-  OperationResult applyRestrictions(Set<String> allowedApps);
-  OperationResult releaseRestrictions();
+  FutureOr<OperationResult> applyRestrictions(
+    Set<String> blockedPackages,
+    FocusSession session,
+    AppState snapshot,
+  );
+  FutureOr<OperationResult> releaseRestrictions([AppState? snapshot]);
+  FutureOr<bool> ready();
+  Future<List<InstalledApp>> apps();
+  Future<void> openSettings();
 }
 
 class IntelligenceRequest {
@@ -70,5 +78,7 @@ abstract interface class ContextPort {
 // Agent proposals never get access to arbitrary state writes or demo time controls.
 abstract interface class ActionPort {
   OperationResult upsertPlan(Plan plan);
+  OperationResult upsertGoal(Goal goal);
+  OperationResult upsertMilestone(Milestone milestone);
   OperationResult setRest(DateTime day, bool enabled);
 }

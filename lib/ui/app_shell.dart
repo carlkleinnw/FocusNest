@@ -4,14 +4,16 @@ import 'package:go_router/go_router.dart';
 import '../core/controller.dart';
 import '../pet/pet_drawing.dart';
 import 'theme.dart';
+import 'focus_exit.dart';
 
 const destinations = [
   ('/home', '宠物小屋', Icons.cottage_outlined),
   ('/plans', '学习计划', Icons.event_note_outlined),
   ('/focus', '沉浸专注', Icons.timelapse),
   ('/records', '专注记录', Icons.bar_chart_rounded),
+  ('/goals', '长期目标', Icons.flag_outlined),
   ('/rest', '休息安排', Icons.spa_outlined),
-  ('/apps', '允许的应用', Icons.apps_rounded),
+  ('/apps', '应用锁定', Icons.apps_rounded),
   ('/adopt', '重新领养', Icons.pets_outlined),
   ('/demo', '演示控制', Icons.tune_rounded),
 ];
@@ -25,117 +27,143 @@ class AppShell extends ConsumerWidget {
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final floating = ref.watch(appProvider.select((s) => s.floating));
     final focusing = ref.watch(appProvider.select((s) => s.focusing));
-    final selected = destinations.indexWhere((d) => d.$1 == path).clamp(0, 7);
-    return Scaffold(
-      appBar: wide
-          ? null
-          : AppBar(
-              title: const Text(
-                '伴学小屋',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => context.go('/demo'),
-                  child: const Text('Demo'),
+    final state = ref.watch(appProvider);
+    final simulated = ref.read(deviceProvider).simulated;
+    ref.watch(appsProvider);
+    final navigationPath = path.startsWith('/goals/') ? '/goals' : path;
+    final selected = destinations
+        .indexWhere((d) => d.$1 == navigationPath)
+        .clamp(0, destinations.length - 1);
+    return PopScope(
+      canPop: !focusing,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop && focusing) await requestFocusExit(context, ref);
+      },
+      child: Scaffold(
+        appBar: wide
+            ? null
+            : AppBar(
+                title: const Text(
+                  '伴学小屋',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
-              ],
-            ),
-      drawer: wide
-          ? null
-          : Drawer(
-              child: SafeArea(child: _Navigation(path: path, drawer: true)),
-            ),
-      body: Stack(
-        children: [
-          Row(
-            children: [
-              if (wide)
-                Container(
-                  width: 222,
-                  decoration: const BoxDecoration(
-                    color: NestColors.surface,
-                    border: Border(right: BorderSide(color: NestColors.line)),
-                  ),
-                  child: _Navigation(path: path),
-                ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 13,
-                      ),
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: NestColors.line),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            focusing ? Icons.lock_outline : Icons.eco_outlined,
-                            size: 16,
-                            color: NestColors.green,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              focusing ? '正在专注 · 宠物互动已暂停' : '慢慢来，每一小步都算数。',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: NestColors.muted,
-                              ),
-                            ),
-                          ),
-                          if (wide)
-                            TextButton(
-                              onPressed: () => context.go('/demo'),
-                              child: const Text('虚拟数据 Demo'),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Expanded(child: child),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (floating) const FloatingPetPreview(),
-        ],
-      ),
-      bottomNavigationBar: wide
-          ? null
-          : Builder(
-              builder: (scaffoldContext) => NavigationBar(
-                height: 70,
-                selectedIndex: selected > 3 ? 4 : selected,
-                onDestinationSelected: (index) {
-                  if (index == 4) {
-                    Scaffold.of(scaffoldContext).openDrawer();
-                  } else {
-                    context.go(destinations[index].$1);
-                  }
-                },
-                destinations: [
-                  ...destinations
-                      .take(4)
-                      .map(
-                        (d) => NavigationDestination(
-                          icon: Icon(d.$3),
-                          label: d.$2,
-                        ),
-                      ),
-                  const NavigationDestination(
-                    icon: Icon(Icons.menu),
-                    label: '更多',
+                actions: [
+                  TextButton(
+                    onPressed: () => context.go('/demo'),
+                    child: Text(simulated ? 'Demo' : '说明'),
                   ),
                 ],
               ),
+        drawer: wide
+            ? null
+            : Drawer(
+                child: SafeArea(
+                  child: _Navigation(path: navigationPath, drawer: true),
+                ),
+              ),
+        body: Stack(
+          children: [
+            Row(
+              children: [
+                if (wide)
+                  Container(
+                    width: 222,
+                    decoration: const BoxDecoration(
+                      color: NestColors.surface,
+                      border: Border(right: BorderSide(color: NestColors.line)),
+                    ),
+                    child: _Navigation(path: navigationPath),
+                  ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 13,
+                        ),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: NestColors.line),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              focusing
+                                  ? Icons.lock_outline
+                                  : Icons.eco_outlined,
+                              size: 16,
+                              color: NestColors.green,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                state.storageError.isNotEmpty
+                                    ? state.storageError
+                                    : simulated
+                                    ? (focusing
+                                          ? '模拟专注 · 宠物互动已暂停'
+                                          : '网页演示 · 虚拟数据')
+                                    : (state.protectionReady
+                                          ? (focusing
+                                                ? '正在专注 · 保护已开启'
+                                                : '保护权限已开启')
+                                          : '保护未生效 · 请前往应用锁定开启权限'),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: NestColors.muted,
+                                ),
+                              ),
+                            ),
+                            if (wide)
+                              TextButton(
+                                onPressed: () => context.go('/demo'),
+                                child: Text(simulated ? '虚拟数据 Demo' : '手机体验说明'),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Expanded(child: child),
+                    ],
+                  ),
+                ),
+              ],
             ),
+            if (floating) const FloatingPetPreview(),
+          ],
+        ),
+        bottomNavigationBar: wide
+            ? null
+            : Builder(
+                builder: (scaffoldContext) => NavigationBar(
+                  height: 70,
+                  selectedIndex: selected > 3 ? 4 : selected,
+                  onDestinationSelected: (index) {
+                    if (index == 4) {
+                      Scaffold.of(scaffoldContext).openDrawer();
+                    } else {
+                      context.go(destinations[index].$1);
+                    }
+                  },
+                  destinations: [
+                    ...destinations
+                        .take(4)
+                        .map(
+                          (d) => NavigationDestination(
+                            icon: Icon(d.$3),
+                            label: d.$2,
+                          ),
+                        ),
+                    const NavigationDestination(
+                      icon: Icon(Icons.menu),
+                      label: '更多',
+                    ),
+                  ],
+                ),
+              ),
+      ),
     );
   }
 }
@@ -233,7 +261,7 @@ class _Navigation extends StatelessWidget {
             ),
             SizedBox(height: 8),
             Text(
-              '体验版 0.1 · 虚拟数据',
+              '体验版 0.2',
               style: TextStyle(fontSize: 10, color: NestColors.muted),
             ),
           ],

@@ -2,56 +2,100 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/controller.dart';
 import '../ui/components.dart';
-import '../ui/theme.dart';
 
 class AppsPage extends ConsumerWidget {
   const AppsPage({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appProvider);
-    const apps = [
-      ('课程平台', '听课与学习', Icons.school_outlined),
-      ('词典', '查词与翻译', Icons.translate),
-      ('浏览器', '查资料，也可能分心', Icons.public),
-      ('视频平台', '课程与娱乐混合', Icons.ondemand_video),
-      ('短视频', '娱乐与推荐内容', Icons.smart_display_outlined),
-      ('游戏', '休闲娱乐', Icons.sports_esports_outlined),
-      ('电话', '必要通讯，始终保留', Icons.phone_outlined),
-    ];
+    final device = ref.read(deviceProvider);
+    final catalog = ref.watch(appsProvider);
     return PageFrame(
-      title: '留下学习需要的工具',
-      subtitle: '打开开关表示专注时允许使用。这里的应用列表与拦截效果均为模拟。',
-      eyebrow: 'MAKE ROOM FOR WHAT MATTERS',
+      title: '把分心留在门外',
+      subtitle: '开关开启表示允许使用。娱乐分类仅为初始建议，请确认名单。',
+      action: IconButton(
+        tooltip: '刷新应用列表',
+        onPressed: state.focusing ? null : () => ref.invalidate(appsProvider),
+        icon: const Icon(Icons.refresh),
+      ),
       children: [
         SurfacePanel(
           child: Column(
-            children: apps
-                .map(
-                  (app) => ListTile(
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    leading: Icon(app.$3, color: NestColors.green),
-                    title: Text(app.$1),
-                    subtitle: Text(
-                      app.$2,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    trailing: Switch(
-                      value: state.allowedApps.contains(app.$1),
-                      onChanged: state.focusing || app.$1 == '电话'
-                          ? null
-                          : (_) => ref
-                                .read(appProvider.notifier)
-                                .toggleApp(app.$1),
-                    ),
-                  ),
-                )
-                .toList(),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StatusPill(
+                device.simulated
+                    ? '网页模拟'
+                    : state.protectionReady
+                    ? '保护权限已开启'
+                    : '保护未生效',
+                warning: !device.simulated && !state.protectionReady,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                device.simulated
+                    ? '这里使用虚拟应用列表，真实拦截请在手机体验。'
+                    : '专注时识别打开的应用，显示锁定提醒并返回桌面。不读取应用页面内容。电话、系统设置等必要应用始终允许。',
+              ),
+              if (!device.simulated) ...[
+                const SizedBox(height: 12),
+                MainButton(
+                  '前往系统开启权限',
+                  onPressed: () async {
+                    try {
+                      await device.openSettings();
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('请在系统无障碍设置中找到伴学小屋')),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                const Text('在系统设置找到「伴学小屋专注保护」并开启。关闭权限后保护会失效。'),
+              ],
+            ],
           ),
         ),
         const SizedBox(height: 20),
-        const Text(
-          '同一应用中的课程与娱乐，应用白名单无法区分。第一版先让你体验按应用选择的方式。',
-          style: TextStyle(fontSize: 12, color: NestColors.muted),
+        if (state.focusing) const Text('本次专注采用开始时确认的名单，结束后可调整。'),
+        catalog.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => EmptyPanel(
+            title: '未能读取应用列表',
+            body: '已有名单会保留。',
+            action: MainButton(
+              '重试',
+              onPressed: () => ref.invalidate(appsProvider),
+            ),
+          ),
+          data: (apps) => SurfacePanel(
+            child: Column(
+              children: [
+                Text(
+                  '已限制 ${apps.where((a) => state.blockedApps.contains(a.package)).length} 个应用',
+                ),
+                for (final app in apps)
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(app.name),
+                    subtitle: Text(
+                      app.protected
+                          ? '必要应用 · 始终允许'
+                          : '${app.category} · ${state.blockedApps.contains(app.package) ? '专注时限制' : '允许使用'}',
+                    ),
+                    value: !state.blockedApps.contains(app.package),
+                    onChanged: app.protected || state.focusing
+                        ? null
+                        : (_) => ref
+                              .read(appProvider.notifier)
+                              .toggleInstalledApp(app),
+                  ),
+              ],
+            ),
+          ),
         ),
       ],
     );

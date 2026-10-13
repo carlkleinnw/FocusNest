@@ -259,3 +259,17 @@ void showResult(BuildContext context, OperationResult result) =>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(result.message)));
+
+// Wait until the closing route has removed its overlay before disposing fields.
+Future<T?> showEditorDialog<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+}) async {
+  final route = DialogRoute<T>(context: context, builder: builder);
+  final result = await Navigator.of(
+    context,
+    rootNavigator: true,
+  ).push<T>(route);
+  await route.completed;
+  return result;
+}

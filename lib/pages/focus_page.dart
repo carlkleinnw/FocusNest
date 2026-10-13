@@ -6,6 +6,7 @@ import '../core/models.dart';
 import '../pet/pet_drawing.dart';
 import '../ui/components.dart';
 import '../ui/theme.dart';
+import '../ui/focus_exit.dart';
 
 class FocusPage extends ConsumerStatefulWidget {
   const FocusPage({super.key, this.planId});
@@ -22,7 +23,9 @@ class _FocusPageState extends ConsumerState<FocusPage> {
     final controller = ref.read(appProvider.notifier);
     final plan =
         state.plans.where((p) => p.id == widget.planId).firstOrNull ??
-        state.plans.firstOrNull ??
+        state.plans
+            .where((p) => !p.done && (p.date.isEmpty || p.date == state.dayKey))
+            .firstOrNull ??
         const Plan(id: 'free', title: '完成一个小任务', minutes: 30, time: '09:00');
     final session = state.session;
     final minutes = selectedMinutes ?? plan.minutes;
@@ -73,23 +76,26 @@ class _FocusPageState extends ConsumerState<FocusPage> {
                 MainButton(
                   state.pet.dead ? '先去重启领养' : '确认并开始专注',
                   icon: Icons.play_arrow_rounded,
-                  onPressed: () {
+                  onPressed: () async {
                     if (state.pet.dead) {
                       context.go('/adopt');
                       return;
                     }
-                    showResult(
-                      context,
-                      controller.start(
-                        Plan(
-                          id: plan.id,
-                          title: plan.title,
-                          minutes: minutes,
-                          time: plan.time,
-                          category: plan.category,
-                        ),
+                    final result = await controller.start(
+                      Plan(
+                        id: plan.id,
+                        title: plan.title,
+                        minutes: minutes,
+                        time: plan.time,
+                        category: plan.category,
+                        date: plan.date,
+                        goalId: plan.goalId,
+                        milestoneId: plan.milestoneId,
+                        units: plan.units,
+                        doneUnits: plan.doneUnits,
                       ),
                     );
+                    if (context.mounted) showResult(context, result);
                   },
                 ),
               ],
@@ -153,10 +159,11 @@ class _FocusPageState extends ConsumerState<FocusPage> {
                   child: const Text('提前结束'),
                 ),
                 const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () => context.go('/demo'),
-                  child: const Text('去演示控制快进时间'),
-                ),
+                if (controller.simulated)
+                  TextButton(
+                    onPressed: () => context.go('/demo'),
+                    child: const Text('去演示控制快进时间'),
+                  ),
               ],
             ),
           )
@@ -206,32 +213,41 @@ class _FocusPageState extends ConsumerState<FocusPage> {
             children: [
               Text('专注时的应用', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              const Text(
-                '演示：点击下列应用，体验允许访问和分心拦截。',
+              Text(
+                controller.simulated
+                    ? '演示：点击下列应用，体验允许访问和分心拦截。'
+                    : '请先在应用锁定页开启权限并确认名单。',
                 style: TextStyle(color: NestColors.muted, fontSize: 12),
               ),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: ['课程平台', '词典', '短视频', '游戏', '电话']
-                    .map(
-                      (app) => ActionChip(
-                        avatar: Icon(
-                          state.allowedApps.contains(app)
-                              ? Icons.check_circle_outline
-                              : Icons.lock_outline,
-                          size: 17,
-                        ),
-                        label: Text(app),
-                        onPressed: () => _openApp(app),
-                      ),
-                    )
-                    .toList(),
+                children:
+                    (controller.simulated
+                            ? ['课程平台', '词典', '短视频', '游戏', '电话']
+                            : <String>[])
+                        .map(
+                          (app) => ActionChip(
+                            avatar: Icon(
+                              !_simBlocked(state, app)
+                                  ? Icons.check_circle_outline
+                                  : Icons.lock_outline,
+                              size: 17,
+                            ),
+                            label: Text(app),
+                            onPressed: () => _openApp(app),
+                          ),
+                        )
+                        .toList(),
               ),
               const SizedBox(height: 16),
-              const Text(
-                '这里模拟限制效果，网页不会锁定真实手机或拦截其他应用。',
+              Text(
+                controller.simulated
+                    ? '网页不会拦截真实手机应用。'
+                    : (state.protectionReady
+                          ? '权限已开启；受限应用会显示提醒并返回桌面。'
+                          : '保护未生效：请先开启无障碍权限。'),
                 style: TextStyle(fontSize: 12, color: NestColors.muted),
               ),
             ],
@@ -243,7 +259,7 @@ class _FocusPageState extends ConsumerState<FocusPage> {
 
   Future<void> _openApp(String app) async {
     final state = ref.read(appProvider);
-    if (!state.focusing || state.allowedApps.contains(app)) {
+    if (!state.focusing || !_simBlocked(state, app)) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('$app：允许访问（模拟）')));
@@ -265,68 +281,15 @@ class _FocusPageState extends ConsumerState<FocusPage> {
     );
   }
 
-  Future<void> _requestExit() async {
-    final session = ref.read(appProvider).session;
-    if (session == null) return;
-    final first = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('再给自己一点时间？'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const StatusPill('确认 1 / 2'),
-            const SizedBox(height: 18),
-            Text('正在专注：${session.title}'),
-            const SizedBox(height: 10),
-            Text(
-              '还剩 ${timerLabel(session.remainingSeconds(ref.read(appProvider).now))}。开始已经不容易，接下来只需要继续这一小段。',
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('仍要退出'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('继续坚持'),
-          ),
-        ],
-      ),
-    );
-    if (first != true || !mounted || !ref.read(appProvider).focusing) return;
-    final second = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('确认结束这次专注？'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            StatusPill('确认 2 / 2', warning: true),
-            SizedBox(height: 18),
-            Text('提前结束后，本次不会获得食物或重新领养资格。'),
-            SizedBox(height: 12),
-            Text('如果可以，试着回到眼前的一小步；如果需要离开，也可以之后重新开始。'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('确认结束'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('返回专注'),
-          ),
-        ],
-      ),
-    );
-    if (second == true && mounted) {
-      showResult(context, ref.read(appProvider.notifier).cancelFocus());
-    }
-  }
+  Future<void> _requestExit() => requestFocusExit(context, ref);
+
+  bool _simBlocked(AppState state, String app) => state.blockedApps.contains(
+    {
+      '课程平台': 'demo.course',
+      '词典': 'demo.dictionary',
+      '短视频': 'demo.video',
+      '游戏': 'demo.game',
+      '电话': 'demo.phone',
+    }[app],
+  );
 }
