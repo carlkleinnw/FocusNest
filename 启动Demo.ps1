@@ -11,7 +11,7 @@ $chosenPort=$null
 foreach ($candidatePort in 8787..8797) {
   $url="http://127.0.0.1:$candidatePort/"
   try {
-    $response=Invoke-WebRequest -Uri ($url+'focusnest-demo.json') -TimeoutSec 1
+    $response=Invoke-WebRequest -UseBasicParsing -Uri ($url+'focusnest-demo.json') -TimeoutSec 1
     if (($response.Content | ConvertFrom-Json).id -eq 'focusnest-demo-v01') {
       $chosenPort=$candidatePort
       break
@@ -28,7 +28,7 @@ foreach ($candidatePort in 8787..8797) {
     for ($attempt=0;$attempt -lt 30;$attempt++) {
       Start-Sleep -Milliseconds 200
       try {
-        $response=Invoke-WebRequest -Uri ($url+'focusnest-demo.json') -TimeoutSec 1
+        $response=Invoke-WebRequest -UseBasicParsing -Uri ($url+'focusnest-demo.json') -TimeoutSec 1
         if (($response.Content | ConvertFrom-Json).id -eq 'focusnest-demo-v01') { $ready=$true; break }
       } catch {}
     }
@@ -37,4 +37,3 @@ foreach ($candidatePort in 8787..8797) {
 }
 if ($null -eq $chosenPort) { throw '未能启动演示服务，请检查本机端口。' }
 Start-Process "http://127.0.0.1:$chosenPort/#/home"
-
