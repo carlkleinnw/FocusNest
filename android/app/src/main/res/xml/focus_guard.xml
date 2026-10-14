@@ -1,7 +1,8 @@
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowsChanged"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows|flagIncludeNotImportantViews"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:notificationTimeout="0"
-    android:canRetrieveWindowContent="false"
+    android:canRetrieveWindowContent="true"
     android:description="@string/focus_guard_description"
     android:isAccessibilityTool="false" />

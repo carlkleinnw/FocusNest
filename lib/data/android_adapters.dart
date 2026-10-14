@@ -74,6 +74,9 @@ class AndroidDevice implements DevicePort {
   @override
   Future<void> openSettings() => nativeChannel.invokeMethod<void>('settings');
   @override
+  Future<void> openBackgroundSettings() =>
+      nativeChannel.invokeMethod<void>('backgroundSettings');
+  @override
   Future<OperationResult> applyRestrictions(
     Set<String> blockedPackages,
     FocusSession session,

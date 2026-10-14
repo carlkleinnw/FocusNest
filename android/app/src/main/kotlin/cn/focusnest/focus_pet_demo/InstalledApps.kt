@@ -5,16 +5,39 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.telecom.TelecomManager
 import android.os.Build
+import android.provider.Settings
+import android.net.Uri
+import org.json.JSONArray
+import org.json.JSONObject
 
 object InstalledApps {
+    fun homePackages(context: Context): Set<String> = context.packageManager.queryIntentActivities(
+        Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0
+    ).map { it.activityInfo.packageName }.toSet()
+
+    fun allowedForRule(context: Context, rule: JSONObject): Set<String> {
+        val stored = rule.optJSONArray("allowed")
+        if (stored != null) return (0 until stored.length()).map { stored.optString(it) }.toSet()
+        val blocked = rule.optJSONArray("blocked") ?: JSONArray()
+        val denied = (0 until blocked.length()).map { blocked.optString(it) }.toSet()
+        val allowed = list(context).map { it["package"] as String }.filter { it !in denied }.toSet() + protectedPackages(context)
+        rule.put("allowed", JSONArray(allowed.sorted())).put("mode", "allowlist")
+        NestDatabase(context).use { it.write("protection", rule.toString()) }
+        return allowed
+    }
     fun protectedPackages(context: Context): Set<String> {
         val launcher = context.packageManager.resolveActivity(
             Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0
         )?.activityInfo?.packageName
         val dialer = context.getSystemService(TelecomManager::class.java)?.defaultDialerPackage
+        val settingsHandlers = listOf(
+            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + context.packageName)),
+            Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+        ).mapNotNull { context.packageManager.resolveActivity(it, 0)?.activityInfo?.packageName }
         return setOfNotNull(context.packageName, launcher, dialer, "com.android.settings",
             "com.android.systemui", "com.android.phone", "com.android.emergency",
-            "com.android.permissioncontroller", "com.google.android.permissioncontroller")
+            "com.android.permissioncontroller", "com.google.android.permissioncontroller") + settingsHandlers
     }
     fun list(context: Context): List<Map<String, Any>> {
         val pm = context.packageManager

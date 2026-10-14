@@ -111,6 +111,8 @@ class SimulatedDevice implements DevicePort {
   @override
   Future<void> openSettings() async {}
   @override
+  Future<void> openBackgroundSettings() async {}
+  @override
   Future<List<InstalledApp>> apps() async => const [
     InstalledApp(package: 'demo.course', name: '课程平台', category: '学习'),
     InstalledApp(package: 'demo.dictionary', name: '词典', category: '工具'),

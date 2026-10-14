@@ -1,4 +1,4 @@
 <resources>
     <string name="focus_guard_label">伴学小屋专注保护</string>
-    <string name="focus_guard_description">你主动开启专注后，识别打开的应用，显示分心应用的锁定提醒；点击知道了后返回桌面。不读取应用页面内容；可在系统设置关闭此服务。电话、系统设置与必要系统功能保持可用。</string>
+    <string name="focus_guard_description">你主动开启专注后，通过窗口所属应用标识核对白名单，在未允许的应用前显示锁定提醒；点击知道了后返回桌面。系统需要授予窗口访问能力，但本应用只读取窗口所属应用标识，不读取页面文字、输入内容或截图，不上传应用名单。可在系统设置关闭此服务。电话、桌面与必要系统功能保持可用。</string>
 </resources>

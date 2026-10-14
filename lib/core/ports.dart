@@ -50,6 +50,7 @@ abstract interface class DevicePort {
   Future<ProtectionStatus> status();
   Future<List<InstalledApp>> apps();
   Future<void> openSettings();
+  Future<void> openBackgroundSettings();
 }
 
 class IntelligenceRequest {

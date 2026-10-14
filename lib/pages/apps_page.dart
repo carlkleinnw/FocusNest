@@ -15,7 +15,7 @@ class AppsPage extends ConsumerWidget {
     final protection = ref.watch(protectionStatusProvider);
     return PageFrame(
       title: '把分心留在门外',
-      subtitle: '开关开启表示允许使用。娱乐分类仅为初始建议，请确认名单。',
+      subtitle: '开启开关加入白名单。专注时，白名单之外的应用会被拦截。',
       action: IconButton(
         tooltip: '刷新应用列表',
         onPressed: state.focusing ? null : () => ref.invalidate(appsProvider),
@@ -38,7 +38,7 @@ class AppsPage extends ConsumerWidget {
               Text(
                 device.simulated
                     ? '这里使用虚拟应用列表，真实拦截请在手机体验。'
-                    : '打开受限应用会显示锁定提醒，点击「知道了」返回桌面。不读取应用页面内容。电话、系统设置等必要应用始终允许。',
+                    : '打开未加入白名单的应用会显示锁定提醒，点击「知道了」返回桌面。只读取窗口所属应用标识，不读取页面文字、输入内容或截图。电话、系统设置等必要应用始终允许。',
               ),
               if (!device.simulated) ...[
                 const SizedBox(height: 12),
@@ -57,8 +57,17 @@ class AppsPage extends ConsumerWidget {
                       ),
                       if (state.focusing && !p.active)
                         const Text('当前计时与应用保护状态不一致'),
-                      Text('已显示${p.reminders}次提醒'),
+                      Text('提醒已获得前台焦点${p.reminders}次'),
                       Text('收到${p.windowEvents}次切换通知'),
+                      Text('已核对前台窗口${p.foregroundChecks}次'),
+                      if (p.active)
+                        Text(
+                          p.backgroundRunning
+                              ? '后台保护正在运行'
+                              : '后台保护未运行，离开小屋后可能漏拦截',
+                        ),
+                      if (p.active && !p.windowAccess)
+                        const Text('当前缺少窗口识别能力，需重新开启新版保护服务'),
                       TextButton.icon(
                         icon: const Icon(Icons.copy, size: 16),
                         label: const Text('复制诊断信息'),
@@ -78,9 +87,11 @@ class AppsPage extends ConsumerWidget {
                       ),
                       if (p.homeResult.isNotEmpty)
                         Text(
-                          p.homeResult == 'HOME_ACCEPTED'
-                              ? '最近返回桌面请求：系统已执行'
-                              : '最近返回桌面请求：系统未执行',
+                          p.homeResult == 'HOME_VERIFIED'
+                              ? '已确认返回桌面'
+                              : p.homeResult == 'HOME_ACCEPTED'
+                              ? '系统已接受返回桌面请求，等待核实'
+                              : '系统未接受返回桌面请求',
                         ),
                       if (p.error.isNotEmpty) Text(p.error),
                     ],
@@ -102,7 +113,28 @@ class AppsPage extends ConsumerWidget {
                   },
                 ),
                 const SizedBox(height: 8),
-                const Text('在系统设置找到「伴学小屋专注保护」并开启。关闭权限后保护会失效。'),
+                const Text(
+                  '在系统设置找到「伴学小屋专注保护」并开启。系统需授予窗口访问能力，应用只取所属应用标识。关闭权限后保护会失效。',
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '如果离开小屋后不再拦截，请在应用信息里将「省电策略」设为「无限制／不限制」，让专注保护能持续运行。专注期间提供后台保护通知。',
+                ),
+                const SizedBox(height: 8),
+                MainButton(
+                  '检查后台运行设置',
+                  onPressed: () async {
+                    try {
+                      await device.openBackgroundSettings();
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('请在系统的伴学小屋应用信息中检查省电策略')),
+                        );
+                      }
+                    }
+                  },
+                ),
               ],
             ],
           ),

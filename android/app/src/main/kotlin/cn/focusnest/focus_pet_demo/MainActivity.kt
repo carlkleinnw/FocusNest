@@ -5,6 +5,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.content.Intent
 import android.provider.Settings
+import android.net.Uri
 import org.json.JSONObject
 import org.json.JSONArray
 
@@ -20,19 +21,33 @@ class MainActivity : FlutterActivity() {
                         "apps" -> result.success(InstalledApps.list(this))
                         "status" -> {
                             val rule = database.rule()
-                            result.success(mapOf("ready" to FocusGuardService.connected,
+                            result.success(mapOf("ready" to (FocusGuardService.connected && FocusGuardService.windowAccess),
+                                "windowAccess" to FocusGuardService.windowAccess,
+                                "backgroundRunning" to FocusGuardService.backgroundRunning,
                                 "active" to ((rule?.optLong("deadline") ?: 0) > System.currentTimeMillis()),
                                 "blockedCount" to (rule?.optJSONArray("blocked")?.length() ?: 0),
                                 "windowEvents" to FocusGuardService.windowEvents,
                                 "connections" to FocusGuardService.connections,
                                 "disconnections" to FocusGuardService.disconnections,
                                 "reminders" to FocusGuardService.reminders,
+                                "reminderAttempts" to FocusGuardService.reminderAttempts,
+                                "reminderVisible" to FocusGuardService.reminderVisible,
+                                "foregroundChecks" to FocusGuardService.foregroundChecks,
+                                "unknownWindows" to FocusGuardService.unknownWindows,
+                                "homeVerified" to FocusGuardService.homeVerified,
+                                "hideReason" to FocusGuardService.lastHideReason,
+                                "allowlistMode" to (rule?.optString("mode") == "allowlist"),
                                 "homeResult" to FocusGuardService.lastHomeResult,
                                 "error" to FocusGuardService.lastError,
                                 "errorCode" to FocusGuardService.lastErrorCode,
                                 "version" to packageManager.getPackageInfo(packageName, 0).versionName))
                         }
                         "settings" -> { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)); result.success(null) }
+                        "backgroundSettings" -> {
+                            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.parse("package:" + packageName)))
+                            result.success(null)
+                        }
                         "load" -> result.success(database.read("state"))
                         "save" -> {
                             val payload = call.argument<String>("snapshot") ?: error("Missing snapshot")
@@ -41,7 +56,7 @@ class MainActivity : FlutterActivity() {
                             database.write("state", payload); result.success(null)
                         }
                         "start" -> {
-                            require(FocusGuardService.connected) { "先开启专注保护服务" }
+                            require(FocusGuardService.connected && FocusGuardService.windowAccess) { "先开启具备窗口识别能力的专注保护服务" }
                             val deadline = call.argument<Number>("deadline")?.toLong() ?: error("Missing deadline")
                             val started = call.argument<Number>("started")?.toLong() ?: error("Missing start")
                             require(deadline-started in 1_800_000L..10_800_000L)
@@ -51,15 +66,21 @@ class MainActivity : FlutterActivity() {
                             val safe = blocked.filter { it !in InstalledApps.protectedPackages(this) }
                             val rule = JSONObject().put("deadline", deadline).put("blocked", JSONArray(safe))
                                 .put("title", call.argument<String>("title")?.take(60) ?: "当前任务")
+                            val allowed = InstalledApps.list(this).map { it["package"] as String }
+                                .filter { it !in safe }.toSet() + InstalledApps.protectedPackages(this)
+                            rule.put("allowed", JSONArray(allowed.sorted())).put("mode", "allowlist")
                             val snapshot = call.argument<String>("snapshot") ?: error("Missing snapshot")
                             require(snapshot.length <= 2_000_000); JSONObject(snapshot)
+                            FocusGuardService.startBackgroundProtection()
                             database.beginFocus(rule, snapshot)
+                            FocusGuardService.refreshRule()
                             result.success(null)
                         }
                         "stop" -> {
                             val snapshot = call.argument<String>("snapshot")
                             if (snapshot != null) { require(snapshot.length <= 2_000_000); JSONObject(snapshot); database.beginFocus(JSONObject(), snapshot) }
                             else database.clearFocus()
+                            FocusGuardService.refreshRule()
                             result.success(null)
                         }
                         else -> result.notImplemented()
