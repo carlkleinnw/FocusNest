@@ -1,0 +1,17 @@
+{
+  "checksPassed": 11,
+  "checks": [
+    "repository-only hook and followTags installation",
+    "branch push without a version tag is rejected",
+    "lightweight version tag does not satisfy the hook",
+    "atomic publication sends the branch and annotated tag together",
+    "same commit and tag may be retried safely",
+    "dirty tree is rejected before tagging",
+    "existing historical tag cannot be moved to another commit",
+    "mismatched application version is rejected",
+    "new commits require a new annotated tag",
+    "failed publication retains the new tag for retry",
+    "retained tag publishes successfully after restoring the remote"
+  ],
+  "shell": "Windows PowerShell 5.1"
+}

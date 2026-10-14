@@ -1,0 +1,27 @@
+#!/bin/sh
+# Branch updates must point to an annotated version tag.
+# push.followTags=true is installed with scripts/Install-ReleasePolicy.ps1.
+while read -r local_ref local_oid remote_ref remote_oid
+do
+    case "$remote_ref" in
+        refs/heads/*)
+            case "$local_oid" in
+                0000000000000000000000000000000000000000) continue ;;
+            esac
+            found=false
+            for version_tag in $(git tag --points-at "$local_oid" --list 'v*')
+            do
+                if [ "$(git cat-file -t "refs/tags/$version_tag")" = tag ]; then
+                    found=true
+                    break
+                fi
+            done
+            if [ "$found" != true ]; then
+                echo 'FocusNest: this branch update has no annotated version tag.' >&2
+                echo 'Use scripts/Publish-Version.ps1 to tag and publish the update.' >&2
+                exit 1
+            fi
+            ;;
+    esac
+done
+exit 0

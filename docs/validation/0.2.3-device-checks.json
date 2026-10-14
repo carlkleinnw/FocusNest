@@ -1,0 +1,107 @@
+{
+  "version": "0.2.3+5",
+  "at": "2026-10-14T16:19:23.181077",
+  "validation": {
+    "flutterAnalyze": "passed",
+    "flutterTests": 20,
+    "nativePolicyChecks": 23,
+    "androidBuild": "passed",
+    "webBuild": "passed",
+    "gitDiffCheck": "passed",
+    "temporaryDiagnosticLogsRemoved": true
+  },
+  "android": {
+    "handset": "Xiaomi 15",
+    "system": "Android 16 / API 36",
+    "versionCode": 5,
+    "minSdk": 24,
+    "targetSdk": 36,
+    "finalPackageInstalled": true,
+    "signingCertificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "apkSha256": "8736f7d9192857c1ee5e92b302bf6e93f776dbf9efa7d44134add6c22b9dddfa",
+    "apkBytes": 169997571,
+    "appBatteryPolicy": "Changed only FocusNest from intelligent background restriction to unrestricted via visible system settings",
+    "foregroundServiceConfirmed": true,
+    "realDeviceChecks": {
+      "version": "0.2.3",
+      "cases": [
+        {
+          "reminderDelayIncludingAdbSeconds": 0.512,
+          "retainedBeforeAcknowledgementSeconds": 2.5,
+          "ackReturnedHome": true,
+          "screen": "1200x2670",
+          "application": "哔哩哔哩"
+        },
+        {
+          "reminderDelayIncludingAdbSeconds": 0.631,
+          "retainedBeforeAcknowledgementSeconds": 2.5,
+          "ackReturnedHome": true,
+          "screen": "2670x1200",
+          "application": "原神"
+        },
+        {
+          "reminderDelayIncludingAdbSeconds": 0.751,
+          "retainedBeforeAcknowledgementSeconds": 2.5,
+          "ackReturnedHome": true,
+          "screen": "1200x2670",
+          "application": "抖音"
+        },
+        {
+          "reminderDelayIncludingAdbSeconds": 0.538,
+          "retainedBeforeAcknowledgementSeconds": 2.5,
+          "ackReturnedHome": true,
+          "screen": "1200x2670",
+          "application": "哔哩哔哩"
+        },
+        {
+          "reminderDelayIncludingAdbSeconds": 0.663,
+          "retainedBeforeAcknowledgementSeconds": 2.5,
+          "ackReturnedHome": true,
+          "screen": "2670x1200",
+          "application": "原神"
+        },
+        {
+          "reminderDelayIncludingAdbSeconds": 0.627,
+          "retainedBeforeAcknowledgementSeconds": 15.0,
+          "ackReturnedHome": true,
+          "screen": "2670x1200",
+          "application": "原神（B站版）"
+        }
+      ],
+      "necessarySettingsAllowed": true,
+      "ownPermissionSettingsAllowed": true,
+      "defaultDialerAllowed": true,
+      "actualPhoneCallsMade": false,
+      "necessaryHomeAllowed": true,
+      "measurement": "Includes ADB launch and inspection overhead",
+      "screenCapture": "Own native reminder only; no external app screenshot in report"
+    },
+    "twoStepEarlyExitConfirmed": true,
+    "inactiveRuleObservedAfterExit": true
+  },
+  "limitations": [
+    "Verified on this handset only; other brands and long-term battery usage still need validation",
+    "App switching is asynchronous; measured times include ADB launch and inspection overhead",
+    "Returning home does not kill third-party processes; disabling permissions or stopping the app can bypass protection"
+  ],
+  "excluded": [
+    "phone database",
+    "full app inventory",
+    "personal phone screenshots",
+    "clipboard contents",
+    "credentials",
+    "caches",
+    "work scratch files"
+  ],
+  "source": {
+    "commit": "057be62",
+    "tag": "v0.2.3-demo",
+    "scope": "Historical runtime validation before the documentation publication revision"
+  },
+  "toolchain": {
+    "flutter": "3.41.9",
+    "dart": "3.11.5",
+    "jdk": "21.0.9",
+    "javaCompileTarget": 17
+  }
+}

@@ -48,3 +48,14 @@ app.*.map.json
 /dist/
 .env
 .env.*
+
+# Private runtime and release artifacts
+*.apk
+*.aab
+*.db
+*.sqlite
+*.sqlite3
+*.keystore
+*.jks
+*.pem
+*.key
