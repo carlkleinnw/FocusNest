@@ -17,7 +17,7 @@ class TestClock implements ClockPort {
 class RefusingDevice extends SimulatedDevice {
   @override
   OperationResult applyRestrictions(
-    Set<String> blockedPackages,
+    Set<String> allowedPackages,
     FocusSession session,
     AppState snapshot,
   ) => const OperationResult(false, 'PERMISSION_REQUIRED', '权限未开启');
@@ -208,7 +208,13 @@ void main() {
       final state = container.read(appProvider);
       final restored = decodeSnapshot(encodeSnapshot(state));
       expect(restored.session!.id, state.session!.id);
-      expect(restored.blockedApps, {'demo.video', 'demo.game'});
+      expect(restored.blockedApps, {
+        'demo.course',
+        'demo.dictionary',
+        'demo.video',
+        'demo.game',
+      });
+      expect(restored.allowedApps, isEmpty);
       expect(restored.appsInitialized, true);
       expect(restored.plans.firstWhere((p) => p.id == 't').milestoneId, 'm');
       expect(restored.goals.single.totalUnits, 20);
@@ -295,18 +301,72 @@ void main() {
     expect(c.read(appProvider).todayFed, false);
   });
   test(
-    'default catalog initializes once and preserves custom allowlist',
+    'all optional apps start blocked and only explicit choices enter allowlist',
     () async {
       final apps = await container.read(deviceProvider).apps();
       app.initializeApps(apps);
-      app.toggleInstalledApp(apps.firstWhere((a) => a.package == 'demo.video'));
+      expect(container.read(appProvider).blockedApps, {
+        'demo.course',
+        'demo.dictionary',
+        'demo.video',
+        'demo.game',
+      });
+      app.toggleInstalledApp(
+        apps.firstWhere((a) => a.package == 'demo.course'),
+      );
       app.initializeApps(apps);
-      expect(container.read(appProvider).blockedApps, {'demo.game'});
+      expect(container.read(appProvider).allowedApps, {'demo.course'});
+      expect(
+        decodeSnapshot(encodeSnapshot(container.read(appProvider))).allowedApps,
+        {'demo.course'},
+      );
+      expect(container.read(appProvider).blockedApps, {
+        'demo.dictionary',
+        'demo.video',
+        'demo.game',
+      });
       app.toggleInstalledApp(apps.firstWhere((a) => a.protected));
       expect(
-        container.read(appProvider).blockedApps.contains('demo.phone'),
+        container.read(appProvider).allowedApps.contains('demo.phone'),
         false,
       );
+      app.initializeApps([
+        ...apps,
+        const InstalledApp(package: 'demo.new', name: '新应用', category: '其他'),
+      ]);
+      expect(
+        container.read(appProvider).blockedApps.contains('demo.new'),
+        true,
+      );
+      expect(
+        container.read(appProvider).allowedApps.contains('demo.new'),
+        false,
+      );
+    },
+  );
+  test(
+    'old snapshot migrates to empty explicit allowlist without losing focus',
+    () {
+      final previous = encodeSnapshot(
+        container
+            .read(appProvider)
+            .copyWith(
+              session: FocusSession(
+                id: 'existing',
+                title: '正在学习',
+                minutes: 30,
+                startedAt: DateTime(2026, 10, 13, 9),
+              ),
+            ),
+      );
+      previous.remove('allowlistSchema');
+      previous['allowedApps'] = ['课程平台', '词典', '电话'];
+      previous['appsInitialized'] = true;
+      final restored = decodeSnapshot(previous);
+      expect(restored.allowedApps, isEmpty);
+      expect(restored.appsInitialized, true);
+      expect(restored.session?.id, 'existing');
+      expect(restored.permissionPromptSeen, false);
     },
   );
 }

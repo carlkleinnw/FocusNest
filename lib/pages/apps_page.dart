@@ -5,17 +5,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/controller.dart';
 import '../ui/components.dart';
 
-class AppsPage extends ConsumerWidget {
+class AppsPage extends ConsumerStatefulWidget {
   const AppsPage({super.key});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppsPage> createState() => _AppsPageState();
+}
+
+class _AppsPageState extends ConsumerState<AppsPage> {
+  String query = '';
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(appProvider);
     final device = ref.read(deviceProvider);
     final catalog = ref.watch(appsProvider);
     final protection = ref.watch(protectionStatusProvider);
     return PageFrame(
       title: '把分心留在门外',
-      subtitle: '开启开关加入白名单。专注时，白名单之外的应用会被拦截。',
+      subtitle: '应用默认受限。只将专注时确实需要的应用加入白名单。',
       action: IconButton(
         tooltip: '刷新应用列表',
         onPressed: state.focusing ? null : () => ref.invalidate(appsProvider),
@@ -99,7 +107,7 @@ class AppsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 MainButton(
-                  '前往系统开启权限',
+                  '管理系统保护权限',
                   onPressed: () async {
                     try {
                       await device.openSettings();
@@ -114,7 +122,7 @@ class AppsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '在系统设置找到「伴学小屋专注保护」并开启。系统需授予窗口访问能力，应用只取所属应用标识。关闭权限后保护会失效。',
+                  '在系统设置找到「伴学小屋专注保护」，可开启或关闭。系统需授予窗口访问能力，应用只取所属应用标识。拒绝或关闭后仍可使用计划和小屋，但无法开始受保护的专注。',
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -155,23 +163,51 @@ class AppsPage extends ConsumerWidget {
             child: Column(
               children: [
                 Text(
-                  '已限制 ${apps.where((a) => state.blockedApps.contains(a.package)).length} 个应用',
+                  '已限制 ${apps.where((a) => !a.protected && !state.allowedApps.contains(a.package)).length} 个应用',
                 ),
-                for (final app in apps)
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: '搜索应用',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) =>
+                      setState(() => query = value.trim().toLowerCase()),
+                ),
+                const SizedBox(height: 8),
+                for (final app in apps.where(
+                  (a) =>
+                      query.isEmpty ||
+                      a.name.toLowerCase().contains(query) ||
+                      a.package.toLowerCase().contains(query),
+                ))
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(app.name),
                     subtitle: Text(
                       app.protected
                           ? '必要应用 · 始终允许'
-                          : '${app.category} · ${state.blockedApps.contains(app.package) ? '专注时限制' : '允许使用'}',
+                          : '${app.category} · ${state.allowedApps.contains(app.package) ? '专注时允许' : '专注时限制'}',
                     ),
-                    value: !state.blockedApps.contains(app.package),
+                    value:
+                        app.protected ||
+                        state.allowedApps.contains(app.package),
                     onChanged: app.protected || state.focusing
                         ? null
                         : (_) => ref
                               .read(appProvider.notifier)
                               .toggleInstalledApp(app),
+                  ),
+                if (query.isNotEmpty &&
+                    !apps.any(
+                      (a) =>
+                          a.name.toLowerCase().contains(query) ||
+                          a.package.toLowerCase().contains(query),
+                    ))
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('没有找到匹配的应用'),
                   ),
               ],
             ),

@@ -78,13 +78,13 @@ class AndroidDevice implements DevicePort {
       nativeChannel.invokeMethod<void>('backgroundSettings');
   @override
   Future<OperationResult> applyRestrictions(
-    Set<String> blockedPackages,
+    Set<String> allowedPackages,
     FocusSession session,
     AppState snapshot,
   ) async {
     try {
       await nativeChannel.invokeMethod<void>('start', {
-        'blocked': blockedPackages.toList(),
+        'allowed': allowedPackages.toList(),
         'started': session.startedAt.millisecondsSinceEpoch,
         'deadline': session.deadline.millisecondsSinceEpoch,
         'title': session.title,

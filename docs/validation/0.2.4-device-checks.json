@@ -1,0 +1,55 @@
+{
+  "version": "0.2.4+6",
+  "date": "2026-10-14",
+  "sourceTag": "v0.2.4-demo",
+  "validation": {
+    "flutterAnalyze": "passed",
+    "flutterTests": 23,
+    "nativePolicyChecks": 23,
+    "androidDebugBuild": "passed",
+    "androidReleaseBuild": "passed",
+    "webReleaseBuild": "passed",
+    "gitDiffCheck": "passed"
+  },
+  "android": {
+    "handset": "Xiaomi 15",
+    "system": "Android 16 / API 36",
+    "versionCode": 6,
+    "versionName": "0.2.4",
+    "apkBytes": 53397980,
+    "apkSha256": "b6f73b7682eb518255909bb2bdb6edca2abde24f9da786585edc8afb97dff5e2",
+    "signingCertificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "checks": [
+      "Existing 0.2.3 data survived first 0.2.4 update; no pre-existing focus was canceled",
+      "First permission dialog appeared; choosing not now left home and plans usable",
+      "Accessibility permission was enabled through visible system settings; protection became ready",
+      "App list showed 168 nonessential apps restricted by default; search located Bilibili by package name",
+      "Explicitly allowing Bilibili reduced restricted count to 167; it stayed foreground during focus",
+      "Douyin and Genshin were intercepted in portrait and landscape; reminder stayed visible until acknowledgement",
+      "Acknowledgement returned to launcher; repeating launch triggered the reminder again",
+      "Accessibility settings and launcher remained usable during focus",
+      "Whitelist switches were disabled during focus; two-step early exit ended only the newly created test session",
+      "Temporary test plan was removed and Bilibili whitelist switch returned off; count restored to 168",
+      "Final same-signature APK was installed over the prior build without clearing data; pet, permission and whitelist state remained",
+      "Final APK with empty whitelist blocked Bilibili, maintained reminder, returned home on acknowledgement, allowed accessibility settings and ended its test focus in two steps",
+      "Protection status after test exit showed service connected and app protection inactive",
+      "Release APK was installed over the tested debug build with the same signing certificate and preserved data; a new test focus again blocked Bilibili, held the reminder, returned home on acknowledgement, allowed accessibility settings and ended in two steps"
+    ],
+    "screenCapture": "Only own app, own native reminder and system permission settings were inspected; screenshots were not published",
+    "actualPhoneCallsMade": false
+  },
+  "limitations": [
+    "Only Xiaomi 15 / Android 16 was tested; other brands and long-term battery behavior remain unverified",
+    "First-install permission choices were exercised during upgrade with permission disabled; clean-install state was covered by widget tests without erasing phone data",
+    "App switching is asynchronous; no latency benchmark is claimed",
+    "Returning home does not kill third-party processes; disabling the accessibility permission or stopping the app bypasses protection"
+  ],
+  "excluded": [
+    "phone database",
+    "full installed-app inventory",
+    "personal screenshots",
+    "credentials",
+    "signing key",
+    "debug caches"
+  ]
+}

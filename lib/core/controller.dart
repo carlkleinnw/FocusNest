@@ -405,7 +405,7 @@ class AppController extends Notifier<AppState>
       }
       final result = await ref
           .read(deviceProvider)
-          .applyRestrictions(state.blockedApps, session, next);
+          .applyRestrictions(state.allowedApps, session, next);
       if (!result.ok) return result;
       _virtual = false;
       _commit(next, 'focus.started');
@@ -522,24 +522,42 @@ class AppController extends Notifier<AppState>
   OperationResult toggleRest(DateTime day) =>
       setRest(day, !state.restDates.contains(dateKey(day)));
   void initializeApps(List<InstalledApp> apps) {
-    if (state.appsInitialized) return;
+    if (state.focusing || _busy) return;
+    final blocked = apps
+        .where((a) => !a.protected && !state.allowedApps.contains(a.package))
+        .map((a) => a.package)
+        .toSet();
+    if (state.appsInitialized &&
+        blocked.length == state.blockedApps.length &&
+        blocked.containsAll(state.blockedApps)) {
+      return;
+    }
     _commit(
-      state.copyWith(
-        blockedApps: apps
-            .where((a) => a.recommendedBlocked && !a.protected)
-            .map((a) => a.package)
-            .toSet(),
-        appsInitialized: true,
-      ),
+      state.copyWith(blockedApps: blocked, appsInitialized: true),
       'apps.initialized',
     );
   }
 
   void toggleInstalledApp(InstalledApp app) {
     if (state.focusing || _busy || app.protected) return;
+    final allowed = {...state.allowedApps};
+    if (!allowed.add(app.package)) allowed.remove(app.package);
     final blocked = {...state.blockedApps};
-    if (!blocked.add(app.package)) blocked.remove(app.package);
-    _commit(state.copyWith(blockedApps: blocked), 'allowlist.changed');
+    if (allowed.contains(app.package)) {
+      blocked.remove(app.package);
+    } else {
+      blocked.add(app.package);
+    }
+    _commit(
+      state.copyWith(allowedApps: allowed, blockedApps: blocked),
+      'allowlist.changed',
+    );
+  }
+
+  void markPermissionPromptSeen() {
+    if (!state.permissionPromptSeen) {
+      _commit(state.copyWith(permissionPromptSeen: true));
+    }
   }
 
   void interact(String action) {

@@ -61,13 +61,14 @@ class MainActivity : FlutterActivity() {
                             val started = call.argument<Number>("started")?.toLong() ?: error("Missing start")
                             require(deadline-started in 1_800_000L..10_800_000L)
                             require(kotlin.math.abs(started-System.currentTimeMillis()) < 15_000)
-                            val blocked = call.argument<List<String>>("blocked") ?: emptyList()
-                            require(blocked.size <= 1000)
-                            val safe = blocked.filter { it !in InstalledApps.protectedPackages(this) }
-                            val rule = JSONObject().put("deadline", deadline).put("blocked", JSONArray(safe))
+                            val requested = call.argument<List<String>>("allowed") ?: emptyList()
+                            require(requested.size <= 1000)
+                            val installed = InstalledApps.list(this).map { it["package"] as String }.toSet()
+                            val necessary = InstalledApps.protectedPackages(this)
+                            val allowed = requested.filter { it in installed }.toSet() + necessary
+                            val blocked = (installed - allowed).sorted()
+                            val rule = JSONObject().put("deadline", deadline).put("blocked", JSONArray(blocked))
                                 .put("title", call.argument<String>("title")?.take(60) ?: "当前任务")
-                            val allowed = InstalledApps.list(this).map { it["package"] as String }
-                                .filter { it !in safe }.toSet() + InstalledApps.protectedPackages(this)
                             rule.put("allowed", JSONArray(allowed.sorted())).put("mode", "allowlist")
                             val snapshot = call.argument<String>("snapshot") ?: error("Missing snapshot")
                             require(snapshot.length <= 2_000_000); JSONObject(snapshot)

@@ -96,7 +96,7 @@ class SimulatedDevice implements DevicePort {
   bool get simulated => true;
   @override
   OperationResult applyRestrictions(
-    Set<String> blockedPackages,
+    Set<String> allowedPackages,
     FocusSession session,
     AppState snapshot,
   ) => const OperationResult(true, 'SIMULATED', '已开启应用限制模拟');

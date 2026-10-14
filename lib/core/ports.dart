@@ -41,7 +41,7 @@ class OperationResult {
 abstract interface class DevicePort {
   bool get simulated;
   FutureOr<OperationResult> applyRestrictions(
-    Set<String> blockedPackages,
+    Set<String> allowedPackages,
     FocusSession session,
     AppState snapshot,
   );

@@ -145,7 +145,7 @@ class AppState {
     required List<Plan> plans,
     required List<FocusRecord> records,
     Set<String> restDates = const {},
-    Set<String> allowedApps = const {'课程平台', '词典', '电话'},
+    Set<String> allowedApps = const {},
     this.session,
     this.todayFed = false,
     this.adoptionReady = false,
@@ -157,6 +157,7 @@ class AppState {
     List<Milestone> milestones = const [],
     Set<String> blockedApps = const {},
     this.appsInitialized = false,
+    this.permissionPromptSeen = false,
     this.protectionReady = false,
     this.storageError = '',
     this.dailyCapacity = 180,
@@ -181,7 +182,7 @@ class AppState {
   final List<Goal> goals;
   final List<Milestone> milestones;
   final Set<String> blockedApps;
-  final bool appsInitialized, protectionReady;
+  final bool appsInitialized, protectionReady, permissionPromptSeen;
   final String storageError;
   final int dailyCapacity;
   bool get focusing => session?.status == FocusStatus.running;
@@ -206,6 +207,7 @@ class AppState {
     List<Milestone>? milestones,
     Set<String>? blockedApps,
     bool? appsInitialized,
+    bool? permissionPromptSeen,
     bool? protectionReady,
     String? storageError,
     int? dailyCapacity,
@@ -227,6 +229,7 @@ class AppState {
     milestones: milestones ?? this.milestones,
     blockedApps: blockedApps ?? this.blockedApps,
     appsInitialized: appsInitialized ?? this.appsInitialized,
+    permissionPromptSeen: permissionPromptSeen ?? this.permissionPromptSeen,
     protectionReady: protectionReady ?? this.protectionReady,
     storageError: storageError ?? this.storageError,
     dailyCapacity: dailyCapacity ?? this.dailyCapacity,

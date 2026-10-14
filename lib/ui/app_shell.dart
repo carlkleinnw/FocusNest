@@ -18,19 +18,82 @@ const destinations = [
   ('/demo', '演示控制', Icons.tune_rounded),
 ];
 
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.child, required this.path});
   final Widget child;
   final String path;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _offerProtectionPermission(),
+    );
+  }
+
+  Future<void> _offerProtectionPermission() async {
+    final device = ref.read(deviceProvider);
+    if (device.simulated) return;
+    final status = await device.status();
+    if (!mounted) return;
+    final state = ref.read(appProvider);
+    if (state.permissionPromptSeen || state.focusing) return;
+    if (status.ready) {
+      ref.read(appProvider.notifier).markPermissionPromptSeen();
+      return;
+    }
+    final open = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('开启专注保护？'),
+        content: const Text(
+          '专注期间，伴学小屋需要无障碍窗口访问权限识别正在打开的应用，并在非白名单应用上显示提醒。'
+          '只读取应用标识，不读取页面文字、输入内容或截图。你可以暂不启用，之后在「应用锁定」里重新开启或前往系统设置关闭。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('暂不启用'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('去系统设置开启'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || open == null) return;
+    ref.read(appProvider.notifier).markPermissionPromptSeen();
+    if (open) {
+      try {
+        await device.openSettings();
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('请从应用锁定页前往系统无障碍设置')));
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final floating = ref.watch(appProvider.select((s) => s.floating));
     final focusing = ref.watch(appProvider.select((s) => s.focusing));
     final state = ref.watch(appProvider);
     final simulated = ref.read(deviceProvider).simulated;
     ref.watch(appsProvider);
-    final navigationPath = path.startsWith('/goals/') ? '/goals' : path;
+    final navigationPath = widget.path.startsWith('/goals/')
+        ? '/goals'
+        : widget.path;
     final selected = destinations
         .indexWhere((d) => d.$1 == navigationPath)
         .clamp(0, destinations.length - 1);
@@ -125,7 +188,7 @@ class AppShell extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      Expanded(child: child),
+                      Expanded(child: widget.child),
                     ],
                   ),
                 ),

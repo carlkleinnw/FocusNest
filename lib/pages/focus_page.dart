@@ -216,7 +216,9 @@ class _FocusPageState extends ConsumerState<FocusPage> {
               Text(
                 controller.simulated
                     ? '演示：点击下列应用，体验允许访问和分心拦截。'
-                    : '请先在应用锁定页开启权限并确认名单。',
+                    : state.focusing
+                    ? '本次专注使用开始时确认的白名单。结束后可在应用锁定页调整。'
+                    : '请在应用锁定页确认白名单和保护权限。',
                 style: TextStyle(color: NestColors.muted, fontSize: 12),
               ),
               const SizedBox(height: 16),
@@ -283,13 +285,15 @@ class _FocusPageState extends ConsumerState<FocusPage> {
 
   Future<void> _requestExit() => requestFocusExit(context, ref);
 
-  bool _simBlocked(AppState state, String app) => state.blockedApps.contains(
-    {
-      '课程平台': 'demo.course',
-      '词典': 'demo.dictionary',
-      '短视频': 'demo.video',
-      '游戏': 'demo.game',
-      '电话': 'demo.phone',
-    }[app],
-  );
+  bool _simBlocked(AppState state, String app) =>
+      app != '电话' &&
+      !state.allowedApps.contains(
+        {
+          '课程平台': 'demo.course',
+          '词典': 'demo.dictionary',
+          '短视频': 'demo.video',
+          '游戏': 'demo.game',
+          '电话': 'demo.phone',
+        }[app],
+      );
 }
