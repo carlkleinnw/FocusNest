@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'models.dart';
 import 'planning.dart';
+import 'protection_status.dart';
 
 // Versioned local contracts. Future native/network adapters share JSON-safe data.
 abstract interface class ClockPort {
@@ -46,6 +47,7 @@ abstract interface class DevicePort {
   );
   FutureOr<OperationResult> releaseRestrictions([AppState? snapshot]);
   FutureOr<bool> ready();
+  Future<ProtectionStatus> status();
   Future<List<InstalledApp>> apps();
   Future<void> openSettings();
 }

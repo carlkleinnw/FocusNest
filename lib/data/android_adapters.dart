@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../core/models.dart';
 import '../core/planning.dart';
+import '../core/protection_status.dart';
 import '../core/ports.dart';
 import 'snapshot_codec.dart';
 
@@ -49,12 +50,16 @@ class AndroidDevice implements DevicePort {
   @override
   bool get simulated => false;
   @override
-  Future<bool> ready() async {
+  Future<bool> ready() async => (await status()).ready;
+  @override
+  Future<ProtectionStatus> status() async {
     try {
-      final s = await nativeChannel.invokeMapMethod<String, dynamic>('status');
-      return s?['ready'] == true;
+      final result = await nativeChannel.invokeMapMethod<String, dynamic>(
+        'status',
+      );
+      return ProtectionStatus.fromJson(result ?? {});
     } catch (_) {
-      return false;
+      return const ProtectionStatus(ready: false, error: '无法检查系统保护服务');
     }
   }
 

@@ -5,6 +5,7 @@ import '../data/android_adapters.dart';
 import 'models.dart';
 import 'planning.dart';
 import 'ports.dart';
+import 'protection_status.dart';
 
 final clockProvider = Provider<ClockPort>((ref) => DemoClock());
 final repositoryProvider = Provider<DataRepository>(
@@ -14,6 +15,10 @@ final deviceProvider = Provider<DevicePort>((ref) => SimulatedDevice());
 final intelligenceProvider = Provider<IntelligencePort>(
   (ref) => DisabledIntelligence(),
 );
+final protectionStatusProvider = FutureProvider<ProtectionStatus>((ref) async {
+  ref.watch(appProvider.select((s) => s.now.millisecondsSinceEpoch ~/ 3000));
+  return ref.read(deviceProvider).status();
+});
 final eventsProvider = Provider<EventPort>((ref) {
   final events = DemoEvents();
   ref.onDispose(events.dispose);

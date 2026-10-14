@@ -2,6 +2,7 @@ import 'dart:async';
 import '../core/models.dart';
 import '../core/ports.dart';
 import '../core/planning.dart';
+import '../core/protection_status.dart';
 
 class DemoClock implements ClockPort {
   DateTime _anchor = DateTime.now();
@@ -104,6 +105,9 @@ class SimulatedDevice implements DevicePort {
       const OperationResult(true, 'SIMULATED', '已解除应用限制模拟');
   @override
   bool ready() => true;
+  @override
+  Future<ProtectionStatus> status() async =>
+      const ProtectionStatus(ready: true);
   @override
   Future<void> openSettings() async {}
   @override

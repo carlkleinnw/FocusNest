@@ -18,8 +18,20 @@ class MainActivity : FlutterActivity() {
                 try {
                     when (call.method) {
                         "apps" -> result.success(InstalledApps.list(this))
-                        "status" -> result.success(mapOf("ready" to FocusGuardService.connected,
-                            "active" to ((database.rule()?.optLong("deadline") ?: 0) > System.currentTimeMillis())))
+                        "status" -> {
+                            val rule = database.rule()
+                            result.success(mapOf("ready" to FocusGuardService.connected,
+                                "active" to ((rule?.optLong("deadline") ?: 0) > System.currentTimeMillis()),
+                                "blockedCount" to (rule?.optJSONArray("blocked")?.length() ?: 0),
+                                "windowEvents" to FocusGuardService.windowEvents,
+                                "connections" to FocusGuardService.connections,
+                                "disconnections" to FocusGuardService.disconnections,
+                                "reminders" to FocusGuardService.reminders,
+                                "homeResult" to FocusGuardService.lastHomeResult,
+                                "error" to FocusGuardService.lastError,
+                                "errorCode" to FocusGuardService.lastErrorCode,
+                                "version" to packageManager.getPackageInfo(packageName, 0).versionName))
+                        }
                         "settings" -> { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)); result.success(null) }
                         "load" -> result.success(database.read("state"))
                         "save" -> {

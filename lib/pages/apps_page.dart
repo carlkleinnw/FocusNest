@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/controller.dart';
 import '../ui/components.dart';
@@ -10,6 +12,7 @@ class AppsPage extends ConsumerWidget {
     final state = ref.watch(appProvider);
     final device = ref.read(deviceProvider);
     final catalog = ref.watch(appsProvider);
+    final protection = ref.watch(protectionStatusProvider);
     return PageFrame(
       title: '把分心留在门外',
       subtitle: '开关开启表示允许使用。娱乐分类仅为初始建议，请确认名单。',
@@ -35,9 +38,54 @@ class AppsPage extends ConsumerWidget {
               Text(
                 device.simulated
                     ? '这里使用虚拟应用列表，真实拦截请在手机体验。'
-                    : '专注时识别打开的应用，显示锁定提醒并返回桌面。不读取应用页面内容。电话、系统设置等必要应用始终允许。',
+                    : '打开受限应用会显示锁定提醒，点击「知道了」返回桌面。不读取应用页面内容。电话、系统设置等必要应用始终允许。',
               ),
               if (!device.simulated) ...[
+                const SizedBox(height: 12),
+                protection.when(
+                  loading: () => const Text('正在检查保护状态…'),
+                  error: (_, _) => const Text('暂时无法检查保护状态'),
+                  data: (p) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        p.ready
+                            ? (p.active
+                                  ? '本次专注保护已启用 · 限制${p.blockedCount}个应用'
+                                  : '服务已连接 · 尚未开始应用保护')
+                            : '保护服务未连接，请重新开启系统权限',
+                      ),
+                      if (state.focusing && !p.active)
+                        const Text('当前计时与应用保护状态不一致'),
+                      Text('已显示${p.reminders}次提醒'),
+                      Text('收到${p.windowEvents}次切换通知'),
+                      TextButton.icon(
+                        icon: const Icon(Icons.copy, size: 16),
+                        label: const Text('复制诊断信息'),
+                        onPressed: () async {
+                          final fresh = await device.status();
+                          await Clipboard.setData(
+                            ClipboardData(text: jsonEncode(fresh.toJson())),
+                          );
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('已复制保护状态，可发给开发者排查；不包含应用内容或应用名单'),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      if (p.homeResult.isNotEmpty)
+                        Text(
+                          p.homeResult == 'HOME_ACCEPTED'
+                              ? '最近返回桌面请求：系统已执行'
+                              : '最近返回桌面请求：系统未执行',
+                        ),
+                      if (p.error.isNotEmpty) Text(p.error),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 12),
                 MainButton(
                   '前往系统开启权限',
