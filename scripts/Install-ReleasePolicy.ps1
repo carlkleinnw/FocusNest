@@ -1,5 +1,6 @@
-param([string]$ProjectPath = (Split-Path -Parent $PSScriptRoot))
+param([string]$ProjectPath = '')
 $ErrorActionPreference = 'Stop'
+if (-not $ProjectPath) { $ProjectPath = Split-Path -Parent $PSScriptRoot }
 $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
 & git -C $ProjectPath rev-parse --show-toplevel | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'ProjectPath must be an existing Git repository.' }

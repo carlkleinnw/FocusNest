@@ -2,9 +2,10 @@ param(
     [Parameter(Mandatory=$true)][ValidatePattern('^v[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*)?$')][string]$Tag,
     [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]$Message,
     [string]$Remote = 'origin',
-    [string]$ProjectPath = (Split-Path -Parent $PSScriptRoot)
+    [string]$ProjectPath = ''
 )
 $ErrorActionPreference = 'Stop'
+if (-not $ProjectPath) { $ProjectPath = Split-Path -Parent $PSScriptRoot }
 $ProjectPath = (Resolve-Path -LiteralPath $ProjectPath).Path
 function Read-Git([string[]]$Arguments) {
     $Result = & git -C $ProjectPath @Arguments

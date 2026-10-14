@@ -1,9 +1,10 @@
 {
-  "checksPassed": 11,
+  "checksPassed": 12,
   "checks": [
     "repository-only hook and followTags installation",
     "branch push without a version tag is rejected",
     "lightweight version tag does not satisfy the hook",
+    "both scripts resolve the project directory without optional arguments",
     "atomic publication sends the branch and annotated tag together",
     "same commit and tag may be retried safely",
     "dirty tree is rejected before tagging",

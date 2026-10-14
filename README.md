@@ -80,7 +80,7 @@ flutter build apk --release
 
 JDK 路径应按本机调整。构建好的网页也可以通过 `启动Demo.cmd` 体验。Android 构建当前使用本机开发签名，其他电脑重新构建的证书可能不同，不能保证覆盖现有 APK；不要为安装而直接清空用户数据。
 
-`v0.2.3-demo` 的历史检查通过：Flutter 静态检查、20 项 Flutter 测试、23 项原生规则检查、Android/Web 构建及上述真机测试。本次发布另行完成 [11 项版本脚本与推送检查](docs/validation/0.2.3-demo.1-release-policy.json)，使用 Windows PowerShell 5.1 和独立本地仓库验证。未配置 GitHub CI。
+`v0.2.3-demo` 的历史检查通过：Flutter 静态检查、20 项 Flutter 测试、23 项原生规则检查、Android/Web 构建及上述真机测试。本次发布另行完成 [12 项版本脚本与推送检查](docs/validation/0.2.3-demo.1-release-policy.json)，使用 Windows PowerShell 5.1 和独立本地仓库验证。未配置 GitHub CI。
 
 ## 架构与后续扩展
 
