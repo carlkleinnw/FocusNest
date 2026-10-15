@@ -4,7 +4,7 @@
 
 [体验包与历史发布](https://github.com/carlkleinnw/FocusNest/releases) · [版本记录](CHANGELOG.md) · [发布与回滚](docs/版本发布与回滚.md) · [协作规则](AGENTS.md)
 
-本仓库以私有方式保存项目进度。当前功能版本标签为 `v0.2.4-demo`；历史版本保留独立标签。
+本仓库以私有方式保存项目进度。当前功能版本为 `v0.2.4-demo`，下载附件统一后的发布修订为 `v0.2.4-demo.1`；历史版本保留独立标签。
 
 ## 当前功能
 
@@ -26,7 +26,7 @@
 
 ## Android 上体验
 
-从 [当前发布页](https://github.com/carlkleinnw/FocusNest/releases/tag/v0.2.4-demo) 下载 `伴学小屋_0.2.4.apk`，在手机安装。这是开发签名体验包，尚未作为正式商店版本发布。
+从 [当前发布页](https://github.com/carlkleinnw/FocusNest/releases/tag/v0.2.4-demo.1) 下载 `FocusNest_0.2.4.apk`，在手机安装。这是开发签名体验包，尚未作为正式商店版本发布。
 
 1. 首次打开可选择前往系统开启专注保护权限，或暂不启用；之后随时可从「更多 → 应用锁定」修改。
 2. 在「应用锁定」搜索应用并确认白名单；默认限制所有非必要应用，开关开启才允许专注时使用。旧版升级后白名单从空开始；已有专注不会被自动取消。
