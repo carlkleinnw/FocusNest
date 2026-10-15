@@ -1,0 +1,305 @@
+{
+  "version": "0.2.7+11",
+  "date": "2026-10-15",
+  "timezone": "Asia/Shanghai",
+  "sourceTag": "v0.2.7-demo",
+  "acceptance": "passed-on-tested-device-with-required-settings",
+  "validation": {
+    "flutterAnalyze": "passed",
+    "flutterTests": 28,
+    "nativePolicyChecks": 23,
+    "androidReleaseBuild": "passed",
+    "webReleaseBuild": "passed",
+    "gitDiffCheck": "passed"
+  },
+  "android": {
+    "handset": "Xiaomi 15",
+    "system": "Android 16 / API 36",
+    "firmware": "OS3.0.305.0.WOCCNXM",
+    "versionName": "0.2.7",
+    "versionCode": 11,
+    "apkBytes": 53561924,
+    "apkSha256": "d789fe816c5d584e162b9e78012af35171e2d3f76d3c42186d8983307e03e219",
+    "signingCertificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "requiredSettings": {
+      "accessibility": "enabled and bound",
+      "xiaomiAutostart": "enabled through visible system UI",
+      "xiaomiBatteryPolicy": "unrestricted, already enabled before this round"
+    },
+    "singleCardSwipes": [
+      {
+        "localTime": "2026-10-15T21:19:40",
+        "check": "single-card-swipe",
+        "versionName": "0.2.7",
+        "versionCode": 11,
+        "stopped": false,
+        "enabled": true,
+        "bound": true,
+        "foregroundService": true,
+        "lastExit": {
+          "timestamp": "2026-10-15 21:19:36.856",
+          "reason": "OTHER KILLS BY SYSTEM",
+          "subreason": "UNKNOWN",
+          "description": "SwipeUpClean"
+        }
+      },
+      {
+        "localTime": "2026-10-15T21:21:52",
+        "check": "single-card-swipe",
+        "versionName": "0.2.7",
+        "versionCode": 11,
+        "stopped": false,
+        "enabled": true,
+        "bound": true,
+        "foregroundService": true,
+        "lastExit": {
+          "timestamp": "2026-10-15 21:21:48.475",
+          "reason": "OTHER KILLS BY SYSTEM",
+          "subreason": "UNKNOWN",
+          "description": "SwipeUpClean"
+        }
+      },
+      {
+        "localTime": "2026-10-15T21:34:55",
+        "check": "single-card-swipe",
+        "versionName": "0.2.7",
+        "versionCode": 11,
+        "stopped": false,
+        "enabled": true,
+        "bound": true,
+        "foregroundService": true,
+        "lastExit": {
+          "timestamp": "2026-10-15 21:34:51.088",
+          "reason": "OTHER KILLS BY SYSTEM",
+          "subreason": "UNKNOWN",
+          "description": "SwipeUpClean"
+        }
+      }
+    ],
+    "blockingChecks": [
+      {
+        "localTime": "2026-10-15T21:19:49",
+        "check": "block",
+        "versionCode": 11,
+        "target": "portrait app",
+        "heldSeconds": 5,
+        "delayIncludingAdbSeconds": 1.047,
+        "ackReturnedHome": true,
+        "screen": "1200x2670"
+      },
+      {
+        "localTime": "2026-10-15T21:20:00",
+        "check": "block",
+        "versionCode": 11,
+        "target": "portrait app",
+        "heldSeconds": 8,
+        "delayIncludingAdbSeconds": 0.555,
+        "ackReturnedHome": true,
+        "screen": "1200x2670"
+      },
+      {
+        "localTime": "2026-10-15T21:20:08",
+        "check": "block",
+        "versionCode": 11,
+        "target": "portrait app",
+        "heldSeconds": 5,
+        "delayIncludingAdbSeconds": 0.566,
+        "ackReturnedHome": true,
+        "screen": "1200x2670"
+      },
+      {
+        "localTime": "2026-10-15T21:20:17",
+        "check": "block",
+        "versionCode": 11,
+        "target": "portrait app",
+        "heldSeconds": 5,
+        "delayIncludingAdbSeconds": 1.047,
+        "ackReturnedHome": true,
+        "screen": "1200x2670"
+      },
+      {
+        "localTime": "2026-10-15T21:22:00",
+        "check": "block",
+        "versionCode": 11,
+        "target": "portrait app",
+        "heldSeconds": 5,
+        "delayIncludingAdbSeconds": 1.051,
+        "ackReturnedHome": true,
+        "screen": "1200x2670"
+      },
+      {
+        "localTime": "2026-10-15T21:22:34",
+        "check": "block",
+        "versionCode": 11,
+        "target": "landscape game",
+        "heldSeconds": 30,
+        "delayIncludingAdbSeconds": 0.631,
+        "ackReturnedHome": true,
+        "screen": "2670x1200"
+      },
+      {
+        "localTime": "2026-10-15T21:28:49",
+        "check": "block",
+        "versionCode": 11,
+        "target": "portrait app",
+        "heldSeconds": 5,
+        "delayIncludingAdbSeconds": 1.293,
+        "ackReturnedHome": true,
+        "screen": "1200x2670"
+      },
+      {
+        "localTime": "2026-10-15T21:35:05",
+        "check": "block",
+        "versionCode": 11,
+        "target": "portrait app",
+        "heldSeconds": 5,
+        "delayIncludingAdbSeconds": 1.19,
+        "ackReturnedHome": true,
+        "screen": "1200x2670"
+      }
+    ],
+    "necessaryAppChecks": [
+      {
+        "localTime": "2026-10-15T21:19:27",
+        "check": "necessary-app-allowed",
+        "action": "android.settings.APPLICATION_DETAILS_SETTINGS",
+        "passed": true,
+        "callsMade": false,
+        "versionCode": 11
+      },
+      {
+        "localTime": "2026-10-15T21:19:30",
+        "check": "necessary-app-allowed",
+        "action": "android.settings.ACCESSIBILITY_SETTINGS",
+        "passed": true,
+        "callsMade": false,
+        "versionCode": 11
+      },
+      {
+        "localTime": "2026-10-15T21:19:33",
+        "check": "necessary-app-allowed",
+        "action": "android.intent.action.DIAL",
+        "passed": true,
+        "callsMade": false,
+        "versionCode": 11
+      }
+    ],
+    "inAppSettingsButton": {
+      "localTime": "2026-10-15T21:23:40",
+      "check": "in-app-background-settings-button",
+      "versionCode": 11,
+      "passed": true
+    },
+    "screenLockCheck": {
+      "localTime": "2026-10-15T21:28:39",
+      "check": "after-lock-screen",
+      "screenOffElapsedSeconds": 298,
+      "versionName": "0.2.7",
+      "versionCode": 11,
+      "stopped": false,
+      "enabled": true,
+      "bound": true,
+      "foregroundService": true,
+      "lastExit": {
+        "timestamp": "2026-10-15 21:21:48.475",
+        "reason": "OTHER KILLS BY SYSTEM",
+        "subreason": "UNKNOWN",
+        "description": "SwipeUpClean"
+      }
+    },
+    "naturalExpiryCheck": {
+      "localTime": "2026-10-15T21:33:44",
+      "check": "natural-expiry-ui-background",
+      "versionCode": 11,
+      "reminderRemoved": true,
+      "foregroundServiceStopped": true,
+      "restrictedAppAllowedAfterExpiry": true,
+      "focusnestUiWasReopened": false,
+      "realSystemClockUnchanged": true,
+      "versionName": "0.2.7",
+      "stopped": false,
+      "enabled": true,
+      "bound": true,
+      "foregroundService": false,
+      "lastExit": {
+        "timestamp": "2026-10-15 21:21:48.475",
+        "reason": "OTHER KILLS BY SYSTEM",
+        "subreason": "UNKNOWN",
+        "description": "SwipeUpClean"
+      },
+      "uiNotInForeground": true,
+      "uiTaskRemovedForThisExpiryWatch": false
+    },
+    "newSessionExitCheck": {
+      "localTime": "2026-10-15T21:36:40",
+      "check": "new-final-session-two-step-exit",
+      "versionCode": 11,
+      "startedOnFinalApk": true,
+      "swipeRecovered": true,
+      "bothVisibleConfirmationsUsed": true,
+      "onlyIndependentTestEnded": true,
+      "foregroundServiceStopped": true
+    },
+    "actualPhoneCallsMade": false
+  },
+  "causalComparison": {
+    "baselineSame026Apk": "21:04:29 autostart off: USER REQUESTED / FORCE STOP, stopped=true, enabled services null; 21:06:52 and 21:08:30 after visible autostart enable: OTHER KILLS BY SYSTEM / SwipeUpClean, stopped=false, service rebound and blocking returned without opening FocusNest",
+    "finalApkNegativeControl": {
+      "localTime": "2026-10-15T21:21:04",
+      "check": "negative-control-autostart-off",
+      "versionName": "0.2.7",
+      "versionCode": 11,
+      "stopped": true,
+      "enabled": false,
+      "bound": false,
+      "foregroundService": false,
+      "lastExit": {
+        "timestamp": "2026-10-15 21:21:00.829",
+        "reason": "USER REQUESTED",
+        "subreason": "FORCE STOP",
+        "description": "stop cn.focusnest.focus_pet_demo due to SwipeUpClean"
+      }
+    },
+    "interpretation": "On this phone, enabling autostart avoids the observed package force-stop path during a single-card swipe. The process can still die and the system rebinds accessibility. This does not bypass a genuine force stop or establish zero interruption."
+  },
+  "dataPreservation": [
+    "Initial own-app UI showed a cancelled session; no user focus was active or cancelled by this round",
+    "A separate 30-minute test started on 0.2.6+8 and survived process deaths and in-place upgrades; final 0.2.7+11 expired while its UI stayed in the background throughout the expiry watch",
+    "Final 0.2.7+11 also started a separate new session and ended only that test through both in-app confirmations",
+    "Existing pet, plans/history and explicit empty allowlist remained visible; add-app control stayed disabled during focus",
+    "No uninstall, data clear, database export, hidden secure-settings grant or system-time change was used"
+  ],
+  "implementation": [
+    "Explain Xiaomi autostart plus unrestricted battery; keep public own-app-details settings entry",
+    "Add visibility for known redirected Xiaomi Security Center and require signature match with Android platform before adding it as a necessary package",
+    "Keep existing foreground/window/overlay engine, user allowlist freeze, SQLite schema and two-step exit"
+  ],
+  "earlierCandidateAndToolingFindings": [
+    "First new build used a different local debug signing home; Android rejected its in-place update. Data was preserved; original E-drive signing home was then verified and reused",
+    "0.2.7+9 recovered after swipes but blocked redirected Xiaomi app details; this candidate was not delivered",
+    "0.2.7+10 used system-app flags for the known fallback; final +11 follows official signature-check guidance instead",
+    "One +11 landscape attempt was interrupted by test navigation to settings and excluded; the full 30-second landscape hold was rerun successfully before release",
+    "A shell launch returned START_TASK_TO_FRONT with the existing settings child activity, causing an automation focus timeout. Logs identified the task stack; subsequent launch uses CLEAR_TOP to resume the intended MainActivity"
+  ],
+  "limitations": [
+    "Required conditions were tested only on this Xiaomi 15 firmware; other brands, other HyperOS versions, long-term idle and battery consumption are unverified",
+    "Process death and rebind can introduce a recovery gap; reported reminder delays include ADB launch and inspection overhead, not guaranteed zero delay",
+    "Autostart disabled is an expected negative control and still fails; genuine system Force stop, revoked accessibility, uninstall and safe mode remain independent boundaries",
+    "Device reboot and clearing all recent tasks were not tested in this round; unrelated user tasks were preserved",
+    "The natural-expiry session began on the baseline and was restored through upgrades; a new final-build session separately covered start and two-step cancellation",
+    "Platform-signature negative cases were reviewed as fail-closed code paths; no system package was replaced on the user phone for testing",
+    "First-install permission, batch picker and rule edge cases use the 28 host tests and prior records; no destructive first-install phone reset was performed"
+  ],
+  "research": [
+    "docs/research/2026-10-15-open-source-protection.md",
+    "docs/最近任务划除与后台设置.md"
+  ],
+  "excluded": [
+    "phone database",
+    "full installed-app inventory",
+    "personal screenshots and notifications",
+    "credentials",
+    "signing private key",
+    "debug caches"
+  ]
+}

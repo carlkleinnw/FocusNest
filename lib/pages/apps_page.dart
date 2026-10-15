@@ -211,22 +211,24 @@ class _AppsPageState extends ConsumerState<AppsPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  '正常切到后台时，可在应用信息里将「省电策略」设为「无限制／不限制」，减少后台检查暂停。专注期间提供后台保护通知。',
+                  '请在伴学小屋的系统应用信息中检查后台设置：小米／澎湃 OS 开启「自启动」，并将「省电策略」设为「无限制」；其他手机按系统提供的后台运行选项设置。专注期间会运行后台保护服务。',
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '这台小米手机把从最近任务上划伴学小屋视为强制停止，还会关闭专注保护权限。锁定最近任务卡片也不能防止单卡上划；重新打开后计时仍在，需手动恢复权限。',
+                  '仅设置省电无限制或锁定最近任务卡片还不够。若划除后保护失效，请先检查自启动，再重新开启专注保护。系统强行停止或手动关闭权限后，仍需重新打开应用并恢复权限；保存的计时会保留。',
                 ),
                 const SizedBox(height: 8),
                 MainButton(
-                  '检查后台运行设置',
+                  '检查自启动与省电设置',
                   onPressed: () async {
                     try {
                       await device.openBackgroundSettings();
                     } catch (_) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('请在系统的伴学小屋应用信息中检查省电策略')),
+                          const SnackBar(
+                            content: Text('请在系统的伴学小屋应用信息中检查自启动与省电策略'),
+                          ),
                         );
                       }
                     }

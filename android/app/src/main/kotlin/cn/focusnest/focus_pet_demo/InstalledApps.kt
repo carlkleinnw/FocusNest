@@ -3,6 +3,7 @@ package cn.focusnest.focus_pet_demo
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.telecom.TelecomManager
 import android.os.Build
 import android.provider.Settings
@@ -35,9 +36,17 @@ object InstalledApps {
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + context.packageName)),
             Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
         ).mapNotNull { context.packageManager.resolveActivity(it, 0)?.activityInfo?.packageName }
+        // HyperOS resolves app details to Settings, then redirects to Security Center.
+        // Verify the platform signature rather than trusting a package name or FLAG_SYSTEM.
+        // https://developer.android.com/reference/android/content/pm/ApplicationInfo#FLAG_SYSTEM
+        val redirectedSettings = setOf("com.miui.securitycenter").filter { pkg ->
+            runCatching {
+                context.packageManager.checkSignatures("android", pkg) == PackageManager.SIGNATURE_MATCH
+            }.getOrDefault(false)
+        }
         return setOfNotNull(context.packageName, launcher, dialer, "com.android.settings",
             "com.android.systemui", "com.android.phone", "com.android.emergency",
-            "com.android.permissioncontroller", "com.google.android.permissioncontroller") + settingsHandlers
+            "com.android.permissioncontroller", "com.google.android.permissioncontroller") + settingsHandlers + redirectedSettings
     }
     fun list(context: Context): List<Map<String, Any>> {
         val pm = context.packageManager
