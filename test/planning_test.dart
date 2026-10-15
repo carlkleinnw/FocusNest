@@ -325,6 +325,17 @@ void main() {
         'demo.video',
         'demo.game',
       });
+      app.addAllowedApps([
+        apps.firstWhere((a) => a.package == 'demo.dictionary'),
+        apps.firstWhere((a) => a.package == 'demo.video'),
+        apps.firstWhere((a) => a.protected),
+      ]);
+      expect(container.read(appProvider).allowedApps, {
+        'demo.course',
+        'demo.dictionary',
+        'demo.video',
+      });
+      expect(container.read(appProvider).blockedApps, {'demo.game'});
       app.toggleInstalledApp(apps.firstWhere((a) => a.protected));
       expect(
         container.read(appProvider).allowedApps.contains('demo.phone'),

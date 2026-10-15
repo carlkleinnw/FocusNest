@@ -1,0 +1,56 @@
+{
+  "version": "0.2.6+8",
+  "date": "2026-10-15",
+  "sourceTag": "v0.2.6-demo",
+  "validation": {
+    "flutterAnalyze": "passed",
+    "flutterTests": 28,
+    "nativePolicyChecks": 23,
+    "androidReleaseBuild": "passed",
+    "webReleaseBuild": "passed",
+    "gitDiffCheck": "passed"
+  },
+  "android": {
+    "handset": "Xiaomi 15",
+    "system": "Android 16 / API 36",
+    "versionCode": 8,
+    "versionName": "0.2.6",
+    "apkBytes": 53561888,
+    "apkSha256": "d656e1fdfc3806720a941a4941fcb8f5104c195f629b4342d04e10280c820cba",
+    "signingCertificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "checks": [
+      "0.2.6 release APK was installed in place over 0.2.5; pet, focus history and explicit allowlist storage survived",
+      "After a previous focus naturally completed, reopening with accessibility disabled showed a status banner without a repeated modal",
+      "Empty allowlist page showed 168 other optional apps restricted by default; batch picker showed a separate catalog, search and category controls",
+      "Two apps were added in one action, appeared in the whitelist only, and were individually removed; the original empty whitelist was restored",
+      "Xiaomi accessibility setting was enabled through the visible system UI, then the app reported protection ready",
+      "A new independent 30-minute test focus started with an empty allowlist; Bilibili was covered by the full-screen reminder",
+      "Acknowledging the reminder returned to the launcher; reopening Bilibili triggered the reminder again",
+      "Accessibility settings remained available during focus and the add-app button was disabled",
+      "Only this independent test focus was ended with both in-app confirmations; accessibility remained enabled and no test focus remained active",
+      "On the final 0.2.6 build, swiping the app card away from recent tasks while idle force-stopped the process and disabled its accessibility service",
+      "After that force stop, reopening restored the saved app state without a repeated recovery modal; accessibility was re-enabled through the visible system UI and verified on"
+    ],
+    "recentTaskExit": "ApplicationExitInfo at 2026-10-15 18:01:50.920: USER REQUESTED / FORCE STOP; description SwipeUpClean; enabled_accessibility_services became null",
+    "screenCapture": "Only own app, own reminder and system settings were inspected; screenshots were not published",
+    "actualPhoneCallsMade": false
+  },
+  "unpassedAcceptance": [
+    "Preventing Xiaomi recent-task single-card swipe from force-stopping a normal app is not available through Android public app APIs",
+    "Keeping accessibility enabled after that system force stop is not available to the app; the user must grant it again in system settings"
+  ],
+  "limitations": [
+    "Only Xiaomi 15 / Android 16 was tested in this round; other brands and long-term battery behavior remain unverified",
+    "First-install permission request was verified by widget tests without erasing existing phone data",
+    "The native interception engine was unchanged from 0.2.5; landscape and necessary-app cases are inherited from the previous device checks rather than repeated here",
+    "The saved timer can continue across a force stop, but external app interception is unavailable until accessibility is restored"
+  ],
+  "excluded": [
+    "phone database",
+    "full installed-app inventory",
+    "personal screenshots",
+    "credentials",
+    "signing key",
+    "debug caches"
+  ]
+}

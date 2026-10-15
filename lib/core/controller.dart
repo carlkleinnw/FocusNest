@@ -555,6 +555,22 @@ class AppController extends Notifier<AppState>
     );
   }
 
+  void addAllowedApps(Iterable<InstalledApp> apps) {
+    if (state.focusing || _busy) return;
+    final allowed = {...state.allowedApps};
+    final blocked = {...state.blockedApps};
+    for (final app in apps) {
+      if (app.protected) continue;
+      allowed.add(app.package);
+      blocked.remove(app.package);
+    }
+    if (allowed.length == state.allowedApps.length) return;
+    _commit(
+      state.copyWith(allowedApps: allowed, blockedApps: blocked),
+      'allowlist.changed',
+    );
+  }
+
   void markPermissionPromptSeen() {
     if (!state.permissionPromptSeen) {
       _commit(state.copyWith(permissionPromptSeen: true));

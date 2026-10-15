@@ -69,6 +69,9 @@ class _AppShellState extends ConsumerState<AppShell>
         return;
       }
       final recovery = state.permissionEverReady;
+      // A previously granted service may be stopped by the phone vendor.
+      // Interrupt an active focus, but keep ordinary visits free of repeat dialogs.
+      if (recovery && !state.focusing) return;
       if (recovery
           ? state.permissionRecoveryPromptSeen
           : state.permissionPromptSeen) {
@@ -81,7 +84,7 @@ class _AppShellState extends ConsumerState<AppShell>
           title: Text(recovery ? '专注保护已关闭' : '开启专注保护？'),
           content: Text(
             recovery
-                ? '系统保护权限当前未生效。请到系统设置重新开启「伴学小屋专注保护」，否则专注期间无法拦截非白名单应用。你也可以稍后从「应用锁定」页开启。'
+                ? '专注计时仍在继续，但系统保护权限已关闭，暂时无法拦截非白名单应用。请到系统设置重新开启「伴学小屋专注保护」。'
                 : '专注期间，伴学小屋需要无障碍窗口访问权限识别正在打开的应用，并在非白名单应用上显示提醒。'
                       '只读取应用标识，不读取页面文字、输入内容或截图。你可以暂不启用，之后在「应用锁定」里重新开启或前往系统设置关闭。',
           ),

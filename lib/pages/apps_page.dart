@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/controller.dart';
+import '../core/planning.dart';
+import '../ui/app_picker_dialog.dart';
 import '../ui/components.dart';
 
 class AppsPage extends ConsumerStatefulWidget {
@@ -13,8 +15,6 @@ class AppsPage extends ConsumerStatefulWidget {
 }
 
 class _AppsPageState extends ConsumerState<AppsPage> {
-  String query = '';
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(appProvider);
@@ -30,6 +30,80 @@ class _AppsPageState extends ConsumerState<AppsPage> {
         icon: const Icon(Icons.refresh),
       ),
       children: [
+        const SizedBox(height: 20),
+        if (state.focusing) const Text('本次专注采用开始时确认的名单，结束后可调整。'),
+        catalog.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => EmptyPanel(
+            title: '未能读取应用列表',
+            body: '已有名单会保留。',
+            action: MainButton(
+              '重试',
+              onPressed: () => ref.invalidate(appsProvider),
+            ),
+          ),
+          data: (apps) {
+            final allowed = apps
+                .where(
+                  (a) => !a.protected && state.allowedApps.contains(a.package),
+                )
+                .toList();
+            final available = apps
+                .where(
+                  (a) => !a.protected && !state.allowedApps.contains(a.package),
+                )
+                .toList();
+            return SurfacePanel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    '白名单 · 已添加 ${allowed.length} 个',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '其他 ${available.length} 个应用在专注时默认受限。电话、桌面和必要系统应用始终允许，无需添加。',
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    key: const Key('open-app-picker'),
+                    onPressed: state.focusing
+                        ? null
+                        : () => _addApps(available),
+                    icon: const Icon(Icons.add),
+                    label: const Text('添加应用'),
+                  ),
+                  const SizedBox(height: 12),
+                  if (allowed.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Text('白名单还是空的。需要学习工具时，点上方按钮一次勾选多个应用。'),
+                    )
+                  else
+                    for (final app in allowed)
+                      ListTile(
+                        key: Key('allowed-${app.package}'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.check_circle_outline),
+                        title: Text(app.name),
+                        subtitle: Text(app.category),
+                        trailing: IconButton(
+                          tooltip: '移除${app.name}',
+                          icon: const Icon(Icons.remove_circle_outline),
+                          onPressed: state.focusing
+                              ? null
+                              : () => ref
+                                    .read(appProvider.notifier)
+                                    .toggleInstalledApp(app),
+                        ),
+                      ),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 20),
         SurfacePanel(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,10 +138,7 @@ class _AppsPageState extends ConsumerState<AppsPage> {
                             : '保护服务未连接，请重新开启系统权限',
                       ),
                       if (state.focusing && !p.active)
-                        const Text('当前计时与应用保护状态不一致'),
-                      Text('提醒已获得前台焦点${p.reminders}次'),
-                      Text('收到${p.windowEvents}次切换通知'),
-                      Text('已核对前台窗口${p.foregroundChecks}次'),
+                        const Text('计时仍在继续，但系统保护已停止。请重新开启权限。'),
                       if (p.active)
                         Text(
                           p.backgroundRunning
@@ -76,32 +147,46 @@ class _AppsPageState extends ConsumerState<AppsPage> {
                         ),
                       if (p.active && !p.windowAccess)
                         const Text('当前缺少窗口识别能力，需重新开启新版保护服务'),
-                      TextButton.icon(
-                        icon: const Icon(Icons.copy, size: 16),
-                        label: const Text('复制诊断信息'),
-                        onPressed: () async {
-                          final fresh = await device.status();
-                          await Clipboard.setData(
-                            ClipboardData(text: jsonEncode(fresh.toJson())),
-                          );
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('已复制保护状态，可发给开发者排查；不包含应用内容或应用名单'),
-                              ),
-                            );
-                          }
-                        },
+                      ExpansionTile(
+                        tilePadding: EdgeInsets.zero,
+                        title: const Text('查看保护诊断'),
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('提醒已获得前台焦点${p.reminders}次'),
+                                Text('收到${p.windowEvents}次切换通知'),
+                                Text('已核对前台窗口${p.foregroundChecks}次'),
+                                if (p.homeResult.isNotEmpty) Text(p.homeResult),
+                                if (p.error.isNotEmpty) Text(p.error),
+                                TextButton.icon(
+                                  icon: const Icon(Icons.copy, size: 16),
+                                  label: const Text('复制诊断信息'),
+                                  onPressed: () async {
+                                    final fresh = await device.status();
+                                    await Clipboard.setData(
+                                      ClipboardData(
+                                        text: jsonEncode(fresh.toJson()),
+                                      ),
+                                    );
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('已复制保护状态，不包含应用内容或应用名单'),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      if (p.homeResult.isNotEmpty)
-                        Text(
-                          p.homeResult == 'HOME_VERIFIED'
-                              ? '已确认返回桌面'
-                              : p.homeResult == 'HOME_ACCEPTED'
-                              ? '系统已接受返回桌面请求，等待核实'
-                              : '系统未接受返回桌面请求',
-                        ),
-                      if (p.error.isNotEmpty) Text(p.error),
                     ],
                   ),
                 ),
@@ -126,7 +211,11 @@ class _AppsPageState extends ConsumerState<AppsPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  '如果离开小屋后不再拦截，请在应用信息里将「省电策略」设为「无限制／不限制」，让专注保护能持续运行。专注期间提供后台保护通知。',
+                  '正常切到后台时，可在应用信息里将「省电策略」设为「无限制／不限制」，减少后台检查暂停。专注期间提供后台保护通知。',
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '这台小米手机把从最近任务上划伴学小屋视为强制停止，还会关闭专注保护权限。锁定最近任务卡片也不能防止单卡上划；重新打开后计时仍在，需手动恢复权限。',
                 ),
                 const SizedBox(height: 8),
                 MainButton(
@@ -147,73 +236,16 @@ class _AppsPageState extends ConsumerState<AppsPage> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
-        if (state.focusing) const Text('本次专注采用开始时确认的名单，结束后可调整。'),
-        catalog.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => EmptyPanel(
-            title: '未能读取应用列表',
-            body: '已有名单会保留。',
-            action: MainButton(
-              '重试',
-              onPressed: () => ref.invalidate(appsProvider),
-            ),
-          ),
-          data: (apps) => SurfacePanel(
-            child: Column(
-              children: [
-                Text(
-                  '已限制 ${apps.where((a) => !a.protected && !state.allowedApps.contains(a.package)).length} 个应用',
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: '搜索应用',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) =>
-                      setState(() => query = value.trim().toLowerCase()),
-                ),
-                const SizedBox(height: 8),
-                for (final app in apps.where(
-                  (a) =>
-                      query.isEmpty ||
-                      a.name.toLowerCase().contains(query) ||
-                      a.package.toLowerCase().contains(query),
-                ))
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(app.name),
-                    subtitle: Text(
-                      app.protected
-                          ? '必要应用 · 始终允许'
-                          : '${app.category} · ${state.allowedApps.contains(app.package) ? '专注时允许' : '专注时限制'}',
-                    ),
-                    value:
-                        app.protected ||
-                        state.allowedApps.contains(app.package),
-                    onChanged: app.protected || state.focusing
-                        ? null
-                        : (_) => ref
-                              .read(appProvider.notifier)
-                              .toggleInstalledApp(app),
-                  ),
-                if (query.isNotEmpty &&
-                    !apps.any(
-                      (a) =>
-                          a.name.toLowerCase().contains(query) ||
-                          a.package.toLowerCase().contains(query),
-                    ))
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('没有找到匹配的应用'),
-                  ),
-              ],
-            ),
-          ),
-        ),
       ],
     );
+  }
+
+  Future<void> _addApps(List<InstalledApp> available) async {
+    final selected = await showDialog<List<InstalledApp>>(
+      context: context,
+      builder: (_) => AppPickerDialog(apps: available),
+    );
+    if (selected == null || selected.isEmpty || !mounted) return;
+    ref.read(appProvider.notifier).addAllowedApps(selected);
   }
 }
