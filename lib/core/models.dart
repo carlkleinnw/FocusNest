@@ -158,6 +158,8 @@ class AppState {
     Set<String> blockedApps = const {},
     this.appsInitialized = false,
     this.permissionPromptSeen = false,
+    this.permissionEverReady = false,
+    this.permissionRecoveryPromptSeen = false,
     this.protectionReady = false,
     this.storageError = '',
     this.dailyCapacity = 180,
@@ -183,6 +185,7 @@ class AppState {
   final List<Milestone> milestones;
   final Set<String> blockedApps;
   final bool appsInitialized, protectionReady, permissionPromptSeen;
+  final bool permissionEverReady, permissionRecoveryPromptSeen;
   final String storageError;
   final int dailyCapacity;
   bool get focusing => session?.status == FocusStatus.running;
@@ -208,6 +211,8 @@ class AppState {
     Set<String>? blockedApps,
     bool? appsInitialized,
     bool? permissionPromptSeen,
+    bool? permissionEverReady,
+    bool? permissionRecoveryPromptSeen,
     bool? protectionReady,
     String? storageError,
     int? dailyCapacity,
@@ -230,6 +235,9 @@ class AppState {
     blockedApps: blockedApps ?? this.blockedApps,
     appsInitialized: appsInitialized ?? this.appsInitialized,
     permissionPromptSeen: permissionPromptSeen ?? this.permissionPromptSeen,
+    permissionEverReady: permissionEverReady ?? this.permissionEverReady,
+    permissionRecoveryPromptSeen:
+        permissionRecoveryPromptSeen ?? this.permissionRecoveryPromptSeen,
     protectionReady: protectionReady ?? this.protectionReady,
     storageError: storageError ?? this.storageError,
     dailyCapacity: dailyCapacity ?? this.dailyCapacity,

@@ -27,59 +27,95 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
+  bool _checkingPermission = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _offerProtectionPermission(),
     );
   }
 
-  Future<void> _offerProtectionPermission() async {
-    final device = ref.read(deviceProvider);
-    if (device.simulated) return;
-    final status = await device.status();
-    if (!mounted) return;
-    final state = ref.read(appProvider);
-    if (state.permissionPromptSeen || state.focusing) return;
-    if (status.ready) {
-      ref.read(appProvider.notifier).markPermissionPromptSeen();
-      return;
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _offerProtectionPermission();
+      });
     }
-    final open = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('开启专注保护？'),
-        content: const Text(
-          '专注期间，伴学小屋需要无障碍窗口访问权限识别正在打开的应用，并在非白名单应用上显示提醒。'
-          '只读取应用标识，不读取页面文字、输入内容或截图。你可以暂不启用，之后在「应用锁定」里重新开启或前往系统设置关闭。',
+  }
+
+  Future<void> _offerProtectionPermission() async {
+    if (_checkingPermission) return;
+    _checkingPermission = true;
+    try {
+      final device = ref.read(deviceProvider);
+      if (device.simulated) return;
+      final status = await device.status();
+      if (!mounted) return;
+      final state = ref.read(appProvider);
+      if (status.ready) {
+        ref.read(appProvider.notifier).markPermissionReady();
+        return;
+      }
+      final recovery = state.permissionEverReady;
+      if (recovery
+          ? state.permissionRecoveryPromptSeen
+          : state.permissionPromptSeen) {
+        return;
+      }
+      final open = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(recovery ? '专注保护已关闭' : '开启专注保护？'),
+          content: Text(
+            recovery
+                ? '系统保护权限当前未生效。请到系统设置重新开启「伴学小屋专注保护」，否则专注期间无法拦截非白名单应用。你也可以稍后从「应用锁定」页开启。'
+                : '专注期间，伴学小屋需要无障碍窗口访问权限识别正在打开的应用，并在非白名单应用上显示提醒。'
+                      '只读取应用标识，不读取页面文字、输入内容或截图。你可以暂不启用，之后在「应用锁定」里重新开启或前往系统设置关闭。',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('暂不启用'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('去系统设置开启'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('暂不启用'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('去系统设置开启'),
-          ),
-        ],
-      ),
-    );
-    if (!mounted || open == null) return;
-    ref.read(appProvider.notifier).markPermissionPromptSeen();
-    if (open) {
-      try {
-        await device.openSettings();
-      } catch (_) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('请从应用锁定页前往系统无障碍设置')));
+      );
+      if (!mounted || open == null) return;
+      if (recovery) {
+        ref.read(appProvider.notifier).markPermissionRecoveryPromptSeen();
+      } else {
+        ref.read(appProvider.notifier).markPermissionPromptSeen();
+      }
+      if (open) {
+        try {
+          await device.openSettings();
+        } catch (_) {
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('请从应用锁定页前往系统无障碍设置')));
+          }
         }
       }
+    } finally {
+      _checkingPermission = false;
     }
   }
 

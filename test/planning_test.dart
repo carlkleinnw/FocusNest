@@ -369,4 +369,16 @@ void main() {
       expect(restored.permissionPromptSeen, false);
     },
   );
+  test('old permission choice gets one recovery prompt after upgrade', () {
+    final previous = encodeSnapshot(container.read(appProvider));
+    previous['permissionPromptSeen'] = true;
+    previous.remove('permissionEverReady');
+    previous.remove('permissionRecoveryPromptSeen');
+    final restored = decodeSnapshot(previous);
+    expect(restored.permissionEverReady, true);
+    expect(restored.permissionRecoveryPromptSeen, false);
+    final roundTrip = decodeSnapshot(encodeSnapshot(restored));
+    expect(roundTrip.permissionEverReady, true);
+    expect(roundTrip.permissionRecoveryPromptSeen, false);
+  });
 }

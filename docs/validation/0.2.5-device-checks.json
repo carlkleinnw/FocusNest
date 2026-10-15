@@ -1,0 +1,50 @@
+{
+  "version": "0.2.5+7",
+  "date": "2026-10-15",
+  "sourceTag": "v0.2.5-demo",
+  "validation": {
+    "flutterAnalyze": "passed",
+    "flutterTests": 26,
+    "nativePolicyChecks": 23,
+    "androidReleaseBuild": "passed",
+    "webReleaseBuild": "passed",
+    "gitDiffCheck": "passed"
+  },
+  "android": {
+    "handset": "Xiaomi 15",
+    "system": "Android 16 / API 36",
+    "versionCode": 7,
+    "versionName": "0.2.5",
+    "apkBytes": 53463516,
+    "apkSha256": "e0afd1e6c824ae241e576342861dff7cefd18526e2fedd9ed2eb9b4bea9e9827",
+    "signingCertificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "checks": [
+      "Existing 0.2.4 installation was upgraded in place with the same signing certificate; pet and previous focus result remained",
+      "With permission enabled, opening the app showed protection ready without an unnecessary prompt",
+      "Disabling the accessibility service through visible Xiaomi settings and returning to the app displayed the recovery dialog",
+      "Choosing not now left the app usable and did not repeat the dialog on the next resume",
+      "The app lock page opened system accessibility settings; re-enabling the service restored protection ready",
+      "The final release APK was installed and the disable, recovery prompt, and re-enable flow was repeated successfully",
+      "During a confirmed test focus with an empty explicit allowlist, Bilibili was covered by the reminder; acknowledgement returned to the launcher",
+      "The final release APK repeated the confirmed-focus Bilibili block; only the newly created test focus was ended through two confirmations",
+      "System accessibility settings remained available during the candidate test focus; after final testing the own accessibility service was enabled and no test focus remained active"
+    ],
+    "screenCapture": "Only own app, own reminder, and system permission settings were inspected; screenshots were not published",
+    "actualPhoneCallsMade": false
+  },
+  "limitations": [
+    "Only Xiaomi 15 / Android 16 was tested; other brands and long-term battery behavior remain unverified",
+    "A clean-install first-run prompt was covered by widget tests without erasing existing phone data",
+    "Android requires the user to turn on the accessibility service in system settings; the app cannot silently enable it",
+    "The recovery prompt appears once for each observed permission-loss episode; explicit refusal is respected",
+    "Returning home does not kill third-party processes; disabling accessibility permission or stopping the app bypasses protection"
+  ],
+  "excluded": [
+    "phone database",
+    "full installed-app inventory",
+    "personal screenshots",
+    "credentials",
+    "signing key",
+    "debug caches"
+  ]
+}

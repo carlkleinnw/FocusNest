@@ -122,6 +122,7 @@ class AppController extends Notifier<AppState>
         _lastPermissionPoll = now;
         final ready = await ref.read(deviceProvider).ready();
         _commit(state.copyWith(protectionReady: ready), null, false);
+        if (ready) markPermissionReady();
       }
       final repo = ref.read(repositoryProvider);
       if (repo is AndroidRepository &&
@@ -557,6 +558,26 @@ class AppController extends Notifier<AppState>
   void markPermissionPromptSeen() {
     if (!state.permissionPromptSeen) {
       _commit(state.copyWith(permissionPromptSeen: true));
+    }
+  }
+
+  void markPermissionReady() {
+    if (!state.permissionEverReady ||
+        state.permissionRecoveryPromptSeen ||
+        !state.permissionPromptSeen) {
+      _commit(
+        state.copyWith(
+          permissionEverReady: true,
+          permissionRecoveryPromptSeen: false,
+          permissionPromptSeen: true,
+        ),
+      );
+    }
+  }
+
+  void markPermissionRecoveryPromptSeen() {
+    if (!state.permissionRecoveryPromptSeen) {
+      _commit(state.copyWith(permissionRecoveryPromptSeen: true));
     }
   }
 

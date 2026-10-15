@@ -27,6 +27,8 @@ Map<String, Object?> encodeSnapshot(AppState s) {
     'blockedApps': s.blockedApps.toList(),
     'appsInitialized': s.appsInitialized,
     'permissionPromptSeen': s.permissionPromptSeen,
+    'permissionEverReady': s.permissionEverReady,
+    'permissionRecoveryPromptSeen': s.permissionRecoveryPromptSeen,
     'todayFed': s.todayFed,
     'adoptionReady': s.adoptionReady,
     'floating': s.floating,
@@ -107,6 +109,11 @@ AppState decodeSnapshot(Map<String, dynamic> j) {
     blockedApps: set('blockedApps'),
     appsInitialized: j['appsInitialized'] as bool? ?? false,
     permissionPromptSeen: j['permissionPromptSeen'] as bool? ?? false,
+    permissionEverReady:
+        j['permissionEverReady'] as bool? ??
+        (j['permissionPromptSeen'] as bool? ?? false),
+    permissionRecoveryPromptSeen:
+        j['permissionRecoveryPromptSeen'] as bool? ?? false,
     todayFed: j['todayFed'] as bool,
     adoptionReady: j['adoptionReady'] as bool,
     floating: j['floating'] as bool,
