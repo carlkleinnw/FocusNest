@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "appVersion": "0.3.1+13",
+  "tag": "v0.3.1-demo",
+  "scope": "Web API configuration entry and loopback gateway; no real account requests",
+  "checks": {
+    "flutterAnalyze": "passed; no issues",
+    "flutterUnitAndWidgetTests": {"passed": 50, "failed": 0},
+    "loopbackServerTests": {"passed": 8, "failed": 0},
+    "webReleaseBuild": "passed",
+    "launcherPowerShellSyntax": "passed",
+    "localBridge": "Started on 127.0.0.1:8788; version marker 0.3.1 and bridgeVersion 1 verified",
+    "chromePlatformSuite": "Harness connection closed before suite loaded; no browser test assertions ran",
+    "androidEmulator": "emulator-5580 connected; installed version remains 0.3.0+12; read-only check this round"
+  },
+  "security": {
+    "credentialStorage": "Loopback server process memory only; no browser or file persistence",
+    "configurationResponse": "Configured flag and model only; no key readback",
+    "saveCallsModel": false,
+    "testsUse": "Synthetic fixture values and controlled request handlers only",
+    "tested": ["save and clear", "blank preserves key", "cross-site rejection", "invalid input rejection", "sanitized upstream errors", "fresh server has no credentials"]
+  },
+  "pending": [
+    "User enters and saves their credential before real API debugging",
+    "Real DeepSeek connectivity and business workflows on Android emulator",
+    "Browser end-to-end verification; VM widget coverage is not a browser runtime result"
+  ],
+  "android": "No APK rebuilt or installed for this web-only correction; prior version evidence is in 0.3.0-checks.json"
+}

@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/demo_adapters.dart';
 import '../data/android_adapters.dart';
 import '../data/planner_gateway.dart';
+import 'package:flutter/foundation.dart';
+import '../data/web_planner_gateway_stub.dart'
+    if (dart.library.js_interop) '../data/web_planner_gateway.dart';
 import 'planner_agent.dart';
 import 'review_engine.dart';
 import 'dart:convert';
@@ -20,7 +23,7 @@ final intelligenceProvider = Provider<IntelligencePort>(
   (ref) => DisabledIntelligence(),
 );
 final plannerGatewayProvider = Provider<PlannerGateway>(
-  (ref) => AndroidPlannerGateway(),
+  (ref) => kIsWeb ? createWebPlannerGateway() : AndroidPlannerGateway(),
 );
 final protectionStatusProvider = FutureProvider<ProtectionStatus>((ref) async {
   ref.watch(appProvider.select((s) => s.now.millisecondsSinceEpoch ~/ 3000));

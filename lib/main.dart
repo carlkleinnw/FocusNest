@@ -4,6 +4,8 @@ import 'core/controller.dart';
 import 'core/journal.dart';
 import 'data/android_adapters.dart';
 import 'data/demo_adapters.dart';
+import 'data/web_planner_gateway_stub.dart'
+    if (dart.library.js_interop) 'data/web_planner_gateway.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'pages/home_page.dart';
@@ -60,7 +62,16 @@ Future<void> main() async {
   } else {
     final clock = DemoClock();
     final repo = MemoryRepository(clock);
-    repo.save(repo.load().copyWith(workspace: Workspace(demoAgent: true)));
+    var demoAgent = true;
+    if (kIsWeb) {
+      try {
+        demoAgent =
+            (await createWebPlannerGateway().settings())['configured'] != true;
+      } catch (_) {
+        /* Static hosting can still demonstrate the UI. */
+      }
+    }
+    repo.save(repo.load().copyWith(workspace: Workspace(demoAgent: demoAgent)));
     runApp(
       ProviderScope(
         overrides: [

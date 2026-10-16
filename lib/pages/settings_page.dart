@@ -32,14 +32,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           model = s['model'] as String? ?? 'deepseek-flash';
           configured = s['configured'] == true;
           loaded = true;
-          status = configured ? '密钥已保存，连接尚未测试。' : '尚未填写密钥';
+          status = configured
+              ? (kIsWeb ? '密钥已保存在本地服务内存中，尚未测试连接。' : '密钥已保存，连接尚未测试。')
+              : '尚未填写密钥';
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
           loaded = true;
-          status = 'Android 应用支持安全保存密钥；网页可使用演示模式。';
+          status = '无法读取配置，请用新版启动器打开网页后重试。';
         });
       }
     }
@@ -63,9 +65,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       keyInput.clear();
       await _load();
       if (firstKey && mounted) {
-        ref.read(appProvider.notifier).setWorkspaceOptions(autoReview: true);
+        ref
+            .read(appProvider.notifier)
+            .setWorkspaceOptions(
+              autoReview: !kIsWeb,
+              demoAgent: kIsWeb ? false : null,
+            );
       }
-      if (mounted) setState(() => status = remove ? '密钥已移除' : '配置已保存，连接尚未测试。');
+      if (mounted) {
+        setState(
+          () => status = remove
+              ? '密钥已移除'
+              : kIsWeb
+              ? '密钥已保存在本地服务内存中，尚未测试连接。'
+              : '配置已保存，连接尚未测试。',
+        );
+      }
     } catch (_) {
       if (mounted) setState(() => status = '保存失败，请检查密钥后重试。');
     } finally {
@@ -111,8 +126,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       children: [
         Text('DeepSeek', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
-        const Text(
-          '密钥仅在本机加密保存。调用 AI 时会把你输入的目标、对话或待复盘记录发给 DeepSeek，并产生 API 费用。应用名单不发送。',
+        Text(
+          kIsWeb
+              ? '密钥只保存在本机服务内存中，不写入浏览器存储或文件，关闭服务后清除。保存不会调用 DeepSeek；测试连接或发送目标时才会联网并产生 API 费用。'
+              : '密钥仅在本机加密保存。调用 AI 时会把你输入的目标、对话或待复盘记录发给 DeepSeek，并产生 API 费用。应用名单不发送。',
         ),
         const SizedBox(height: 16),
         TextField(
@@ -121,7 +138,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           obscureText: !reveal,
           enableSuggestions: false,
           autocorrect: false,
-          enabled: !locked && !kIsWeb,
+          enabled: !locked,
           decoration: InputDecoration(
             labelText: configured ? 'API 密钥（留空保留原值）' : 'API 密钥',
             suffixIcon: IconButton(
@@ -158,7 +175,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           runSpacing: 8,
           children: [
             FilledButton(
-              onPressed: locked || kIsWeb ? null : () => _save(),
+              onPressed: locked ? null : () => _save(),
               child: const Text('保存 API 配置'),
             ),
             OutlinedButton(
@@ -244,7 +261,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ),
         const SizedBox(height: 24),
         const Text(
-          '伴学小屋 0.3.0 · 数据保存在本机。总结后移除对应明细，只保留统计和选出的关键任务，无法恢复全部逐项内容。',
+          '伴学小屋 0.3.1 · 总结后移除对应明细，只保留统计和选出的关键任务，无法恢复全部逐项内容。',
           style: TextStyle(color: NestColors.muted),
         ),
       ],
