@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-16",
+  "sourceTag": "v0.2.7-demo.3",
+  "scope": "retrospective and reusable skill instructions",
+  "applicationVersionUnchanged": "0.2.7+11",
+  "runtimeCodeChanged": false,
+  "phoneOperated": false,
+  "apkRebuiltOrInstalled": false,
+  "skillFormatChecks": 3,
+  "changedSkills": [
+    "android-accessibility-focus-debugging",
+    "focusnest-evidence-first-delivery"
+  ],
+  "skillChecks": [
+    {
+      "name": "android-accessibility-focus-debugging",
+      "files": 7,
+      "format": "passed",
+      "localReferences": "passed",
+      "installedCopyMatches": true,
+      "discoveryJunctionVerified": true,
+      "automaticInvocationEnabled": true
+    },
+    {
+      "name": "android-protection-source-audit",
+      "files": 3,
+      "format": "passed",
+      "localReferences": "passed",
+      "installedCopyMatches": true,
+      "discoveryJunctionVerified": true,
+      "automaticInvocationEnabled": true
+    },
+    {
+      "name": "focusnest-evidence-first-delivery",
+      "files": 4,
+      "format": "passed",
+      "localReferences": "passed",
+      "installedCopyMatches": true,
+      "discoveryJunctionVerified": true,
+      "automaticInvocationEnabled": true
+    }
+  ],
+  "scriptChanges": false,
+  "flutterOrNativeTestsRerun": false,
+  "priorRuntimeEvidence": "docs/validation/0.2.7-stability-2026-10-16.json, not new device verification",
+  "scenarioReview": {
+    "method": "instruction review against observed failures; not independent agents or live device tests",
+    "cases": [
+      "Dozing and screen OFF are separate from deep idle",
+      "Notification wake stays locked; actual unlock interrupts accepted lock interval",
+      "Lock spans expiry: expected release is distinct from loss of protection",
+      "Final boundary requires a real sample before loop completion",
+      "Resume on an unrelated foreground: relocate before touch or capture",
+      "Missing binding component remains unknown",
+      "Existing release assets: compare digest and retry only missing transfers",
+      "Existing ports: document concrete adapter gaps before adding runtime scaffolds"
+    ]
+  },
+  "validatorEnvironment": "Existing validator defaults to GBK on this Windows Python; passed with -X utf8, without modifying global scripts",
+  "installedBackup": "E:/CodexSkills/backups/2026-10-16-173740-stability-retro",
+  "memory": "User requested experience retention; one note saved through the prescribed memory extension directory, no registry edit",
+  "archive": {
+    "name": "FocusNest_Reusable_Skills_2026-10-16_Revision3.zip",
+    "bytes": 27564,
+    "entries": 16,
+    "sha256": "bbb0f6f935e086b513e08920894307a9c9c8f0f418026cf70b6bf3de7433683f",
+    "crcAndManifest": "passed"
+  },
+  "excluded": [
+    "phone data",
+    "screenshots",
+    "notifications",
+    "full application lists",
+    "device serial",
+    "credentials",
+    "signing keys",
+    "temporary UI drivers",
+    "external runtime source",
+    "memory note contents"
+  ]
+}
