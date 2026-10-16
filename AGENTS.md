@@ -23,6 +23,8 @@
 
 ## 数据与验证
 
+- 本仓库可复用技能位于`.agents/skills/`；Android拦截/划除故障参考`android-accessibility-focus-debugging`，开源保护方案调研参考`android-protection-source-audit`，最终APK验收与交付参考`focusnest-evidence-first-delivery`。技能中的历史设备记录不是当前手机状态，当前代码与本轮验证优先。总览见`docs/可复用技能.md`。
+
 - 不提交模型密钥、凭据、手机数据库、完整应用名单、个人截图、缓存、调试临时文件或签名私钥。
 - APK与网页构建放到GitHub Release附件，不作为Git源码文件提交。
 - 原生拦截修改必须验证真机的显示提醒、持续遮挡、点击「知道了」返回桌面、重复打开、横竖屏和必要应用放行。

@@ -1,0 +1,18 @@
+# 已核查源码入口（2026-10-15 快照）
+
+以下是固定版本的研究线索，不表示最新版本或目标手机已通过。整段源码与许可仍需在准备移植时重读；本技能不包含第三方运行代码。
+
+| 项目 / 固定提交 | 实际代码与可复用判断 |
+| --- | --- |
+| OpenTimeLimit `fad71e34adf03f57d945b97ca5427a27e8d9d1eb` | [BackgroundService](https://codeberg.org/timelimit/opentimelimit-android/src/commit/fad71e34adf03f57d945b97ca5427a27e8d9d1eb/app/src/main/java/io/timelimit/android/integration/platform/android/BackgroundService.kt#L34-L150) 返回 START_REDELIVER_INTENT；[AdminStatus](https://codeberg.org/timelimit/opentimelimit-android/src/commit/fad71e34adf03f57d945b97ca5427a27e8d9d1eb/app/src/main/java/io/timelimit/android/integration/platform/android/AdminStatus.kt#L25-L44) 明确分 ordinary admin 与 Device Owner；[挂起代码](https://codeberg.org/timelimit/opentimelimit-android/src/commit/fad71e34adf03f57d945b97ca5427a27e8d9d1eb/app/src/main/java/io/timelimit/android/integration/platform/android/AndroidIntegration.kt#L451-L466) 要求 Owner。该旧快照 target 33，其自身分流检查不能泛化为 Android 14 所有 FGS 都需要管理员。GPL v3。 |
+| DetoxDroid `263df3ded046a8e5bb1ffea0e5806260bd68b01e` | [生命周期](https://github.com/flxapps/DetoxDroid/blob/263df3ded046a8e5bb1ffea0e5806260bd68b01e/app/src/main/java/com/flx_apps/digitaldetox/system_integration/DetoxDroidAccessibilityService.kt#L274-L334) 的 onTaskRemoved 只有日志；[强停说明](https://github.com/flxapps/DetoxDroid/blob/263df3ded046a8e5bb1ffea0e5806260bd68b01e/app/src/main/java/com/flx_apps/digitaldetox/DetoxDroidApplication.kt#L130-L143) 承认 stopped 后 watchdog 不运行；[AppSuspender](https://github.com/flxapps/DetoxDroid/blob/263df3ded046a8e5bb1ffea0e5806260bd68b01e/app/src/main/java/com/flx_apps/digitaldetox/system_integration/AppSuspender.kt#L9-L79) 借助 Shizuku，挂起和释放的生存期不同。GPL v3。 |
+| Curbox `90444ce3fa0c0d86781368166b80f9337bf5830a` | DigiPaws 当时官方迁移后的仓库。[watchdog](https://github.com/nethical6/curbox/blob/90444ce3fa0c0d86781368166b80f9337bf5830a/app/src/main/java/neth/iecal/curbox/services/ServiceWatchdogJob.kt#L28-L88) 明言不能抗 force stop；[AppSuspendHelper](https://github.com/nethical6/curbox/blob/90444ce3fa0c0d86781368166b80f9337bf5830a/app/src/main/java/neth/iecal/curbox/utils/AppSuspendHelper.kt#L9-L28) 的实际挂起调用被注释，TODO 提到失去 Shizuku 后可能持续挂起。GPL v3 或更新版本声明。 |
+| HyperOS accessibility guard `959ce7cd924c35847426d0f8e730bf90bf25ba1b` | 小型案例。[repair](https://github.com/haku4130/hyperos-accessibility-guard/blob/959ce7cd924c35847426d0f8e730bf90bf25ba1b/app/src/main/java/io/github/haku4130/noscrollguard/repair/AccessibilityRepairer.kt#L16-L44) 清空整个服务列表后只写硬编码 NoScroll，其他服务会丢失；[健康判定](https://github.com/haku4130/hyperos-accessibility-guard/blob/959ce7cd924c35847426d0f8e730bf90bf25ba1b/app/src/main/java/io/github/haku4130/noscrollguard/state/AccessibilityStateReader.kt#L25-L45) 不要求 bound 为 true，unknown 也可被算健康。MIT；不应直接运行它的修复/安装脚本。 |
+
+官方机制入口：
+
+- [Android 包停止状态](https://developer.android.com/about/versions/15/behavior-changes-all#stopped-state)、[无障碍生命周期](https://developer.android.com/reference/android/accessibilityservice/AccessibilityService)、[onTaskRemoved](https://developer.android.com/reference/android/app/Service#onTaskRemoved(android.content.Intent))。
+- [FGS 类型](https://developer.android.com/develop/background-work/services/fgs/service-types#system-exempted)：systemExempted 的资格与 specialUse 的要求分开。
+- [DevicePolicyManager](https://developer.android.com/reference/android/app/admin/DevicePolicyManager#setUserControlDisabledPackages(android.content.ComponentName,%20java.util.List%3Cjava.lang.String%3E))、[锁定任务模式](https://developer.android.com/work/dpc/dedicated-devices/lock-task-mode)：管理身份和部署环境独立核实。
+
+本轮 FocusNest 采用补齐小米自启动设置，避免该手机的单卡划除进入包级强停；没有复制这些项目代码，也未引入 Shizuku/Owner。完整研究保存在私有仓 [v0.2.7-demo](https://github.com/carlkleinnw/FocusNest/blob/v0.2.7-demo/docs/research/2026-10-15-open-source-protection.md)，不可访问时仍可独立读取上面的公开源码。

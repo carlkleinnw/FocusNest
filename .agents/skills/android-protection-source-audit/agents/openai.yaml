@@ -1,0 +1,6 @@
+interface:
+  display_name: "Android 保护方案源码核查"
+  short_description: "核对开源保护方案的实际实现、权限、设备条件与许可证后再判断可移植性"
+  default_prompt: "使用 $android-protection-source-audit 从实际源码判断 Android 保护方案能否用于当前项目。"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: "伴学小屋真机交付"
+  short_description: "保留数据与用户专注，核对最终安装包、真机结果、版本标签与发布附件"
+  default_prompt: "使用 $focusnest-evidence-first-delivery 完成伴学小屋当前改动的证据核对与版本交付。"
+policy:
+  allow_implicit_invocation: true

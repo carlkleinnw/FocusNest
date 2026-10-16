@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-16",
+  "sourceTag": "v0.2.7-demo.1",
+  "scope": "skills, reference documentation and read-only diagnostic helper",
+  "applicationVersionUnchanged": "0.2.7+11",
+  "phoneOperated": false,
+  "apkRebuiltOrInstalled": false,
+  "skillFormatChecks": 3,
+  "helperSyntheticTests": 5,
+  "helperCliFailureBranch": "passed without an ADB device",
+  "privacyCheck": "No raw dumps, full service lists, PIDs, device serial, phone database, screenshots or signing files in output/package",
+  "skillChecks": [
+    {
+      "name": "android-accessibility-focus-debugging",
+      "files": 6,
+      "automaticInvocationMetadata": true,
+      "localReferences": "passed",
+      "installedCopyMatches": true,
+      "userDiscoveryJunctionVerified": true
+    },
+    {
+      "name": "android-protection-source-audit",
+      "files": 3,
+      "automaticInvocationMetadata": true,
+      "localReferences": "passed",
+      "installedCopyMatches": true,
+      "userDiscoveryJunctionVerified": true
+    },
+    {
+      "name": "focusnest-evidence-first-delivery",
+      "files": 3,
+      "automaticInvocationMetadata": true,
+      "localReferences": "passed",
+      "installedCopyMatches": true,
+      "userDiscoveryJunctionVerified": true
+    }
+  ],
+  "archive": {
+    "name": "FocusNest_Reusable_Skills_2026-10-16.zip",
+    "bytes": 23855,
+    "entries": 14,
+    "sha256": "33b4059b22d275feb0bcf09d2d5f1f44f82d04ea02cbb278675f1d5f9f48d0d5",
+    "crcAndManifest": "passed"
+  },
+  "scenarioReview": {
+    "method": "instruction review, not an independent agent or live-device test",
+    "covered": [
+      "Xiaomi battery unrestricted but autostart off: compare configurations before an impossible verdict",
+      "Label-only binding dump: unknown remains unknown",
+      "Guard clears other services or suspend outlives controller: identify repair/release risk",
+      "Different APK certificate: retain data and locate original signing environment",
+      "Background UI and restored timer: distinguish from process death and a fresh full-duration run"
+    ]
+  },
+  "backup": "Two prior same-name personal skill folders were preserved under E:/CodexSkills/backups; new skill had no prior folder",
+  "exclusions": [
+    "app runtime change",
+    "phone or permission operation",
+    "external source-code copy",
+    "credentials",
+    "private keys",
+    "phone runtime data"
+  ]
+}
