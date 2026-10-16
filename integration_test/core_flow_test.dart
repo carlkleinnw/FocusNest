@@ -12,15 +12,40 @@ import 'package:focus_pet_demo/core/planner_agent.dart';
 import 'package:focus_pet_demo/data/android_adapters.dart';
 import 'package:focus_pet_demo/data/planner_gateway.dart';
 import 'package:focus_pet_demo/data/snapshot_codec.dart';
+import 'host_planner_gateway.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  // Resolve emulator permissions before testWidgets records its semantics
+  // handle baseline. Enabling the service halfway through a test changes it.
+  setUpAll(() async {
+    for (var i = 0; i < 120; i++) {
+      if (await AndroidDevice().ready()) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        return;
+      }
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
+    fail(
+      'Enable accessibility on the test emulator before running this suite.',
+    );
+  });
   testWidgets('Android end-to-end core workflow and encrypted settings', (
     tester,
   ) async {
     // Synthetic text entry must own TextInput; the emulator IME otherwise
     // sends delayed empty updates over tester.enterText's simulated input.
     tester.testTextInput.register();
+    const live = bool.fromEnvironment('LIVE_AGENT');
+    final host = live ? HostPlannerGateway() : null;
+    if (host != null) {
+      final configured = await tester.runAsync(() => host.settings());
+      expect(
+        configured?['configured'],
+        true,
+        reason: 'Save the API credential in the local settings UI first.',
+      );
+    }
     final clock = RealClock();
     // The host test runner enables the accessibility service on this emulator
     // after Flutter installs the test APK. Production code never grants it.
@@ -49,6 +74,7 @@ void main() {
         remove: false,
       );
       expect((await gateway.settings())['configured'], true);
+      expect(await gateway.readSavedKey(), fake);
       final prefs = File(
         '/data/user/0/cn.focusnest.focus_pet_demo/shared_prefs/planner_secret_v1.xml',
       );
@@ -64,6 +90,33 @@ void main() {
         throwsA(isA<AgentFailure>()),
       );
     }
+    if (const bool.fromEnvironment('CHECK_NATIVE')) {
+      expect(host, isNotNull);
+      // Keep credentials inside the two local processes and Android Keystore.
+      // No key in arguments, fixtures, diagnostics, screenshots or test output.
+      if (settings['configured'] != true) {
+        final localSettings = await tester.runAsync(() => host!.settings());
+        final saved = await tester.runAsync(() => host!.readSavedKey());
+        expect(saved?.isNotEmpty, true);
+        await gateway.configure(
+          key: saved!,
+          model: localSettings!['model'] as String,
+          remove: false,
+        );
+      }
+      final nativeResult = await tester.runAsync(
+        () => gateway.request([
+          {'role': 'system', 'content': 'Only output JSON: {"ok":true}.'},
+          {'role': 'user', 'content': 'Connection test'},
+        ]),
+      );
+      expect(nativeResult?['ok'], true);
+    }
+    final tracked = host == null
+        ? null
+        : TrackedPlannerGateway(
+            const bool.fromEnvironment('CHECK_NATIVE') ? gateway : host,
+          );
     final before = await nativeChannel.invokeMethod<String>('load');
     final today = dateKey(clock.now());
     final pristine = AppState(
@@ -86,6 +139,7 @@ void main() {
         clockProvider.overrideWithValue(clock),
         repositoryProvider.overrideWithValue(repo),
         deviceProvider.overrideWithValue(AndroidDevice()),
+        if (tracked != null) plannerGatewayProvider.overrideWithValue(tracked),
       ],
     );
     Future<void> settle() async {
@@ -96,7 +150,19 @@ void main() {
       final f = find.text(text).last;
       await tester.ensureVisible(f);
       await settle();
+      final completed = tracked?.completedRequests;
       await tester.tap(f);
+      if (live && text == '发送给规划助手') {
+        // Network I/O runs in real time, outside WidgetTest's fake async zone.
+        await tester.runAsync(() async {
+          for (var i = 0; i < 140; i++) {
+            await Future<void>.delayed(const Duration(seconds: 1));
+            if (tracked!.completedRequests != completed) {
+              return;
+            }
+          }
+        });
+      }
       await settle();
       await tester.pump(const Duration(milliseconds: 600));
       await settle();
@@ -126,7 +192,7 @@ void main() {
       expect(find.byKey(const Key('api-key')), findsOneWidget);
       await shot('01-settings');
       final app = container.read(appProvider.notifier);
-      expect(app.setWorkspaceOptions(demoAgent: true).ok, true);
+      expect(app.setWorkspaceOptions(demoAgent: !live).ok, true);
       router.go('/agent');
       await settle();
       await tester.enterText(
@@ -134,10 +200,18 @@ void main() {
         '学习Python数据采集',
       );
       await tap('发送给规划助手');
-      expect(container.read(appProvider).workspace.rounds, 1);
+      expect(
+        container.read(appProvider).workspace.rounds,
+        1,
+        reason:
+            'Clarification expected; visible page: '
+            '${tester.widgetList<Text>(find.byType(Text)).map((t) => t.data).whereType<String>().join(" | ")}',
+      );
       await tester.enterText(
         find.byKey(const Key('goal-input')),
-        '已有基础，每天30分钟，一周完成项目',
+        live
+            ? '已有Python基础，每天30分钟，从明天开始连续7天，每天一个任务，完成公开示例网页采集并导出CSV的小项目。每天19:00，只练习公开授权页面。请直接制定计划，其余合理假设写明。'
+            : '已有基础，每天30分钟，一周完成项目',
       );
       await tap('发送给规划助手');
       if (container.read(appProvider).workspace.draft == null) {
@@ -150,13 +224,16 @@ void main() {
       );
       await shot('02-agent-draft');
       await tap('确认并保存到计划表');
-      expect(container.read(appProvider).plans.length, 7);
+      final importedCount = container.read(appProvider).plans.length;
+      expect(importedCount, live ? inInclusiveRange(1, 7) : 7);
+      expect((await app.importDraft()).ok, false);
+      expect(container.read(appProvider).plans.length, importedCount);
       expect(container.read(appProvider).workspace.draft, isNull);
       await shot('03-plans');
       // Real native SQLite persistence, including the imported hierarchy.
       await repo.flush();
       final loaded = await AndroidRepository.open(pristine);
-      expect(loaded.load().plans.length, 7);
+      expect(loaded.load().plans.length, importedCount);
       expect(loaded.load().workspace.roadmaps.length, 1);
       expect(
         app
@@ -261,7 +338,7 @@ void main() {
             completed: true,
           ),
         ],
-        workspace: Workspace(demoAgent: true),
+        workspace: Workspace(demoAgent: !live),
         permissionPromptSeen: true,
       );
       historicalRepo = AndroidRepository(historicalState);
@@ -270,12 +347,15 @@ void main() {
           clockProvider.overrideWithValue(clock),
           repositoryProvider.overrideWithValue(historicalRepo),
           deviceProvider.overrideWithValue(AndroidDevice()),
+          if (tracked != null)
+            plannerGatewayProvider.overrideWithValue(tracked),
         ],
       );
-      final reviewResult = await historical
-          .read(appProvider.notifier)
-          .summarizeDue();
-      expect(reviewResult.ok, true);
+      final reviewResult = await tester.runAsync(
+        () => historical!.read(appProvider.notifier).summarizeDue(),
+      );
+      expect(reviewResult, isNotNull);
+      expect(reviewResult!.ok, true, reason: reviewResult.message);
       expect(
         historical.read(appProvider).workspace.reviews.single.level,
         'year',
@@ -310,9 +390,73 @@ void main() {
       if (historicalRepo != null) await historicalRepo.flush();
       historical?.dispose();
       container.dispose();
+      host?.close();
       await nativeChannel.invokeMethod<void>('save', {
         'snapshot': before ?? jsonEncode(encodeSnapshot(pristine)),
       });
     }
   });
+  testWidgets(
+    'Android persists overdue rollover without duplication or resurrection',
+    (tester) async {
+      final clock = RealClock();
+      final now = clock.now();
+      final old = DateTime(now.year, now.month, now.day - 3);
+      final before = await nativeChannel.invokeMethod<String>('load');
+      final seed = AppState(
+        now: old,
+        pet: const PetState(),
+        records: [],
+        plans: [
+          Plan(
+            id: 'overdue_fixture',
+            title: '跨日未完成测试样例',
+            minutes: 30,
+            time: '19:00',
+            date: dateKey(old),
+          ),
+        ],
+      );
+      if (before != null) {
+        expect(
+          decodeSnapshot(jsonDecode(before) as Map<String, dynamic>).focusing,
+          false,
+        );
+      }
+      final repo = AndroidRepository(seed);
+      final c = ProviderContainer(
+        overrides: [
+          clockProvider.overrideWithValue(clock),
+          repositoryProvider.overrideWithValue(repo),
+          deviceProvider.overrideWithValue(AndroidDevice()),
+        ],
+      );
+      try {
+        final app = c.read(appProvider.notifier);
+        await app.tick();
+        final task = c.read(appProvider).plans.single;
+        expect(task.date, dateKey(now));
+        expect(task.originalDate, dateKey(old));
+        expect(task.rollovers, 3);
+        await app.tick();
+        expect(c.read(appProvider).plans.single.rollovers, 3);
+        await repo.flush();
+        expect(
+          (await AndroidRepository.open(seed)).load().plans.single.rollovers,
+          3,
+        );
+        app.removePlan(task.id);
+        await app.tick();
+        await repo.flush();
+        expect((await AndroidRepository.open(seed)).load().plans, isEmpty);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await repo.flush();
+        c.dispose();
+        await nativeChannel.invokeMethod<void>('save', {
+          'snapshot': before ?? jsonEncode(encodeSnapshot(seed)),
+        });
+      }
+    },
+  );
 }

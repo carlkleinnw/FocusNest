@@ -6,9 +6,18 @@ import 'package:focus_pet_demo/core/controller.dart';
 import 'package:focus_pet_demo/core/planner_agent.dart';
 import 'package:focus_pet_demo/pages/settings_page.dart';
 
-class ConfigurationFixture implements PlannerGateway {
+class ConfigurationFixture implements PlannerGateway, SavedKeyReader {
   bool configured = false;
   int requests = 0;
+  bool rejectConfiguration = false;
+  String savedKey = '';
+  int reads = 0;
+  @override
+  Future<String> readSavedKey() async {
+    reads++;
+    return savedKey;
+  }
+
   @override
   Future<Map<String, dynamic>> settings() async => {
     'configured': configured,
@@ -20,10 +29,15 @@ class ConfigurationFixture implements PlannerGateway {
     required String model,
     required bool remove,
   }) async {
+    if (rejectConfiguration) {
+      throw const AgentFailure('当前页面没有本地 AI 配置接口，请使用新版启动器打开设置页。');
+    }
     if (remove) {
       configured = false;
+      savedKey = '';
     } else if (key.isNotEmpty) {
       configured = true;
+      savedKey = key;
     }
   }
 
@@ -37,6 +51,33 @@ class ConfigurationFixture implements PlannerGateway {
 }
 
 void main() {
+  testWidgets('save failure explains the configuration service error', (
+    tester,
+  ) async {
+    final gateway = ConfigurationFixture()..rejectConfiguration = true;
+    final c = ProviderContainer(
+      overrides: [plannerGatewayProvider.overrideWithValue(gateway)],
+    );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: c,
+        child: const MaterialApp(home: Scaffold(body: SettingsPage())),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('api-key')),
+      'fixture-placeholder',
+    );
+    await tester.ensureVisible(find.text('保存 API 配置'));
+    await tester.tap(find.text('保存 API 配置'));
+    await tester.pumpAndSettle();
+    expect(find.text('保存失败：当前页面没有本地 AI 配置接口，请使用新版启动器打开设置页。'), findsOneWidget);
+    expect(gateway.requests, 0);
+    expect(gateway.configured, false);
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
   for (final width in [390.0, 1100.0]) {
     testWidgets(
       'settings accepts, saves and removes a fixture without AI at width $width',
@@ -66,6 +107,23 @@ void main() {
         expect(gateway.configured, true);
         expect(gateway.requests, 0);
         expect(tester.widget<TextField>(input).controller!.text, isEmpty);
+        expect(
+          tester.widget<TextField>(input).decoration!.hintText,
+          '••••••••••••••••',
+        );
+        expect(gateway.reads, 0);
+        await tester.ensureVisible(find.byTooltip('显示密钥'));
+        await tester.tap(find.byTooltip('显示密钥'));
+        await tester.pumpAndSettle();
+        expect(tester.widget<TextField>(input).obscureText, false);
+        expect(
+          tester.widget<TextField>(input).controller!.text,
+          'fixture-placeholder-not-a-real-key',
+        );
+        expect(gateway.reads, 1);
+        await tester.tap(find.byTooltip('隐藏密钥'));
+        await tester.pumpAndSettle();
+        expect(tester.widget<TextField>(input).obscureText, true);
         if (kIsWeb) {
           expect(c.read(appProvider).workspace.demoAgent, false);
           expect(c.read(appProvider).workspace.autoReview, false);

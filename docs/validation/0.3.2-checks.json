@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "version": "0.3.2+14",
+  "tag": "v0.3.2-demo",
+  "device": "Android SDK x86_64 emulator-5580 only; personal phone untouched",
+  "checks": {
+    "flutterAnalyze": "passed; no issues",
+    "flutterUnitAndWidget": {
+      "passed": 51,
+      "failed": 0
+    },
+    "pythonLoopbackServer": {
+      "passed": 9,
+      "failed": 0
+    },
+    "nativeGuardRules": {
+      "passed": 23,
+      "failed": 0
+    },
+    "webBuild": "passed; local CanvasKit resources",
+    "androidReleaseBuild": "passed; development plugin registration regenerated before release",
+    "launcher": "PowerShell syntax passed; actual launcher with -NoOpen reused the configured bridgeVersion 2 service on 8789 while an earlier port was free, without opening a browser or spawning another service",
+    "browserRuntime": {
+      "browser": "Desktop Chrome using an isolated fixture service",
+      "passed": [
+        "save",
+        "refresh retains configuration",
+        "explicit reveal matches synthetic key",
+        "hide",
+        "remove"
+      ],
+      "oldPortFailure": "Reproduced same user-visible failure on legacy static server: settings 404, configure 501",
+      "automationNotes": "Flutter semantics input DOM value is populated after focus; settings assertions used widget state and focused browser input, not the unfocused placeholder element"
+    },
+    "androidIntegration": {
+      "workflowTests": 2,
+      "frameworkReportedPassed": 4,
+      "failed": 0,
+      "realAccount": true,
+      "model": "deepseek-flash",
+      "modelRoute": "AndroidPlannerGateway -> native Kotlin HTTPS -> official DeepSeek",
+      "localServiceRole": "One-time credential input for empty emulator account; no credential in source, arguments, files or diagnostic output",
+      "passed": [
+        "Keystore encryption and explicit readback with a synthetic fixture",
+        "native real-account JSON connection test",
+        "vague goal produces clarification",
+        "real month/week/day draft passes local validation",
+        "confirm import and reject duplicate import",
+        "native SQLite reopen retains tasks and roadmap",
+        "task title edit, complete and uncomplete",
+        "task-linked 37-minute custom session start",
+        "two confirmations to cancel and cancelled focus record",
+        "independent focus has no task link",
+        "task completion and focus attempt shown separately",
+        "task deletion",
+        "real AI week/month/quarter/year compaction on synthetic history",
+        "annual statistics retain exactly one task and 30 completed minutes",
+        "summarized source removed only after persistent save",
+        "three-day pending task rollover retains original date and stable identity",
+        "repeat tick and SQLite reopen do not duplicate rollover",
+        "deleted pending task does not reappear"
+      ],
+      "testIsolation": "Test body restores original task snapshot. Flutter runner may uninstall test package; final release APK is installed and tested separately. These tests must never target a personal phone."
+    }
+  },
+  "finalApk": {
+    "sha256": "d3d2897cf05f518d7b73e6a156158bea6029fe08a6e43eb0426c2e6558289134",
+    "certificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "versionCode": 14,
+    "versionName": "0.3.2",
+    "installedApkPulledAndHashMatched": true,
+    "settingsNativeConnectionViaActualUi": "passed",
+    "actualUiPlanGenerationAndImport": "passed; real clarification and seven-day Python scraping roadmap",
+    "reopenAfterProcessStopRetainsTasks": "passed; before starting the natural session",
+    "blocking": {
+      "initialReminder": "passed",
+      "acknowledgeReturnsLauncher": "passed",
+      "repeatOpenBlocked": "passed",
+      "landscapeReminder": "passed; screenshot inspected",
+      "settingsAndDialerAllowed": "passed",
+      "returnFromAllowedAppBlocked": "passed",
+      "lockScreenRecovery": "passed; block before reopening FocusNest after 32 asleep samples",
+      "ownRecentTaskRemoval": "passed; task absent from visible recents, package stopped=false, direct repeat block; not a force-stop claim"
+    },
+    "naturalSession": {
+      "status": "passed",
+      "minutes": 30,
+      "startedHostUTC": "2026-10-16T15:08:10.557510+00:00",
+      "method": "Real elapsed time; no system-clock or deadline edits. Read-only samples every approximately 20 seconds.",
+      "regularSamples": 90,
+      "lockSamples": 32,
+      "observedLockSeconds": 625.94,
+      "lastForegroundSampleUTC": "2026-10-16T15:38:10.052823+00:00",
+      "firstForegroundStoppedSampleUTC": "2026-10-16T15:38:11.340077+00:00",
+      "lastOverlayFocusedSampleUTC": "2026-10-16T15:38:08.812796+00:00",
+      "firstOverlayRemovedSampleUTC": "2026-10-16T15:38:10.052823+00:00",
+      "completedRecordMinutes": 30,
+      "completeRecordsAfterAppRestart": 1,
+      "taskStillUncheckedAtTimerExpiry": true,
+      "taskManuallyCheckedAndPersisted": true,
+      "precision": "Observation timestamps only, not an exact expiry-delay measurement"
+    },
+    "independentCustomFocus": {
+      "minutes": 37,
+      "started": true,
+      "twoConfirmationCancel": true,
+      "cancelledMinutes": 0,
+      "completedTotalRemains": 30,
+      "activeFocusAtEnd": false
+    }
+  },
+  "security": {
+    "webCredential": "Local service RAM only; no app-managed browser or file storage",
+    "androidCredential": "Keystore AES/GCM in app private preferences",
+    "reveal": "Explicit settings action only in product UI; separate capability and same-origin JSON POST; ordinary settings responses omit the key",
+    "sourceAndReleaseExclude": [
+      "API credentials",
+      "signing private keys",
+      "emulator databases",
+      "personal screenshots",
+      "runtime logs"
+    ]
+  },
+  "limitations": [
+    "Emulator results do not establish vendor phone background survival or battery performance",
+    "Automatic review runs in foreground or on next launch; no guarantee of requests while the app is completely closed",
+    "Compaction retains exact totals and selected verbatim facts, not every original detail",
+    "37-minute custom duration has start/cancel coverage; the full natural-expiry test uses 30 minutes"
+  ]
+}

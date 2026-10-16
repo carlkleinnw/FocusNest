@@ -11,6 +11,11 @@ abstract interface class PlannerGateway {
   });
 }
 
+/// Separate capability: retrieve a saved key only after the user asks to see it.
+abstract interface class SavedKeyReader {
+  Future<String> readSavedKey();
+}
+
 class AgentFailure implements Exception {
   const AgentFailure(this.message);
   final String message;

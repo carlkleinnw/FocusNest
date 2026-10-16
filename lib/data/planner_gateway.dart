@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../core/planner_agent.dart';
 
-class AndroidPlannerGateway implements PlannerGateway {
+class AndroidPlannerGateway implements PlannerGateway, SavedKeyReader {
   static const channel = MethodChannel('focusnest/agent_v1');
+  @override
+  Future<String> readSavedKey() async =>
+      await channel.invokeMethod<String>('revealKey') ?? '';
   @override
   Future<Map<String, dynamic>> settings() async => Map<String, dynamic>.from(
     await channel.invokeMapMethod<String, dynamic>('settings') ?? {},

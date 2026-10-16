@@ -19,7 +19,7 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import javax.net.ssl.HttpsURLConnection
 
-/** Personal BYOK client: only the official HTTPS host; never returns or logs keys. */
+/** Personal BYOK client: official HTTPS only; key readback requires an explicit UI action. */
 class PlannerBridge(context: Context, messenger: BinaryMessenger) {
     private val prefs = context.getSharedPreferences("planner_secret_v1", Context.MODE_PRIVATE)
     private val executor = Executors.newSingleThreadExecutor()
@@ -30,6 +30,10 @@ class PlannerBridge(context: Context, messenger: BinaryMessenger) {
             when (call.method) {
                 "settings" -> result.success(mapOf("configured" to prefs.contains("ciphertext"),
                     "model" to prefs.getString("model", "deepseek-flash")))
+                "revealKey" -> {
+                    try { result.success(readKey()) }
+                    catch (_: Exception) { result.error("KEY_UNAVAILABLE", "密钥无法读取，请重新填写。", null) }
+                }
                 "configure" -> {
                     try {
                         val model = call.argument<String>("model") ?: "deepseek-flash"

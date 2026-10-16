@@ -61,6 +61,18 @@ class DemoBridgeTests(unittest.TestCase):
         self.configure(key='', remove=True)
         self.assertFalse(self.call('/api/agent/settings')[1]['configured'])
 
+    def test_reveal_requires_same_origin_post_and_clears_after_remove(self):
+        self.configure()
+        self.assertEqual(self.call('/api/agent/reveal')[0], 404)
+        for headers in [{'Origin': 'https://example.com'}, {'Host': 'example.com'},
+                        {'Sec-Fetch-Site': 'cross-site'}]:
+            status, result = self.call('/api/agent/reveal', {}, headers)
+            self.assertEqual(status, 403)
+            self.assertNotIn(self.fake, json.dumps(result))
+        self.assertEqual(self.call('/api/agent/reveal', {}), (200, {'key': self.fake}))
+        self.configure(key='', remove=True)
+        self.assertEqual(self.call('/api/agent/reveal', {}), (200, {'key': ''}))
+
     def test_request_requires_key_then_uses_controlled_upstream(self):
         body = {'messages': [{'role': 'user', 'content': 'JSON connection test'}]}
         self.assertEqual(self.call('/api/agent/request', body)[0], 400)

@@ -101,7 +101,7 @@ class DemoHandler(SimpleHTTPRequestHandler):
         if path == '/api/agent/settings':
             with self.server.state_lock:
                 result = {'configured': bool(self.server.key), 'model': self.server.model,
-                          'storage': 'process-memory', 'bridgeVersion': 1}
+                          'storage': 'process-memory', 'bridgeVersion': 2}
             return self._json(200, result)
         if path.startswith('/api/'):
             return self._json(404, {'error': '接口不存在。'})
@@ -122,6 +122,10 @@ class DemoHandler(SimpleHTTPRequestHandler):
         except (ValueError, UnicodeError):
             return self._json(400, {'error': '请求格式错误或过长。'})
         path = urlsplit(self.path).path
+        if path == '/api/agent/reveal':
+            with self.server.state_lock:
+                key = self.server.key
+            return self._json(200, {'key': key})
         if path == '/api/agent/configure':
             key, model, remove = body.get('key', ''), body.get('model'), body.get('remove', False)
             if (not isinstance(model, str)

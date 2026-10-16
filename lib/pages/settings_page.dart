@@ -63,6 +63,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           .read(plannerGatewayProvider)
           .configure(key: keyInput.text, model: model, remove: remove);
       keyInput.clear();
+      reveal = false;
       await _load();
       if (firstKey && mounted) {
         ref
@@ -81,8 +82,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               : '配置已保存，连接尚未测试。',
         );
       }
-    } catch (_) {
-      if (mounted) setState(() => status = '保存失败，请检查密钥后重试。');
+    } catch (e) {
+      if (mounted) {
+        setState(
+          () => status = e is AgentFailure
+              ? '保存失败：${e.message}'
+              : '保存失败，请检查配置后重试。',
+        );
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -116,6 +123,30 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
   }
 
+  Future<void> _toggleKey() async {
+    if (!reveal && configured && keyInput.text.isEmpty) {
+      setState(() => busy = true);
+      try {
+        final gateway = ref.read(plannerGatewayProvider);
+        if (gateway is! SavedKeyReader) {
+          throw const AgentFailure('当前配置服务不支持查看已保存密钥，请更新后重试。');
+        }
+        final key = await (gateway as SavedKeyReader).readSavedKey();
+        if (!mounted) return;
+        if (key.isEmpty) throw const AgentFailure('密钥已清除，请重新填写。');
+        keyInput.text = key;
+      } catch (e) {
+        if (mounted) {
+          setState(() => status = e is AgentFailure ? e.message : '读取失败，请重试。');
+        }
+        return;
+      } finally {
+        if (mounted) setState(() => busy = false);
+      }
+    }
+    if (mounted) setState(() => reveal = !reveal);
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(appProvider);
@@ -141,9 +172,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           enabled: !locked,
           decoration: InputDecoration(
             labelText: configured ? 'API 密钥（留空保留原值）' : 'API 密钥',
+            hintText: configured ? '••••••••••••••••' : null,
+            helperText: configured ? '密钥已保存，点击眼睛查看；留空保存保留原值。' : null,
             suffixIcon: IconButton(
               tooltip: reveal ? '隐藏密钥' : '显示密钥',
-              onPressed: () => setState(() => reveal = !reveal),
+              onPressed: locked ? null : _toggleKey,
               icon: Icon(reveal ? Icons.visibility_off : Icons.visibility),
             ),
           ),
@@ -261,7 +294,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ),
         const SizedBox(height: 24),
         const Text(
-          '伴学小屋 0.3.1 · 总结后移除对应明细，只保留统计和选出的关键任务，无法恢复全部逐项内容。',
+          '伴学小屋 0.3.2 · 总结后移除对应明细，只保留统计和选出的关键任务，无法恢复全部逐项内容。',
           style: TextStyle(color: NestColors.muted),
         ),
       ],
