@@ -198,54 +198,65 @@ Future<void> editPlan(
                   decoration: const InputDecoration(labelText: '具体任务'),
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedGoal ?? '',
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: '关联长期目标'),
-                  items: [
-                    const DropdownMenuItem(value: '', child: Text('独立任务')),
-                    ...state.goals.map(
-                      (g) => DropdownMenuItem(
-                        value: g.id,
-                        child: Text(g.title, overflow: TextOverflow.ellipsis),
-                      ),
-                    ),
-                  ],
-                  onChanged: (v) => set(() {
-                    selectedGoal = v == '' ? null : v;
-                    selectedStage = null;
-                  }),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  key: ValueKey(selectedGoal),
-                  initialValue: selectedStage ?? '',
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: '关联阶段'),
-                  items: [
-                    const DropdownMenuItem(value: '', child: Text('不指定阶段')),
-                    ...state.milestones
-                        .where((m) => m.goalId == selectedGoal)
-                        .map(
-                          (m) => DropdownMenuItem(
-                            value: m.id,
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: const Text('目标与完成量（可选）'),
+                  initiallyExpanded:
+                      selectedGoal != null || (plan?.units ?? 1) > 1,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedGoal ?? '',
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: '关联长期目标'),
+                      items: [
+                        const DropdownMenuItem(value: '', child: Text('独立任务')),
+                        ...state.goals.map(
+                          (g) => DropdownMenuItem(
+                            value: g.id,
                             child: Text(
-                              m.title,
+                              g.title,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
+                      ],
+                      onChanged: (v) => set(() {
+                        selectedGoal = v == '' ? null : v;
+                        selectedStage = null;
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      key: ValueKey(selectedGoal),
+                      initialValue: selectedStage ?? '',
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: '关联阶段'),
+                      items: [
+                        const DropdownMenuItem(value: '', child: Text('不指定阶段')),
+                        ...state.milestones
+                            .where((m) => m.goalId == selectedGoal)
+                            .map(
+                              (m) => DropdownMenuItem(
+                                value: m.id,
+                                child: Text(
+                                  m.title,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                      ],
+                      onChanged: (v) => selectedStage = v == '' ? null : v,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: units,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText:
+                            '任务数量（${state.goals.where((g) => g.id == selectedGoal).firstOrNull?.unit ?? '项'}）',
+                      ),
+                    ),
                   ],
-                  onChanged: (v) => selectedStage = v == '' ? null : v,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: units,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText:
-                        '任务数量（${state.goals.where((g) => g.id == selectedGoal).firstOrNull?.unit ?? '项'}）',
-                  ),
                 ),
                 TextField(
                   controller: minutes,

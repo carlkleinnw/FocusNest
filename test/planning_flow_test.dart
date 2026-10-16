@@ -27,7 +27,15 @@ void main() {
 
       Future<void> fill(List<String> values) async {
         for (var i = 0; i < values.length; i++) {
-          await tester.enterText(find.byType(TextField).at(i), values[i]);
+          await tester.enterText(
+            find
+                .descendant(
+                  of: find.byType(AlertDialog),
+                  matching: find.byType(TextField),
+                )
+                .at(i),
+            values[i],
+          );
           await tester.pump();
         }
       }

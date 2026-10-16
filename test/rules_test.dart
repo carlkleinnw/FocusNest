@@ -64,26 +64,31 @@ void main() {
     await app.advanceDay();
     expect(container.read(appProvider).pet.hungryDays, 1);
   });
-  test('death, gated restart, adoption preserve history', () async {
-    for (var i = 0; i < 7; i++) {
-      await app.advanceDay();
-    }
-    expect(container.read(appProvider).pet.dead, true);
-    expect(app.adopt('小满', 0).ok, false);
-    expect((await app.start(plan)).ok, false);
-    final count = container.read(appProvider).records.length;
-    await app.start(plan, restart: true);
-    await app.advanceMinutes(30);
-    expect(container.read(appProvider).adoptionReady, true);
-    expect(app.adopt('小满', 1).ok, true);
-    final state = container.read(appProvider);
-    expect(state.pet.dead, false);
-    expect(state.pet.meals, 1);
-    expect(state.pet.generation, 2);
-    expect(state.memorials.length, 1);
-    expect(state.records.length, count + 1);
-    expect(app.adopt('第三只', 0).ok, false);
-  });
+  test(
+    'legacy pet state never blocks learning; adoption keeps its old gate',
+    () async {
+      for (var i = 0; i < 7; i++) {
+        await app.advanceDay();
+      }
+      expect(container.read(appProvider).pet.dead, true);
+      expect(app.adopt('小满', 0).ok, false);
+      expect((await app.start(plan)).ok, true);
+      await app.cancelFocus();
+      app.dismissSession();
+      final count = container.read(appProvider).records.length;
+      await app.start(plan, restart: true);
+      await app.advanceMinutes(30);
+      expect(container.read(appProvider).adoptionReady, true);
+      expect(app.adopt('小满', 1).ok, true);
+      final state = container.read(appProvider);
+      expect(state.pet.dead, false);
+      expect(state.pet.meals, 1);
+      expect(state.pet.generation, 2);
+      expect(state.memorials.length, 1);
+      expect(state.records.length, count + 1);
+      expect(app.adopt('第三只', 0).ok, false);
+    },
+  );
   test('interaction never feeds, active focus prevents changes', () async {
     app.interact('pet');
     expect(container.read(appProvider).pet.meals, 8);

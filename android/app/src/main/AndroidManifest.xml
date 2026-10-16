@@ -1,9 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <application
         android:allowBackup="false"
-        android:label="伴学小屋 Demo"
+        android:label="伴学小屋"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

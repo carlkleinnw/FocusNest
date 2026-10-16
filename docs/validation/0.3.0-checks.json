@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "appVersion": "0.3.0+12",
+  "tag": "v0.3.0-demo",
+  "scope": "Core planning simplification; emulator only; no personal phone installation or real API key use",
+  "checks": {
+    "flutterAnalyze": "passed; no issues",
+    "flutterUnitAndWidgetTests": {
+      "passed": 48,
+      "failed": 0
+    },
+    "nativeGateRegressionChecks": {
+      "passed": 23,
+      "failed": 0
+    },
+    "androidIntegration": {
+      "passed": true,
+      "workflowTests": 1,
+      "uses": "Real Android SQLite and Keystore; explicit fixed demo model response, real native focus start/stop",
+      "scenarios": [
+        "API key ciphertext does not contain test placeholder",
+        "remove key and reject missing configuration",
+        "clarification then month/week/day draft",
+        "confirmed atomic import",
+        "reopen native repository",
+        "task edit, check and uncheck completion",
+        "37-minute custom task session start",
+        "two confirmations to cancel",
+        "independent session has no task link",
+        "completion and focus attempt appear separately",
+        "task deletion",
+        "historical fixture rolls up week/month/quarter/year into persisted annual review"
+      ]
+    },
+    "rolloverAndCompactionRules": [
+      "multi-day rollover stable identity and original date",
+      "idempotent task completion timestamp",
+      "deleted task never returns",
+      "old v2 completed task without timestamp preserved",
+      "three-round clarification cap",
+      "no partial or duplicate imports",
+      "invalid dates/hierarchy/capacity/duplicates rejected",
+      "network error preserves user turn and task state",
+      "real and virtual focus segregated",
+      "source mutation aborts compaction",
+      "failed disk write preserves sources",
+      "cross-month/year statistics preserved",
+      "concurrent planner reply preserves a new review"
+    ],
+    "mutationReview": "Inverting pending-task rollover condition failed the regression test; original source restored; final suite passed.",
+    "androidReleaseBuild": "passed",
+    "webReleaseBuild": "passed",
+    "demoLauncher": "PowerShell parse passed; actual launcher served version 0.3.0 marker via loopback and opened /#/plans",
+    "visualQA": "Settings, draft, plan list, custom focus, active timer and reviews inspected; narrow/wide planner widget flows passed"
+  },
+  "finalApk": {
+    "file": "FocusNest_0.3.0_android.apk",
+    "bytes": 54366008,
+    "sha256": "cd1b2a015428829778eecd0bbe6f3b875bd9ba6402fd258f73853ced02dde69f",
+    "signerCertificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "device": "emulator-5580 / sdk_gphone64_x86_64 / Android 16 / API 36",
+    "installedVersion": "0.3.0+12",
+    "installedApkSha256MatchesDeliverable": true,
+    "samePackageChecks": [
+      "existing cancelled record survived overwrite installation",
+      "independent 30-minute session start with live countdown",
+      "Chrome blocked by visible persistent full-screen reminder",
+      "knowing-it button returned to launcher",
+      "reopening Chrome blocked again",
+      "landscape reminder readable and button visible",
+      "Settings and dialer allowed",
+      "two-step cancellation",
+      "Chrome allowed after cancellation",
+      "new cancelled record stored as 2 minutes"
+    ],
+    "sessionOutcome": "cancelled through two confirmations; no active focus left on emulator",
+    "timingLimits": "No full 30/37-minute natural expiry observed on this final APK; no precise interception latency claim"
+  },
+  "knownLimits": [
+    "User will enter own DeepSeek key in Settings; real-account requests are not verified.",
+    "Auto review processes due periods while app runs or on next open, not guaranteed during full app closure.",
+    "Compaction retains exact aggregates and up to 6 source-text highlights, deleting other item details and consumed child summaries.",
+    "v2 can migrate to v3; old 0.2.7 cannot read v3 snapshots; code rollback cannot restore compacted details.",
+    "The new APK has not been installed or tested on the user personal phone; old Xiaomi evidence is historical.",
+    "Long lock, true force-stop, reboot, other manufacturers and long-term battery were not verified this round."
+  ],
+  "privacy": "No real keys, personal phone state, app inventory, personal screenshots, private signing material or runtime database included in source or release."
+}

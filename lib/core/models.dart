@@ -1,4 +1,5 @@
 import 'planning.dart';
+import 'journal.dart';
 
 enum FocusStatus { idle, running, completed, cancelled }
 
@@ -14,14 +15,27 @@ class Plan {
     this.milestoneId,
     this.units = 1,
     this.doneUnits = 0,
+    this.completedAt,
+    this.originalDate = '',
+    this.rollovers = 0,
   });
   final String id, title, time, category;
   final int minutes;
   final String date;
   final String? goalId, milestoneId;
   final int units, doneUnits;
+  final String? completedAt;
+  final String originalDate;
+  final int rollovers;
   bool get done => doneUnits >= units;
-  Plan copyWith({String? date, int? doneUnits}) => Plan(
+  Plan copyWith({
+    String? date,
+    int? doneUnits,
+    String? completedAt,
+    bool clearCompletion = false,
+    String? originalDate,
+    int? rollovers,
+  }) => Plan(
     id: id,
     title: title,
     minutes: minutes,
@@ -32,6 +46,9 @@ class Plan {
     milestoneId: milestoneId,
     units: units,
     doneUnits: doneUnits ?? this.doneUnits,
+    completedAt: clearCompletion ? null : completedAt ?? this.completedAt,
+    originalDate: originalDate ?? this.originalDate,
+    rollovers: rollovers ?? this.rollovers,
   );
   Map<String, Object> toJson() => {
     'id': id,
@@ -44,6 +61,9 @@ class Plan {
     'milestoneId': milestoneId ?? '',
     'units': units,
     'doneUnits': doneUnits,
+    'completedAt': completedAt ?? '',
+    'originalDate': originalDate,
+    'rollovers': rollovers,
   };
 }
 
@@ -163,7 +183,9 @@ class AppState {
     this.protectionReady = false,
     this.storageError = '',
     this.dailyCapacity = 180,
-  }) : plans = List.unmodifiable(plans),
+    Workspace? workspace,
+  }) : workspace = workspace ?? Workspace(),
+       plans = List.unmodifiable(plans),
        records = List.unmodifiable(records),
        restDates = Set.unmodifiable(restDates),
        allowedApps = Set.unmodifiable(allowedApps),
@@ -188,6 +210,7 @@ class AppState {
   final bool permissionEverReady, permissionRecoveryPromptSeen;
   final String storageError;
   final int dailyCapacity;
+  final Workspace workspace;
   bool get focusing => session?.status == FocusStatus.running;
   String get dayKey => dateKey(now);
   bool get resting => restDates.contains(dayKey);
@@ -216,6 +239,7 @@ class AppState {
     bool? protectionReady,
     String? storageError,
     int? dailyCapacity,
+    Workspace? workspace,
   }) => AppState(
     now: now ?? this.now,
     pet: pet ?? this.pet,
@@ -241,6 +265,7 @@ class AppState {
     protectionReady: protectionReady ?? this.protectionReady,
     storageError: storageError ?? this.storageError,
     dailyCapacity: dailyCapacity ?? this.dailyCapacity,
+    workspace: workspace ?? this.workspace,
   );
 }
 

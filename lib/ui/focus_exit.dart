@@ -49,7 +49,7 @@ Future<void> requestFocusExit(BuildContext context, WidgetRef ref) async {
         children: [
           StatusPill('确认 2 / 2', warning: true),
           SizedBox(height: 18),
-          Text('提前结束后，本次不会获得食物或重新领养资格。'),
+          Text('已用专注时间仍会记录，本次标为提前结束。任务不会自动勾选完成。'),
           SizedBox(height: 12),
           Text('如果可以，试着回到眼前的一小步；如果需要离开，也可以之后重新开始。'),
         ],

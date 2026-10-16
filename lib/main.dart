@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'core/controller.dart';
+import 'core/journal.dart';
 import 'data/android_adapters.dart';
 import 'data/demo_adapters.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +15,8 @@ import 'pages/rest_page.dart';
 import 'pages/apps_page.dart';
 import 'pages/adopt_page.dart';
 import 'pages/demo_page.dart';
+import 'pages/settings_page.dart';
+import 'pages/agent_page.dart';
 import 'ui/app_shell.dart';
 import 'ui/theme.dart';
 
@@ -24,11 +27,7 @@ Future<void> main() async {
       final clock = RealClock();
       final initial = MemoryRepository(clock).load();
       final repository = await AndroidRepository.open(
-        initial.copyWith(
-          plans: initial.plans
-              .map((p) => p.copyWith(date: initial.dayKey))
-              .toList(),
-        ),
+        initial.copyWith(plans: const [], records: const []),
       );
       runApp(
         ProviderScope(
@@ -59,22 +58,40 @@ Future<void> main() async {
       );
     }
   } else {
-    runApp(const ProviderScope(child: FocusNestApp()));
+    final clock = DemoClock();
+    final repo = MemoryRepository(clock);
+    repo.save(repo.load().copyWith(workspace: Workspace(demoAgent: true)));
+    runApp(
+      ProviderScope(
+        overrides: [
+          clockProvider.overrideWithValue(clock),
+          repositoryProvider.overrideWithValue(repo),
+        ],
+        child: const FocusNestApp(),
+      ),
+    );
   }
 }
 
 final router = GoRouter(
-  initialLocation: '/home',
+  initialLocation: '/plans',
   routes: [
     ShellRoute(
       builder: (context, state, child) =>
           AppShell(path: state.uri.path, child: child),
       routes: [
         GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+        GoRoute(path: '/agent', builder: (context, state) => const AgentPage()),
+        GoRoute(
+          path: '/settings',
+          builder: (context, state) => const SettingsPage(),
+        ),
         GoRoute(
           path: '/plans',
-          builder: (context, state) =>
-              PlansPage(day: state.uri.queryParameters['day']),
+          builder: (context, state) => PlansPage(
+            day: state.uri.queryParameters['day'],
+            all: state.uri.queryParameters['all'] == 'true',
+          ),
         ),
         GoRoute(path: '/goals', builder: (context, state) => const GoalsPage()),
         GoRoute(

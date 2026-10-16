@@ -24,16 +24,6 @@ class PageFrame extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              eyebrow,
-              style: const TextStyle(
-                fontSize: 11,
-                letterSpacing: 3,
-                fontWeight: FontWeight.w700,
-                color: NestColors.green,
-              ),
-            ),
-            const SizedBox(height: 12),
             Wrap(
               spacing: 16,
               runSpacing: 12,
@@ -76,7 +66,7 @@ class SurfacePanel extends StatelessWidget {
     decoration: BoxDecoration(
       color: color ?? NestColors.surface,
       border: Border.all(color: NestColors.line),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
     ),
     child: child,
   );

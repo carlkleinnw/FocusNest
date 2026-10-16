@@ -2,6 +2,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/demo_adapters.dart';
 import '../data/android_adapters.dart';
+import '../data/planner_gateway.dart';
+import 'planner_agent.dart';
+import 'review_engine.dart';
+import 'dart:convert';
 import 'models.dart';
 import 'planning.dart';
 import 'ports.dart';
@@ -14,6 +18,9 @@ final repositoryProvider = Provider<DataRepository>(
 final deviceProvider = Provider<DevicePort>((ref) => SimulatedDevice());
 final intelligenceProvider = Provider<IntelligencePort>(
   (ref) => DisabledIntelligence(),
+);
+final plannerGatewayProvider = Provider<PlannerGateway>(
+  (ref) => AndroidPlannerGateway(),
 );
 final protectionStatusProvider = FutureProvider<ProtectionStatus>((ref) async {
   ref.watch(appProvider.select((s) => s.now.millisecondsSinceEpoch ~/ 3000));
@@ -44,6 +51,11 @@ class AppController extends Notifier<AppState>
   bool _busy = false, _ticking = false, _virtual = false;
   Future<void>? _tickPending;
   DateTime? _lastPermissionPoll;
+  DateTime? _lastReviewAttempt;
+  bool _agentWorking = false, _reviewWorking = false;
+  PlannerGateway get _gateway => state.workspace.demoAgent
+      ? DemoPlannerGateway(state.dayKey)
+      : ref.read(plannerGatewayProvider);
   ClockPort get clock => ref.read(clockProvider);
   bool get simulated => ref.read(deviceProvider).simulated;
   @override
@@ -129,6 +141,20 @@ class AppController extends Notifier<AppState>
           (repo.error ?? '') != state.storageError) {
         _commit(state.copyWith(storageError: repo.error ?? ''), null, false);
       }
+      if (state.workspace.autoReview &&
+          !state.focusing &&
+          !_reviewWorking &&
+          (_lastReviewAttempt == null ||
+              now.difference(_lastReviewAttempt!).inMinutes >= 15)) {
+        _lastReviewAttempt = now;
+        unawaited(
+          summarizeDue().then((r) {
+            if (ref.mounted) {
+              _commit(state.copyWith(message: '复盘：${r.message}'));
+            }
+          }),
+        );
+      }
     } finally {
       _ticking = false;
     }
@@ -147,6 +173,19 @@ class AppController extends Notifier<AppState>
         now: nextDay,
         pet: pet,
         todayFed: false,
+        plans: state.plans
+            .map(
+              (p) => !p.done && p.date.compareTo(dateKey(nextDay)) < 0
+                  ? p.copyWith(
+                      date: dateKey(nextDay),
+                      originalDate: p.originalDate.isEmpty
+                          ? p.date
+                          : p.originalDate,
+                      rollovers: p.rollovers + 1,
+                    )
+                  : p,
+            )
+            .toList(),
         message: pet.dead ? '${pet.name}已经离开，过去的努力会留下记录。' : '新的一天开始了。',
       ),
       pet.dead && !state.pet.dead ? 'pet.died' : 'day.advanced',
@@ -168,10 +207,12 @@ class AppController extends Notifier<AppState>
       return _result(false, 'INVALID_PLAN', '请输入具体任务、30—180分钟时长和有效进度');
     }
     final day = plan.date.isEmpty ? state.dayKey : plan.date;
+    final existing = state.plans.where((p) => p.id == plan.id).firstOrNull;
     final parsed = DateTime.tryParse(day);
     if (parsed == null ||
         dateKey(parsed) != day ||
-        day.compareTo(state.dayKey) < 0) {
+        (day.compareTo(state.dayKey) < 0 &&
+            !(existing?.done == true && existing?.date == day))) {
       return _result(false, 'INVALID_DATE', '请选择今天或未来日期');
     }
     final goal = state.goals.where((g) => g.id == plan.goalId).firstOrNull;
@@ -189,7 +230,10 @@ class AppController extends Notifier<AppState>
             .where((p) => (p.date.isEmpty ? state.dayKey : p.date) == day)
             .fold(0, (sum, p) => sum + p.minutes) +
         plan.minutes;
-    if (minutes > state.dailyCapacity) {
+    if (minutes > state.dailyCapacity &&
+        !(existing != null &&
+            existing.date == day &&
+            plan.minutes <= existing.minutes)) {
       return _result(
         false,
         'CAPACITY_EXCEEDED',
@@ -201,8 +245,17 @@ class AppController extends Notifier<AppState>
           others
               .where((p) => p.goalId == goal.id)
               .fold(0, (sum, p) => sum + p.units) +
-          plan.units;
-      if (assigned > goal.totalUnits || day.compareTo(goal.deadline) > 0) {
+          plan.units +
+          state.workspace.reviews.fold(
+            0,
+            (n, r) => n + (r.byGoal[goal.id] ?? 0),
+          );
+      final rolled =
+          existing != null &&
+          existing.rollovers > 0 &&
+          existing.goalId == goal.id;
+      if (assigned > goal.totalUnits ||
+          (!rolled && day.compareTo(goal.deadline) > 0)) {
         return _result(false, 'GOAL_EXCEEDED', '任务数量或日期超出长期目标');
       }
     }
@@ -212,11 +265,26 @@ class AppController extends Notifier<AppState>
               .where((p) => p.milestoneId == milestone.id)
               .fold(0, (sum, p) => sum + p.units) +
           plan.units;
-      if (assigned > milestone.units || day.compareTo(milestone.deadline) > 0) {
+      final rolled =
+          existing != null &&
+          existing.rollovers > 0 &&
+          existing.milestoneId == milestone.id;
+      if (assigned > milestone.units ||
+          (!rolled && day.compareTo(milestone.deadline) > 0)) {
         return _result(false, 'STAGE_EXCEEDED', '任务数量或日期超出阶段目标');
       }
     }
-    final saved = plan.copyWith(date: day);
+    final saved = plan.copyWith(
+      date: day,
+      originalDate: existing?.originalDate.isNotEmpty == true
+          ? existing!.originalDate
+          : day,
+      rollovers: existing?.rollovers ?? plan.rollovers,
+      completedAt: plan.done
+          ? (existing?.completedAt ?? clock.now().toIso8601String())
+          : null,
+      clearCompletion: !plan.done,
+    );
     final plans = [...state.plans];
     final index = plans.indexWhere((p) => p.id == plan.id);
     if (index < 0) {
@@ -246,12 +314,22 @@ class AppController extends Notifier<AppState>
     _commit(
       state.copyWith(
         plans: state.plans
-            .map((p) => p.id == id ? p.copyWith(doneUnits: units) : p)
+            .map(
+              (p) => p.id == id
+                  ? p.copyWith(
+                      doneUnits: units,
+                      completedAt: units >= p.units
+                          ? (p.completedAt ?? clock.now().toIso8601String())
+                          : null,
+                      clearCompletion: units < p.units,
+                    )
+                  : p,
+            )
             .toList(),
       ),
       'task.progress',
     );
-    return _result(true, 'OK', '任务进度已更新；喂食仍以完整专注为准');
+    return _result(true, 'OK', '任务进度已更新');
   }
 
   @override
@@ -338,15 +416,6 @@ class AppController extends Notifier<AppState>
     if (minutes < 30 || minutes > 720) {
       return _result(false, 'INVALID_CAPACITY', '每天可用时间应为30—720分钟');
     }
-    final scheduled = <String, int>{};
-    for (final p in state.plans.where(
-      (p) => p.date.compareTo(state.dayKey) >= 0,
-    )) {
-      scheduled[p.date] = (scheduled[p.date] ?? 0) + p.minutes;
-    }
-    if (scheduled.values.any((total) => total > minutes)) {
-      return _result(false, 'CAPACITY_EXCEEDED', '已有日期超出这个时间，请先调整计划');
-    }
     _commit(state.copyWith(dailyCapacity: minutes), 'capacity.changed');
     return _result(true, 'OK', '每日可用时间已更新');
   }
@@ -361,8 +430,7 @@ class AppController extends Notifier<AppState>
         plan.minutes > 180) {
       return _result(false, 'INVALID_DURATION', '每次至少30分钟');
     }
-    if (state.pet.dead && !restart ||
-        restart && (!state.pet.dead || state.adoptionReady)) {
+    if (restart && (!state.pet.dead || state.adoptionReady)) {
       return _result(false, 'RESTART_UNAVAILABLE', '请从重新领养页开始');
     }
     if (!state.appsInitialized) {
@@ -390,12 +458,12 @@ class AppController extends Notifier<AppState>
         minutes: plan.minutes,
         startedAt: now,
         restart: restart,
-        planId: plan.id,
+        planId: savedPlan?.id,
       );
       final next = state.copyWith(
         now: now,
         session: session,
-        message: '你安心专注，${state.pet.name}会安静陪着你。',
+        message: '计时已开始，专注眼前这件事。',
       );
       final repo = ref.read(repositoryProvider);
       if (repo is AndroidRepository) {
@@ -437,7 +505,7 @@ class AppController extends Notifier<AppState>
       todayFed: newPet ? state.todayFed : true,
       adoptionReady: newPet,
       achievement: state.achievement + 1,
-      message: newPet ? '专注完成，可以迎接新伙伴了。' : '${state.pet.name}吃饱啦，谢谢你的坚持！',
+      message: '专注时间已记录。任务是否完成，请回计划表确认。',
     );
     _busy = true;
     try {
@@ -494,7 +562,7 @@ class AppController extends Notifier<AppState>
       final result = await ref.read(deviceProvider).releaseRestrictions(next);
       if (!result.ok) return result;
       _commit(next, 'focus.cancelled');
-      return _result(true, 'OK', '已结束，本次不喂食');
+      return _result(true, 'OK', '已结束，专注时长已记录');
     } finally {
       _busy = false;
     }
@@ -572,12 +640,14 @@ class AppController extends Notifier<AppState>
   }
 
   void markPermissionPromptSeen() {
+    if (_busy) return;
     if (!state.permissionPromptSeen) {
       _commit(state.copyWith(permissionPromptSeen: true));
     }
   }
 
   void markPermissionReady() {
+    if (_busy) return;
     if (!state.permissionEverReady ||
         state.permissionRecoveryPromptSeen ||
         !state.permissionPromptSeen) {
@@ -592,13 +662,14 @@ class AppController extends Notifier<AppState>
   }
 
   void markPermissionRecoveryPromptSeen() {
+    if (_busy) return;
     if (!state.permissionRecoveryPromptSeen) {
       _commit(state.copyWith(permissionRecoveryPromptSeen: true));
     }
   }
 
   void interact(String action) {
-    if (state.focusing || state.pet.dead) return;
+    if (_busy || state.focusing || state.pet.dead) return;
     _commit(
       state.copyWith(
         message: switch (action) {
@@ -612,7 +683,10 @@ class AppController extends Notifier<AppState>
     );
   }
 
-  void toggleFloating() => _commit(state.copyWith(floating: !state.floating));
+  void toggleFloating() {
+    if (!_busy) _commit(state.copyWith(floating: !state.floating));
+  }
+
   OperationResult adopt(String name, int colorIndex) {
     if (!state.pet.dead || !state.adoptionReady || state.focusing || _busy) {
       return _result(false, 'ADOPTION_LOCKED', '先完成30分钟重启专注');
@@ -676,7 +750,8 @@ class AppController extends Notifier<AppState>
 
   @override
   Map<String, Object?> readContext() => {
-    'version': 2,
+    'version': 3,
+    'reviews': state.workspace.reviews.map((r) => r.toJson()).toList(),
     'simulated': simulated,
     'date': state.dayKey,
     'plans': state.plans.map((p) => p.toJson()).toList(),
@@ -693,4 +768,255 @@ class AppController extends Notifier<AppState>
     'blockedApps': state.blockedApps.toList(),
     'rules': {'minimumMinutes': 30, 'deathAfterDays': 7},
   };
+
+  OperationResult setWorkspaceOptions({bool? demoAgent, bool? autoReview}) {
+    if (_busy || state.focusing || _agentWorking || _reviewWorking) {
+      return _locked;
+    }
+    if (autoReview == true) _lastReviewAttempt = null;
+    _commit(
+      state.copyWith(
+        workspace: state.workspace.copyWith(
+          demoAgent: demoAgent,
+          autoReview: autoReview,
+        ),
+      ),
+      'workspace.settings',
+    );
+    return _result(true, 'OK', '设置已保存');
+  }
+
+  OperationResult resetConversation() {
+    if (_busy || state.focusing || _agentWorking) return _locked;
+    _commit(
+      state.copyWith(
+        workspace: state.workspace.copyWith(
+          chat: [],
+          rounds: 0,
+          clearDraft: true,
+        ),
+      ),
+      'agent.reset',
+    );
+    return _result(true, 'OK', '已开始新的目标');
+  }
+
+  Future<OperationResult> askPlanner(String input) async {
+    if (_busy || state.focusing || _agentWorking) return _locked;
+    if (input.trim().isEmpty ||
+        input.length > 2000 ||
+        state.workspace.chat.length >= 10) {
+      return _result(false, 'INVALID_INPUT', '请输入2000字以内的目标，或新建对话。');
+    }
+    _agentWorking = true;
+    final workspace = state.workspace;
+    final chat = [
+      ...workspace.chat,
+      {'role': 'user', 'content': input.trim()},
+    ];
+    try {
+      final response = await _gateway.request([
+        {'role': 'system', 'content': plannerPrompt(state)},
+        ...chat,
+      ]);
+      if (!ref.mounted) return _result(false, 'DISPOSED', '页面已关闭');
+      if (_busy) return _result(false, 'SAVE_IN_PROGRESS', '正在保存本地记录，请稍后重新发送。');
+      if (response['kind'] == 'question') {
+        final question = response['question'];
+        if (workspace.rounds >= 3 ||
+            question is! String ||
+            question.trim().isEmpty ||
+            question.length > 500) {
+          throw const AgentFailure('AI 追问超出限制或内容无效，请重试生成计划。');
+        }
+        _commit(
+          state.copyWith(
+            workspace: state.workspace.copyWith(
+              chat: [
+                ...chat,
+                {'role': 'assistant', 'content': question},
+              ],
+              rounds: workspace.rounds + 1,
+              clearDraft: true,
+            ),
+          ),
+          'agent.question',
+        );
+      } else if (response['kind'] == 'plan') {
+        final draft = validateDraft(response, state);
+        _commit(
+          state.copyWith(
+            workspace: state.workspace.copyWith(
+              draft: draft,
+              chat: [
+                ...chat,
+                {
+                  'role': 'assistant',
+                  'content': '已生成「${draft['title']}」草稿，请检查月、周、日安排与假设后保存。',
+                },
+              ],
+            ),
+          ),
+          'agent.draft',
+        );
+      } else {
+        throw const AgentFailure('AI 返回了无法识别的内容，请重试。');
+      }
+      return _result(true, 'OK', 'AI 回复已保存');
+    } catch (e) {
+      return _result(
+        false,
+        'AGENT_FAILED',
+        e is AgentFailure ? e.message : 'AI 请求失败，请检查设置或网络后重试。',
+      );
+    } finally {
+      _agentWorking = false;
+    }
+  }
+
+  Future<OperationResult> importDraft() async {
+    if (_busy || state.focusing || _agentWorking) return _locked;
+    try {
+      final raw = state.workspace.draft;
+      if (raw == null) return _result(false, 'NO_DRAFT', '没有待保存的计划草稿');
+      final draft = validateDraft(raw, state);
+      final stamp = clock.now().microsecondsSinceEpoch;
+      final id = 'ai_$stamp';
+      final tasks = (draft['tasks'] as List).cast<Map<String, dynamic>>();
+      final dates = tasks.map((t) => t['date'] as String).toList()..sort();
+      final goal = Goal(
+        id: id,
+        title: draft['title'] as String,
+        deadline: dates.last,
+        totalUnits: tasks.length,
+        unit: '项',
+      );
+      final plans = [
+        for (var i = 0; i < tasks.length; i++)
+          Plan(
+            id: '${id}_$i',
+            title: tasks[i]['title'] as String,
+            minutes: tasks[i]['minutes'] as int,
+            date: tasks[i]['date'] as String,
+            originalDate: tasks[i]['date'] as String,
+            time: tasks[i]['time'] as String,
+            goalId: id,
+            category: 'AI 计划',
+          ),
+      ];
+      final next = state.copyWith(
+        plans: [...state.plans, ...plans],
+        goals: [...state.goals, goal],
+        workspace: state.workspace.copyWith(
+          clearDraft: true,
+          roadmaps: {
+            ...state.workspace.roadmaps,
+            id: {
+              'title': draft['title'],
+              'months': draft['months'],
+              'weeks': draft['weeks'],
+              'assumptions': draft['assumptions'],
+              'tasks': <Object>[],
+              'demo': state.workspace.demoAgent,
+            },
+          },
+          chat: [
+            ...state.workspace.chat,
+            {
+              'role': 'assistant',
+              'content': '计划已保存，共${tasks.length}项任务。可到今日计划查看和修改。',
+            },
+          ],
+        ),
+      );
+      return await _saveDurably(next, 'agent.imported');
+    } catch (e) {
+      return _result(
+        false,
+        'INVALID_DRAFT',
+        e is AgentFailure ? e.message : '草稿无效，未保存任何任务。',
+      );
+    }
+  }
+
+  Future<OperationResult> _saveDurably(AppState next, String event) async {
+    if (_busy || state.focusing) return _locked;
+    _busy = true;
+    final before = state;
+    try {
+      final repo = ref.read(repositoryProvider);
+      repo.save(next);
+      if (repo is AndroidRepository) {
+        await repo.flush();
+        if (repo.error != null) {
+          repo.save(before);
+          _commit(before.copyWith(storageError: repo.error!), null, false);
+          return _result(false, 'STORAGE_ERROR', '保存失败，原数据已保留，请重试。');
+        }
+      }
+      _commit(next, event, false);
+      return _result(true, 'OK', '已保存');
+    } finally {
+      _busy = false;
+    }
+  }
+
+  Future<OperationResult> summarizeDue() async {
+    if (_reviewWorking || _busy || state.focusing) return _locked;
+    _reviewWorking = true;
+    var count = 0;
+    try {
+      // Bounded catch-up; subsequent foreground maintenance resumes the queue.
+      for (var i = 0; i < 64; i++) {
+        final batch = nextReview(state);
+        if (batch == null) break;
+        final response = await _gateway.request([
+          {'role': 'system', 'content': reviewPrompt},
+          {'role': 'user', 'content': jsonEncode(batch.input)},
+        ]);
+        if (!ref.mounted) break;
+        if (state.focusing || _busy) return _locked;
+        final current = nextReview(state);
+        if (current == null ||
+            current.id != batch.id ||
+            current.digest != batch.digest) {
+          return _result(false, 'SOURCE_CHANGED', '总结期间记录已改变，原数据保留，请重试。');
+        }
+        final review = batch.verify(response, clock.now());
+        final planIds = batch.plans.map((p) => p.id).toSet();
+        final recordIds = batch.records.map((r) => r.id).toSet();
+        final reviewIds = batch.children.map((r) => r.id).toSet();
+        final next = state.copyWith(
+          plans: state.plans.where((p) => !planIds.contains(p.id)).toList(),
+          records: state.records
+              .where((r) => !recordIds.contains(r.id))
+              .toList(),
+          workspace: state.workspace.copyWith(
+            reviews: [
+              ...state.workspace.reviews.where(
+                (r) => !reviewIds.contains(r.id),
+              ),
+              review,
+            ],
+          ),
+        );
+        final saved = await _saveDurably(next, 'review.compacted');
+        if (!saved.ok) return saved;
+        count++;
+      }
+      return _result(
+        true,
+        'OK',
+        count == 0 ? '暂无到期复盘，当前周期的明细继续保留。' : '已完成$count份复盘，已总结的明细已压缩。',
+      );
+    } catch (e) {
+      return _result(
+        false,
+        'REVIEW_FAILED',
+        e is AgentFailure ? e.message : '复盘失败，未总结的数据已保留，请检查网络后重试。',
+      );
+    } finally {
+      _reviewWorking = false;
+    }
+  }
 }

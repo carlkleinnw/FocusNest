@@ -14,6 +14,7 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         database = NestDatabase(this)
+        PlannerBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "focusnest/device_v1")
             .setMethodCallHandler { call, result ->
                 try {

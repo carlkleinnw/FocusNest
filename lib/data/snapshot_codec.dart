@@ -1,5 +1,6 @@
 import '../core/models.dart';
 import '../core/planning.dart';
+import '../core/journal.dart';
 
 Map<String, Object?> encodeSnapshot(AppState s) {
   Map<String, Object> pet(PetState p) => {
@@ -13,7 +14,8 @@ Map<String, Object?> encodeSnapshot(AppState s) {
   };
   final session = s.session;
   return {
-    'version': 2,
+    'version': 3,
+    'workspace': s.workspace.toJson(),
     'now': s.now.toIso8601String(),
     'pet': pet(s.pet),
     'plans': s.plans.map((p) => p.toJson()).toList(),
@@ -50,7 +52,9 @@ Map<String, Object?> encodeSnapshot(AppState s) {
 }
 
 AppState decodeSnapshot(Map<String, dynamic> j) {
-  if (j['version'] != 2) throw const FormatException('不支持的本地数据版本');
+  if (j['version'] != 2 && j['version'] != 3) {
+    throw const FormatException('不支持的本地数据版本');
+  }
   Map<String, dynamic> obj(Object? x) => Map<String, dynamic>.from(x as Map);
   List<Map<String, dynamic>> list(String k) =>
       (j[k] as List? ?? []).map(obj).toList();
@@ -66,6 +70,7 @@ AppState decodeSnapshot(Map<String, dynamic> j) {
   );
   final p = j['session'] == null ? null : obj(j['session']);
   return AppState(
+    workspace: Workspace.fromJson(obj(j['workspace'] ?? {})),
     now: DateTime.parse(j['now'] as String),
     pet: pet(obj(j['pet'])),
     plans: list('plans')
@@ -85,6 +90,11 @@ AppState decodeSnapshot(Map<String, dynamic> j) {
                 : p['milestoneId'] as String,
             units: p['units'] as int? ?? 1,
             doneUnits: p['doneUnits'] as int? ?? 0,
+            completedAt: (p['completedAt'] as String? ?? '').isEmpty
+                ? null
+                : p['completedAt'] as String,
+            originalDate: p['originalDate'] as String? ?? '',
+            rollovers: p['rollovers'] as int? ?? 0,
           ),
         )
         .toList(),

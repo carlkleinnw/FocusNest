@@ -36,4 +36,4 @@ foreach ($candidatePort in 8787..8797) {
   } catch { $listener.Stop() }
 }
 if ($null -eq $chosenPort) { throw '未能启动演示服务，请检查本机端口。' }
-Start-Process "http://127.0.0.1:$chosenPort/#/home"
+Start-Process "http://127.0.0.1:$chosenPort/#/plans"
