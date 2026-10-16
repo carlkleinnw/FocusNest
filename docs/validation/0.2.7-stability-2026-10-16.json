@@ -1,0 +1,220 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "sourceTag": "v0.2.7-demo.2",
+  "runtimeSourceTag": "v0.2.7-demo",
+  "runtimeCommit": "8c134f7fbd88fe9ffd1d46f2fcd39cc06da29b82",
+  "baseDocumentationCommit": "ef46859add5ee638d6e9ffa23fe863ecb24531d7",
+  "acceptance": "passed-on-tested-device-with-required-settings",
+  "scope": "fresh final-build timer, lock spanning expiry, recovery, independent cancellation, extension documentation",
+  "applicationVersionUnchanged": "0.2.7+11",
+  "runtimeCodeChanged": false,
+  "apkRebuiltOrInstalled": false,
+  "artifact": {
+    "apkSha256": "d789fe816c5d584e162b9e78012af35171e2d3f76d3c42186d8983307e03e219",
+    "certificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "installedApkPulledAndCompared": true,
+    "localApkMatchesInstalled": true
+  },
+  "device": {
+    "handset": "Xiaomi 15",
+    "android": "16",
+    "api": "36",
+    "firmware": "OS3.0.305.0.WOCCNXM",
+    "settings": {
+      "accessibilityEnabled": true,
+      "autostartVisibleEnabled": true,
+      "batteryVisibleUnrestricted": true,
+      "settingsChanged": false
+    },
+    "bindingDump": {
+      "boundComponentVisible": null,
+      "interpretation": "unknown in sanitized binding dump; not inferred from label. Actual reminder and application UI used separately."
+    },
+    "poweredByUsb": true
+  },
+  "validation": {
+    "flutterAnalyze": "passed",
+    "flutterTests": 28,
+    "nativePolicyChecks": 23,
+    "extensionDocumentation": {
+      "ports": 7,
+      "eventNames": 17,
+      "sourceReferences": "passed"
+    },
+    "newAndroidOrWebBuild": "not run; runtime unchanged"
+  },
+  "freshFinalBuildSession": {
+    "minutes": 30,
+    "startRequestedAt": "2026-10-16T15:26:58+08:00",
+    "startMethod": "visible in-app confirmation, 30 minutes selected, free focus",
+    "priorUserSession": "completed, no active user focus cancelled",
+    "noUpgradeDuringSession": true,
+    "realSystemClockUnchanged": true,
+    "expiryObservedAt": "2026-10-16T15:58:41+08:00",
+    "lastProtectionRunningSampleAt": "2026-10-16T15:56:49+08:00",
+    "firstProtectionStoppedSnapshotAt": "2026-10-16T15:58:30+08:00",
+    "secondsFromPostTapStartRecordToExpirySample": 1902.71,
+    "elapsedPrecision": "Start record is after the UI tap; expiry is a periodic status sample, not an exact timer-latency measurement."
+  },
+  "singleOwnCardSwipe": {
+    "at": "2026-10-16T15:30:28+08:00",
+    "newExitObserved": true,
+    "exit": {
+      "timestampOnDevice": "2026-10-16 15:30:24.445",
+      "reasonCode": 13,
+      "reason": "OTHER KILLS BY SYSTEM",
+      "subreasonCode": 0,
+      "subreason": "UNKNOWN",
+      "swipeUpCleanMentioned": true
+    },
+    "packageStopped": false,
+    "enabled": true,
+    "foregroundService": true,
+    "actualBlockingBeforeReopeningFocusNest": true,
+    "otherTaskCardsCleared": false
+  },
+  "blockingChecks": [
+    {
+      "target": "portrait",
+      "heldSeconds": 8,
+      "samples": 20,
+      "adbInclusiveDelaySeconds": 1.368,
+      "homeVerified": true,
+      "screen": "1200x2670",
+      "at": "2026-10-16T15:27:36+08:00"
+    },
+    {
+      "target": "portrait",
+      "heldSeconds": 5,
+      "samples": 13,
+      "adbInclusiveDelaySeconds": 0.184,
+      "homeVerified": true,
+      "screen": "1200x2670",
+      "at": "2026-10-16T15:27:43+08:00"
+    },
+    {
+      "target": "portrait",
+      "heldSeconds": 5,
+      "samples": 11,
+      "adbInclusiveDelaySeconds": 1.628,
+      "homeVerified": true,
+      "screen": "1200x2670",
+      "at": "2026-10-16T15:27:52+08:00"
+    },
+    {
+      "target": "landscape game",
+      "heldSeconds": 30,
+      "samples": 75,
+      "adbInclusiveDelaySeconds": 0.55,
+      "homeVerified": true,
+      "screen": "2670x1200",
+      "at": "2026-10-16T15:29:50+08:00"
+    },
+    {
+      "target": "portrait",
+      "heldSeconds": 5,
+      "samples": 11,
+      "adbInclusiveDelaySeconds": 0.809,
+      "homeVerified": true,
+      "screen": "1200x2670",
+      "at": "2026-10-16T15:30:36+08:00"
+    },
+    {
+      "target": "new session after long-lock expiry",
+      "heldSeconds": 5,
+      "samples": 13,
+      "adbInclusiveDelaySeconds": 0.538,
+      "homeVerified": true,
+      "screen": "1200x2670",
+      "at": "2026-10-16T16:01:08+08:00"
+    }
+  ],
+  "necessaryApplications": {
+    "ownAppDetailsIncludingXiaomiRedirect": "passed",
+    "batterySettings": "passed",
+    "accessibilitySettings": "passed",
+    "dialer": "passed",
+    "actualCallsMade": false
+  },
+  "lockObservation": {
+    "startedAt": "2026-10-16T15:37:18+08:00",
+    "endedAt": "2026-10-16T15:57:18+08:00",
+    "elapsedSeconds": 1200.0,
+    "sampleCount": 39,
+    "nominalSamplingSeconds": 30,
+    "allSamplesCurrentUserLocked": true,
+    "screenOffSampleCount": 37,
+    "awakeWhileLockedSampleCount": 2,
+    "allSamplesAccessibilityEnabledAndPackageNotStopped": true,
+    "expiryOccurredWhileLocked": true,
+    "poweredByUsb": true,
+    "deepIdleOrBatteryBenchmark": false
+  },
+  "naturalExpiry": {
+    "observedWithoutReopeningFocusNest": true,
+    "foregroundServiceStoppedWhileLocked": true,
+    "exactReleaseLatencyMeasured": false,
+    "afterUnlockRepeatedLaunches": 2,
+    "restrictedAppAllowed": true,
+    "reminderPresentAfterUnlock": false,
+    "liveRemovalOfVisibleReminderAtDeadline": "not observed in this round; locked expiry followed the earlier acknowledgement back to Home",
+    "finalSessionActiveBlockingAfterLongLock": "not claimed; this session had expired before unlock"
+  },
+  "recoveryUi": {
+    "completedRecordVisible": true,
+    "completedRecordMinutes": 30,
+    "feedMessageVisible": true,
+    "mealCountStableAfterReopen": true,
+    "recordTotalsStableAfterReopen": true,
+    "priorVisibleHistoryPresent": true,
+    "inspection": "own app screenshots and visible counters; no database export"
+  },
+  "independentNewSessionExit": {
+    "bothVisibleConfirmationsUsed": true,
+    "cancelledResultVisible": true,
+    "noAdditionalMeal": true,
+    "blockingAfterLongLockAndNewSession": true,
+    "cancelledRecordVisible": true,
+    "restrictedAppAllowed": true,
+    "onlyIndependentTestEnded": true,
+    "counterAndRecordsRecheckedAfterResume": true,
+    "inspectionNote": "Visible counter unchanged and exactly one cancellation added; final counter and release checks performed after resuming work, not immediately after cancellation",
+    "serviceStopObservedAt": "2026-10-16T16:01:44+08:00",
+    "finalCountersAndReleaseReviewedAt": "2026-10-16T17:18:38+08:00"
+  },
+  "dataPreservation": [
+    "No user focus was cancelled; the visible prior session was completed before testing",
+    "Free-focus tests did not edit user plans, goals, rest dates or allowlist",
+    "No uninstall, data clear, database export, system-time change, permission reset, reboot or clear-all-recents",
+    "Completed and cancelled test records are retained; existing visible history and pet remained available",
+    "UI restoration and visible counters were inspected; a full private SQLite content comparison was not performed"
+  ],
+  "toolingAndInterruptedAttempts": [
+    "Incoming call deferred UI operations; no call handled or made by this test",
+    "Initial sleep check was too narrow for HyperOS Dozing with physical display OFF; helper was corrected",
+    "Earlier lock observations were interrupted by wake or unlock and are excluded from the accepted 20-minute interval",
+    "Read-only host monitor was restarted to handle scheduled expiry during lock; no device process was stopped"
+  ],
+  "limitations": [
+    "This handset, firmware and required settings only; other brands and firmware remain unverified",
+    "Genuine force stop, revoked accessibility, reboot and clear-all-recents were not tested",
+    "USB-powered lock sampling does not establish deep-idle behavior, battery consumption or multi-day stability",
+    "Periodic status/window sampling does not establish zero gaps or pure app-interception latency",
+    "Protection was last sampled running at 15:56:49 and first sampled stopped at 15:58:30; exact expiry release latency was not measured",
+    "Fresh session expired during long lock; live visible-reminder removal at its deadline uses prior 0.2.7 evidence, not a new observation here",
+    "New-session blocking and two-step exit were tested after long-lock expiry; active blocking at the end of the original locked session is not claimed",
+    "No first-install reset, new permissions, cloud synchronization, LLM or Agent integration"
+  ],
+  "excluded": [
+    "phone databases",
+    "complete application inventories",
+    "user task titles",
+    "personal screenshots and notifications",
+    "raw system dumps",
+    "device serial and PIDs",
+    "credentials",
+    "private signing material",
+    "debug artifacts"
+  ]
+}
