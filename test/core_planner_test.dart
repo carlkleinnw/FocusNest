@@ -170,22 +170,94 @@ void main() {
     expect(nextReview(restored), isNull);
   });
   test(
-    'three clarification rounds max; invalid fourth does not change conversation',
+    'clarification continues beyond three rounds with complete context until ready',
     () async {
       setup(
         initial(DateTime(2026, 10, 16)),
-        respond: (_) async => {'kind': 'question', 'question': '你每天有多久？'},
+        respond: (messages) async {
+          final chat =
+              (jsonDecode(messages.last['content']!) as Map)['conversation']
+                  as List;
+          expect(chat.first['content'], '学习Python，最终成果还没想好');
+          final turn = (chat.length + 1) ~/ 2;
+          for (var i = 1; i < turn; i++) {
+            expect(chat[i * 2 - 1]['content'], '还需要明确条件 $i？');
+            if (i * 2 < chat.length - 1) {
+              expect(chat[i * 2]['content'], '补充条件 $i');
+            }
+          }
+          if (chat.last['content'] == '需求明确了，先总结，不要保存计划') {
+            return {'kind': 'message', 'message': '已结合原目标和所有补充明确需求。'};
+          }
+          return {'kind': 'question', 'question': '还需要明确条件 $turn？'};
+        },
       );
       final app = c.read(appProvider.notifier);
-      for (var i = 0; i < 3; i++) {
-        expect((await app.askPlanner('学习计划 $i')).ok, true);
+      for (var i = 0; i < 8; i++) {
+        final input = i == 0 ? '学习Python，最终成果还没想好' : '补充条件 $i';
+        expect((await app.askPlanner(input)).ok, true);
+        expect(c.read(appProvider).workspace.rounds, i + 1);
+        expect(c.read(appProvider).workspace.chat.length, (i + 1) * 2);
+        expect(c.read(appProvider).plans, isEmpty);
+        expect(c.read(appProvider).workspace.draft, isNull);
       }
-      final before = c.read(appProvider).workspace.chat;
-      expect((await app.askPlanner('请继续')).ok, false);
-      expect(c.read(appProvider).workspace.rounds, 3);
-      expect(c.read(appProvider).workspace.chat, before);
+      expect((await app.askPlanner('需求明确了，先总结，不要保存计划')).ok, true);
+      expect(c.read(appProvider).workspace.rounds, 0);
+      expect(c.read(appProvider).workspace.chat.length, 18);
+      expect(c.read(appProvider).plans, isEmpty);
     },
   );
+  test(
+    'restored clarification can continue and transition to a draft',
+    () async {
+      final demo = DemoPlannerGateway('2026-10-16');
+      final draft = await demo.request([
+        {'role': 'user', 'content': 'Python'},
+        {'role': 'user', 'content': '每天30分钟'},
+      ]);
+      final restored = decodeSnapshot(
+        encodeSnapshot(
+          initial(DateTime(2026, 10, 16)).copyWith(
+            workspace: Workspace(
+              rounds: 12,
+              chat: [
+                for (var i = 0; i < 12; i++) ...[
+                  {'role': 'user', 'content': '原有补充 $i'},
+                  {'role': 'assistant', 'content': '原有问题 $i？'},
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+      setup(
+        restored,
+        respond: (_) async => gateway.calls == 1
+            ? {'kind': 'question', 'question': '最后一个关键条件？'}
+            : draft,
+      );
+      final app = c.read(appProvider.notifier);
+      expect((await app.askPlanner('继续明确需求')).ok, true);
+      expect(c.read(appProvider).workspace.rounds, 13);
+      expect((await app.askPlanner('先预览计划')).ok, true);
+      expect(c.read(appProvider).workspace.rounds, 0);
+      expect(c.read(appProvider).workspace.draft, isNotNull);
+      expect(c.read(appProvider).plans, isEmpty);
+    },
+  );
+  for (final question in <Object?>[null, 1, '', '   ', '问' * 501]) {
+    test('invalid clarification preserves conversation: $question', () async {
+      setup(
+        initial(DateTime(2026, 10, 16)),
+        respond: (_) async => {'kind': 'question', 'question': question},
+      );
+      final app = c.read(appProvider.notifier);
+      final before = c.read(appProvider).workspace.chat;
+      expect((await app.askPlanner('请继续')).ok, false);
+      expect(c.read(appProvider).workspace.rounds, 0);
+      expect(c.read(appProvider).workspace.chat, before);
+    });
+  }
   test(
     'demo draft is previewed, atomically imported, and cannot be duplicated',
     () async {

@@ -1,0 +1,101 @@
+{
+  "version": "0.4.1+16",
+  "date": "2026-10-17",
+  "timezone": "Asia/Shanghai",
+  "scope": "Remove the fixed clarification-round limit; keep full conversation and plan-tool safety boundaries",
+  "reproduction": {
+    "beforeFix": "Regression test fails when accepting the fourth consecutive question",
+    "afterFix": "Eight consecutive questions pass, followed by a normal answer; a restored 12-round conversation can continue and preview a plan"
+  },
+  "staticAnalysis": "passed, no issues",
+  "flutterTests": {
+    "status": "passed",
+    "count": 72,
+    "includes": [
+      "eight clarification rounds with original and intermediate context",
+      "restored conversation continues past 12 rounds and transitions to draft",
+      "invalid question output preserves the previous conversation",
+      "existing plan tools, rollback, concurrency and UI tests"
+    ]
+  },
+  "nativeRuleTests": {
+    "status": "passed",
+    "count": 23,
+    "nativeProtectionCodeChanged": false
+  },
+  "androidEmulator": {
+    "serial": "emulator-5580",
+    "android": "16 / API 36",
+    "model": "sdk_gphone64_x86_64",
+    "userPhoneOperated": false,
+    "scenariosPassed": 3,
+    "clarification": {
+      "fixture": "passed",
+      "liveNativeDeepSeek": "passed",
+      "liveRequests": 7,
+      "consecutiveQuestions": 6,
+      "sqliteReloadAfterQuestion": 4,
+      "originalContextRetained": true,
+      "noPrematureDraftOrMutation": true,
+      "previewAfterRequirementsClear": true,
+      "confirmImportAndSqliteReload": true,
+      "liveCreatedTasks": 2
+    },
+    "planManagementRegression": {
+      "status": "passed",
+      "manualLevels": 5,
+      "liveNativeRequests": 16,
+      "checks": [
+        "manual CRUD across day/week/month/quarter/goal views",
+        "contextual follow-up and direct create/save without a draft",
+        "task date/time/minutes and weekly objective update",
+        "query does not mutate plans",
+        "ambiguous deletion asks before changing plans",
+        "follow-up deletes only the specified task",
+        "goal/month/quarter updates and SQLite reload",
+        "goal deletion retains detached daily tasks"
+      ]
+    }
+  },
+  "web": {
+    "releaseBuild": "passed",
+    "browserRuntimeRetested": false
+  },
+  "finalApk": {
+    "status": "passed",
+    "file": "FocusNest_0.4.1_android.apk",
+    "bytes": 54595408,
+    "sha256": "8e7c824549353ca713bfe2703cceb1e76caa65737235f7bf40aaf49f4d7a7795",
+    "signerCertificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "installedVersion": "0.4.1+16",
+    "installedApkPulledAndHashMatched": true,
+    "nativeConnection": "passed",
+    "consecutiveQuestions": 5,
+    "processRestartAfterQuestion": 4,
+    "originalDialogueRetainedAfterRestart": true,
+    "fifthQuestionAfterRestart": "passed",
+    "directSaveAfterRequirementsClear": "passed",
+    "savedDailyTasks": 2,
+    "setupNotes": [
+      "Initial final-APK check found no configured emulator credential; reconfigured through the obscured settings UI and verified native connection before restarting the scenario",
+      "ADB text entry is checked against the intended synthetic input before sending",
+      "Restart navigation initially preceded foreground readiness; after the app regained foreground, the retained dialogue was verified and the fifth turn continued successfully"
+    ]
+  },
+  "limits": [
+    "No fixed clarification-round cap; per-input, accumulated-context and gateway size limits remain",
+    "Requirement completeness is judged by the model; tested synthetic scenarios do not guarantee every natural-language request",
+    "No new full-duration focus, long-lock, personal-phone or other-brand acceptance in this round",
+    "Web plans remain simulated and in memory; no new browser-runtime acceptance in this round"
+  ],
+  "privacy": {
+    "credentialsInSource": false,
+    "deviceDatabaseInSource": false,
+    "personalScreenshotsInSource": false,
+    "testData": "Synthetic goals and tasks only",
+    "sourceAndArtifactScan": "passed",
+    "sourceFilesChecked": 150,
+    "archiveEntriesChecked": 113,
+    "credentialMatches": 0
+  }
+}

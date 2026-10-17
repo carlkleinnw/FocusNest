@@ -207,7 +207,7 @@ class _AgentPageState extends ConsumerState<AgentPage> {
         ),
         const SizedBox(height: 12),
         Text(
-          '按需追问，连续最多3轮 · 已保存计划可直接用对话调整。',
+          '按需追问，直到关键需求明确 · 已保存计划可直接用对话调整。',
           style: const TextStyle(color: NestColors.muted),
         ),
       ],

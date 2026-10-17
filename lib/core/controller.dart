@@ -893,11 +893,10 @@ class AppController extends Notifier<AppState>
       }
       if (response['kind'] == 'question') {
         final question = response['question'];
-        if (workspace.rounds >= 3 ||
-            question is! String ||
+        if (question is! String ||
             question.trim().isEmpty ||
             question.length > 500) {
-          throw const AgentFailure('AI 追问超出限制或内容无效，请重试生成计划。');
+          throw const AgentFailure('AI 追问内容无效，请重试。');
         }
         _commit(
           state.copyWith(
