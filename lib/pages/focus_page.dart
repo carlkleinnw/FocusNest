@@ -248,7 +248,7 @@ class _FocusPageState extends ConsumerState<FocusPage> {
                 Text(s.message, textAlign: TextAlign.center),
                 const SizedBox(height: 24),
                 MainButton(
-                  '返回今日计划',
+                  '返回计划表',
                   onPressed: () {
                     c.dismissSession();
                     context.go('/plans');

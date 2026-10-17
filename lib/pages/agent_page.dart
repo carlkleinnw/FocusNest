@@ -45,11 +45,12 @@ class _AgentPageState extends ConsumerState<AgentPage> {
   Widget build(BuildContext context) {
     final s = ref.watch(appProvider);
     final w = s.workspace;
+    final activity = ref.watch(agentActivityProvider);
     return PageFrame(
       title: '把目标变成每天的一步',
       subtitle: w.demoAgent
           ? '演示模式 · 固定示例，没有调用 DeepSeek'
-          : 'DeepSeek 会先了解你的需求，再给出月、周、日计划。',
+          : '直接说目标、补充要求，或让 AI 查询和调整已有计划。只在必要时追问。',
       action: IconButton(
         tooltip: 'AI 设置',
         onPressed: () => context.go('/settings'),
@@ -62,7 +63,7 @@ class _AgentPageState extends ConsumerState<AgentPage> {
           const SizedBox(height: 16),
           Text('你想完成什么？', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          const Text('例如：我想学会用 Python 采集公开网页数据，最后做出一个能导出 CSV 的小项目。'),
+          const Text('例如：我会 Python 基础，用两周学会采集公开网页，每天30分钟。也可以说：把本周未完成的任务挪到下周。'),
           const SizedBox(height: 24),
         ],
         for (final m in w.chat)
@@ -131,6 +132,17 @@ class _AgentPageState extends ConsumerState<AgentPage> {
               ),
             ),
           ),
+        if (activity.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                activity,
+                style: const TextStyle(color: NestColors.green),
+              ),
+            ),
+          ),
         TextField(
           key: const Key('goal-input'),
           controller: input,
@@ -139,10 +151,10 @@ class _AgentPageState extends ConsumerState<AgentPage> {
           maxLines: 5,
           enabled: !busy && !s.focusing,
           decoration: InputDecoration(
-            labelText: w.chat.isEmpty ? '描述你的目标' : '回答问题或补充要求',
+            labelText: w.chat.isEmpty ? '目标或计划操作' : '继续对话或调整计划',
             hintText: w.chat.isEmpty
                 ? '想学什么、当前基础、期望成果…'
-                : '可以修改时间、学习重点，或要求重新生成',
+                : '补充条件、查看安排，或直接要求增删改计划',
           ),
         ),
         const SizedBox(height: 12),
@@ -189,13 +201,13 @@ class _AgentPageState extends ConsumerState<AgentPage> {
                         );
                       }
                     },
-              child: const Text('新建目标'),
+              child: const Text('新建对话'),
             ),
           ],
         ),
         const SizedBox(height: 12),
         Text(
-          '已追问 ${w.rounds}/3 轮 · 保存前可以继续补充要求。',
+          '按需追问，连续最多3轮 · 已保存计划可直接用对话调整。',
           style: const TextStyle(color: NestColors.muted),
         ),
       ],

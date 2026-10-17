@@ -72,7 +72,17 @@ class DemoPlannerGateway implements PlannerGateway {
         'advice': '根据实际完成情况安排下一阶段，保留复习时间。',
       };
     }
-    final turns = messages.where((m) => m['role'] == 'user').length;
+    var turns = messages.where((m) => m['role'] == 'user').length;
+    try {
+      final envelope = jsonDecode(messages.last['content']!);
+      if (envelope is Map && envelope['conversation'] is List) {
+        turns = (envelope['conversation'] as List)
+            .where((m) => m['role'] == 'user')
+            .length;
+      }
+    } on FormatException {
+      /* Older callers pass ordinary chat messages. */
+    }
     if (turns == 1) {
       return {'kind': 'question', 'question': '你目前的基础、期望完成期限，以及每天能安排多少分钟？'};
     }

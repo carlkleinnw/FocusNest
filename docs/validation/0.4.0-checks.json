@@ -1,0 +1,96 @@
+{
+  "version": "0.4.0+15",
+  "date": "2026-10-17",
+  "timezone": "Asia/Shanghai",
+  "scope": "Contextual plan Agent and separate editable day/week/month/quarter/goal views",
+  "staticAnalysis": "passed, no issues",
+  "flutterTests": {
+    "status": "passed",
+    "count": 66
+  },
+  "nativeRuleTests": {
+    "status": "passed",
+    "count": 23,
+    "nativeProtectionCodeChanged": false
+  },
+  "androidEmulator": {
+    "serial": "emulator-5580",
+    "android": "16 / API 36",
+    "model": "sdk_gphone64_x86_64",
+    "userPhoneOperated": false,
+    "scenariosPassed": 3,
+    "liveAgent": {
+      "transport": "Android native HTTPS / DeepSeek Flash",
+      "modelRequests": 15,
+      "testData": "Synthetic goals and tasks only",
+      "checks": [
+        "manual CRUD for all five levels",
+        "contextual follow-up and no forced questionnaire",
+        "direct create and save with no draft",
+        "task date/time/minute and weekly objective updates",
+        "query with no mutation",
+        "ambiguous deletion asks before changing",
+        "follow-up identifies and deletes only the intended task",
+        "goal/month/quarter updates",
+        "SQLite reload",
+        "goal deletion detaches retained tasks",
+        "explicit remaining-task deletion"
+      ]
+    },
+    "coreRegression": [
+      "draft import through shared plan executor",
+      "task edit and manual completion/uncompletion",
+      "task-linked 37 minute native focus start and two-confirmation exit",
+      "independent focus start and exit",
+      "synthetic review rollup week/month/quarter/year",
+      "three-day rollover without duplication or resurrection"
+    ]
+  },
+  "web": {
+    "status": "passed",
+    "releaseBuild": true,
+    "realChrome": true,
+    "fiveViews": true,
+    "widths": [
+      390,
+      1100
+    ],
+    "pageErrors": []
+  },
+  "finalApk": {
+    "status": "passed",
+    "file": "FocusNest_0.4.0_android.apk",
+    "bytes": 54595408,
+    "sha256": "30bad836521a6c73efe98e4526d18e80dde69140257ddda6559215b49b538ce1",
+    "signerCertificateSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "installedApkPulledAndHashMatched": true,
+    "nativeConnection": "passed",
+    "liveCreateAndSaveThreeTasks": "passed",
+    "liveTaskAndWeeklyObjectiveUpdate": "passed",
+    "processRestartPreservesUpdatedTask": "passed",
+    "nativeTaskFocus": {
+      "minutes": 45,
+      "start": "passed",
+      "nativeForegroundService": true,
+      "twoConfirmationExit": "passed",
+      "fullNaturalDurationRun": false
+    },
+    "fiveLevelViews": "passed",
+    "manualCompletionAndProcessRestart": "passed"
+  },
+  "limits": [
+    "Model interpretation is tested on these scenarios, not guaranteed for every natural-language request",
+    "No new 30-minute natural-expiry or long-lock run in this release; prior 0.3.2 evidence remains historical",
+    "No personal-phone or other-brand acceptance in this round",
+    "Web plans use demo time and in-memory storage; browser refresh resets plans"
+  ],
+  "privacy": {
+    "credentialsInSource": false,
+    "deviceDatabaseInSource": false,
+    "personalScreenshotsInSource": false,
+    "sourceAndArtifactScan": "passed",
+    "sourceFilesChecked": 148,
+    "archiveEntriesChecked": 113,
+    "credentialMatches": 0
+  }
+}

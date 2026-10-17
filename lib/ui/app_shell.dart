@@ -5,7 +5,7 @@ import '../core/controller.dart';
 import 'focus_exit.dart';
 
 const destinations = [
-  ('/plans', '今日计划', Icons.checklist_rounded),
+  ('/plans', '计划', Icons.checklist_rounded),
   ('/agent', 'AI 规划', Icons.route_outlined),
   ('/focus', '沉浸专注', Icons.timelapse),
   ('/records', '复盘', Icons.auto_stories_outlined),

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import '../data/web_planner_gateway_stub.dart'
     if (dart.library.js_interop) '../data/web_planner_gateway.dart';
 import 'planner_agent.dart';
+import 'plan_management.dart';
 import 'review_engine.dart';
 import 'dart:convert';
 import 'models.dart';
@@ -25,6 +26,16 @@ final intelligenceProvider = Provider<IntelligencePort>(
 final plannerGatewayProvider = Provider<PlannerGateway>(
   (ref) => kIsWeb ? createWebPlannerGateway() : AndroidPlannerGateway(),
 );
+final agentActivityProvider = NotifierProvider<AgentActivity, String>(
+  AgentActivity.new,
+);
+
+class AgentActivity extends Notifier<String> {
+  @override
+  String build() => '';
+  void update(String value) => state = value;
+}
+
 final protectionStatusProvider = FutureProvider<ProtectionStatus>((ref) async {
   ref.watch(appProvider.select((s) => s.now.millisecondsSinceEpoch ~/ 3000));
   return ref.read(deviceProvider).status();
@@ -56,6 +67,7 @@ class AppController extends Notifier<AppState>
   DateTime? _lastPermissionPoll;
   DateTime? _lastReviewAttempt;
   bool _agentWorking = false, _reviewWorking = false;
+  bool get agentWorking => _agentWorking;
   PlannerGateway get _gateway => state.workspace.demoAgent
       ? DemoPlannerGateway(state.dayKey)
       : ref.read(plannerGatewayProvider);
@@ -808,22 +820,77 @@ class AppController extends Notifier<AppState>
     if (_busy || state.focusing || _agentWorking) return _locked;
     if (input.trim().isEmpty ||
         input.length > 2000 ||
-        state.workspace.chat.length >= 10) {
+        jsonEncode(state.workspace.chat).length + input.length > 80000) {
       return _result(false, 'INVALID_INPUT', '请输入2000字以内的目标，或新建对话。');
     }
     _agentWorking = true;
+    ref.read(agentActivityProvider.notifier).update('正在理解目标与补充要求…');
     final workspace = state.workspace;
+    final revision = planRevision(state);
+    var staged = state;
     final chat = [
       ...workspace.chat,
       {'role': 'user', 'content': input.trim()},
     ];
     try {
-      final response = await _gateway.request([
-        {'role': 'system', 'content': plannerPrompt(state)},
-        ...chat,
-      ]);
-      if (!ref.mounted) return _result(false, 'DISPOSED', '页面已关闭');
-      if (_busy) return _result(false, 'SAVE_IN_PROGRESS', '正在保存本地记录，请稍后重新发送。');
+      final observations = <Map<String, dynamic>>[];
+      final mutations = <Map<String, dynamic>>[];
+      Map<String, dynamic>? finalResponse;
+      for (var step = 0; step < 6; step++) {
+        final response = await _gateway.request([
+          {'role': 'system', 'content': plannerPrompt(staged)},
+          {
+            'role': 'user',
+            'content': jsonEncode({
+              'conversation': chat,
+              'toolObservations': observations,
+              'instruction': '按 conversation 中最后一条用户消息继续；工具观察是真实执行结果。',
+            }),
+          },
+        ]);
+        if (!ref.mounted) return _result(false, 'DISPOSED', '页面已关闭');
+        if (_busy || state.focusing) return _locked;
+        if (planRevision(state) != revision && response['kind'] != 'question') {
+          throw const AgentFailure('对话期间计划已改变，请重新发送；本次 AI 修改未保存。');
+        }
+        if (response['kind'] != 'actions') {
+          finalResponse = response;
+          break;
+        }
+        if (step == 5) throw const AgentFailure('本次操作步骤过多，未保存任何修改，请缩小范围重试。');
+        try {
+          final result = applyPlanActions(
+            staged,
+            response['actions'],
+            '${clock.now().microsecondsSinceEpoch}_$step',
+          );
+          staged = result.state;
+          observations.add({
+            'step': step + 1,
+            'actions': response['actions'],
+            'results': result.receipts,
+          });
+          mutations.addAll(result.receipts.where((r) => r['op'] != 'query'));
+          ref
+              .read(agentActivityProvider.notifier)
+              .update(result.changed ? '已核对计划操作，正在整理结果…' : '已查询计划，正在核对下一步…');
+        } on AgentFailure catch (e) {
+          staged = state;
+          mutations.clear();
+          ref.read(agentActivityProvider.notifier).update('操作未通过校验，正在修正…');
+          observations.add({
+            'step': step + 1,
+            'actions': response['actions'],
+            'error': e.message,
+            'effect': '本次请求之前的所有暂存修改也已回滚。当前计划以新系统上下文为准，请重新提交完整操作或说明未执行。',
+          });
+        }
+      }
+      final response = finalResponse;
+      if (response == null) throw const AgentFailure('AI 未结束本次操作，所有修改未保存。');
+      if (mutations.isNotEmpty && response['kind'] != 'message') {
+        throw const AgentFailure('AI 修改未形成完整结果，所有修改未保存，请重试。');
+      }
       if (response['kind'] == 'question') {
         final question = response['question'];
         if (workspace.rounds >= 3 ||
@@ -840,7 +907,6 @@ class AppController extends Notifier<AppState>
                 {'role': 'assistant', 'content': question},
               ],
               rounds: workspace.rounds + 1,
-              clearDraft: true,
             ),
           ),
           'agent.question',
@@ -851,6 +917,7 @@ class AppController extends Notifier<AppState>
           state.copyWith(
             workspace: state.workspace.copyWith(
               draft: draft,
+              rounds: 0,
               chat: [
                 ...chat,
                 {
@@ -861,6 +928,42 @@ class AppController extends Notifier<AppState>
             ),
           ),
           'agent.draft',
+        );
+      } else if (response['kind'] == 'message') {
+        final message = response['message'];
+        if (message is! String ||
+            message.trim().isEmpty ||
+            message.length > 6000) {
+          throw const AgentFailure('AI 回复无效，本次修改未保存。');
+        }
+        final counts = <String, int>{};
+        for (final r in mutations) {
+          final label =
+              '${{'create': '新增', 'update': '修改', 'delete': '删除'}[r['op']]}${{'task': '每日任务', 'goal': '总目标', 'period': '周期计划'}[r['entity']]}';
+          counts[label] = (counts[label] ?? 0) + 1;
+        }
+        final receipt = counts.isEmpty
+            ? (observations.any((o) => o.containsKey('error'))
+                  ? '本次未修改计划。\n\n'
+                  : '')
+            : '已保存：${counts.entries.map((e) => '${e.key} ${e.value} 项').join('，')}。\n\n';
+        final next = state.copyWith(
+          plans: staged.plans,
+          goals: staged.goals,
+          milestones: staged.milestones,
+          workspace: state.workspace.copyWith(
+            roadmaps: staged.workspace.roadmaps,
+            clearDraft: staged.workspace.draft == null,
+            rounds: 0,
+            chat: [
+              ...chat,
+              {'role': 'assistant', 'content': '$receipt$message'},
+            ],
+          ),
+        );
+        return await _saveDurably(
+          next,
+          mutations.isEmpty ? 'agent.answer' : 'agent.actions',
         );
       } else {
         throw const AgentFailure('AI 返回了无法识别的内容，请重试。');
@@ -874,6 +977,27 @@ class AppController extends Notifier<AppState>
       );
     } finally {
       _agentWorking = false;
+      if (ref.mounted) ref.read(agentActivityProvider.notifier).update('');
+    }
+  }
+
+  Future<OperationResult> managePlans(
+    List<Map<String, dynamic>> actions,
+  ) async {
+    if (_busy || state.focusing || _agentWorking) return _locked;
+    try {
+      final result = applyPlanActions(
+        state,
+        actions,
+        '${clock.now().microsecondsSinceEpoch}',
+      );
+      return await _saveDurably(result.state, 'plans.managed');
+    } catch (e) {
+      return _result(
+        false,
+        'INVALID_OPERATION',
+        e is AgentFailure ? e.message : '计划参数无效，未修改。',
+      );
     }
   }
 
@@ -886,48 +1010,17 @@ class AppController extends Notifier<AppState>
       final stamp = clock.now().microsecondsSinceEpoch;
       final id = 'ai_$stamp';
       final tasks = (draft['tasks'] as List).cast<Map<String, dynamic>>();
-      final dates = tasks.map((t) => t['date'] as String).toList()..sort();
-      final goal = Goal(
-        id: id,
-        title: draft['title'] as String,
-        deadline: dates.last,
-        totalUnits: tasks.length,
-        unit: '项',
-      );
-      final plans = [
-        for (var i = 0; i < tasks.length; i++)
-          Plan(
-            id: '${id}_$i',
-            title: tasks[i]['title'] as String,
-            minutes: tasks[i]['minutes'] as int,
-            date: tasks[i]['date'] as String,
-            originalDate: tasks[i]['date'] as String,
-            time: tasks[i]['time'] as String,
-            goalId: id,
-            category: 'AI 计划',
-          ),
-      ];
-      final next = state.copyWith(
-        plans: [...state.plans, ...plans],
-        goals: [...state.goals, goal],
-        workspace: state.workspace.copyWith(
+      final managed = applyPlanActions(state, [
+        {'op': 'create_plan', 'entity': 'goal', 'id': id, 'values': draft},
+      ], '$stamp').state;
+      final next = managed.copyWith(
+        workspace: managed.workspace.copyWith(
           clearDraft: true,
-          roadmaps: {
-            ...state.workspace.roadmaps,
-            id: {
-              'title': draft['title'],
-              'months': draft['months'],
-              'weeks': draft['weeks'],
-              'assumptions': draft['assumptions'],
-              'tasks': <Object>[],
-              'demo': state.workspace.demoAgent,
-            },
-          },
           chat: [
             ...state.workspace.chat,
             {
               'role': 'assistant',
-              'content': '计划已保存，共${tasks.length}项任务。可到今日计划查看和修改。',
+              'content': '计划已保存，共${tasks.length}项任务。可到计划表分层查看和修改。',
             },
           ],
         ),
