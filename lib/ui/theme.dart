@@ -44,6 +44,10 @@ abstract final class NestColors {
   static const amber = Color(0xFFC77700);
 
   static const tagBg = Color(0xFFF1F2F4);
+
+  /// Deep cards on the immersive page.
+  static const heroStart = Color(0xFF1D1E22);
+  static const heroEnd = Color(0xFF2C2E35);
 }
 
 abstract final class NestRadius {

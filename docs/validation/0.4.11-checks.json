@@ -1,0 +1,43 @@
+{
+  "version": "0.4.11+32",
+  "tag": "v0.4.11-demo",
+  "date": "2026-10-18",
+  "scope": "Only the immersive focus page returns to the original Xiaomi-style visuals: soft orange minute orb with pill duration options, dark gradient running card, circular result card. All other pages keep the current layout and palette. No route, key, business logic, native protection, snapshot or key storage changes.",
+  "checks": [
+    {
+      "name": "dart analyze lib test",
+      "result": "pass",
+      "detail": "No issues found."
+    },
+    {
+      "name": "dart format lib",
+      "result": "pass",
+      "detail": "Formatted, 0 changed after the final pass."
+    },
+    {
+      "name": "flutter test",
+      "result": "pass",
+      "detail": "72 tests passed. The focus back/cancel test still exercises the running page and both exit confirmations."
+    },
+    {
+      "name": "flutter build web --release --no-web-resources-cdn",
+      "result": "pass",
+      "detail": "build/web produced; idle, running and cancelled states rendered and inspected through the demo device."
+    },
+    {
+      "name": "flutter build apk --release",
+      "result": "pass",
+      "detail": "52.4 MB release APK built from version 0.4.11+32."
+    },
+    {
+      "name": "Android 36.1 emulator idle state",
+      "result": "pass",
+      "detail": "Installed and opened the focus page; the orange orb, duration pills and orange start button render as intended. Starting a session on the emulator still requires the window-recognition protection service and was refused as expected."
+    }
+  ],
+  "notRun": [
+    "Phone install of 0.4.11 (the Xiaomi 15 had an active 55-minute focus session and was deliberately left untouched; it remains on 0.4.10+31)",
+    "30-minute native focus duration and long lock screen",
+    "Swipe-away survival and incoming-call overlay (native code unchanged)"
+  ]
+}

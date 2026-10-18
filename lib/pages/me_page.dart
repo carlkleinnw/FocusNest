@@ -42,7 +42,7 @@ class MePage extends StatelessWidget {
                   ),
                   SizedBox(height: 2),
                   Text(
-                    'FocusNest · 0.4.10 体验版',
+                    'FocusNest · 0.4.11 体验版',
                     style: TextStyle(fontSize: 13, color: NestColors.muted),
                   ),
                 ],
