@@ -9,7 +9,6 @@ const destinations = [
   ('/plans', '日程', Icons.event_note_rounded),
   ('/agent', 'AI', Icons.auto_awesome_outlined),
   ('/focus', '沉浸', Icons.timelapse_rounded),
-  ('/records', '复盘', Icons.auto_stories_outlined),
   ('/me', '我的', Icons.person_outline_rounded),
 ];
 

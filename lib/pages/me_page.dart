@@ -8,7 +8,7 @@ class MePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => PageFrame(
-    subtitle: '长期目标、专注保护与设置。',
+    subtitle: '复盘、长期目标、专注保护与设置。',
     children: [
       SurfacePanel(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -42,7 +42,7 @@ class MePage extends StatelessWidget {
                   ),
                   SizedBox(height: 2),
                   Text(
-                    'FocusNest · 0.4.9 体验版',
+                    'FocusNest · 0.4.10 体验版',
                     style: TextStyle(fontSize: 13, color: NestColors.muted),
                   ),
                 ],
@@ -54,6 +54,16 @@ class MePage extends StatelessWidget {
       const SizedBox(height: 14),
       SettingsGroup(
         children: [
+          SettingsRow(
+            title: '复盘',
+            subtitle: '周、月、季、年逐级压缩',
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: NestColors.faint,
+            ),
+            onTap: () => context.go('/records'),
+          ),
           SettingsRow(
             title: '长期目标',
             subtitle: '目标、阶段与每日任务',
