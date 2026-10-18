@@ -1,0 +1,43 @@
+{
+  "version": "0.4.4+25",
+  "tag": "v0.4.4-demo",
+  "date": "2026-10-18",
+  "scope": "Interface redesign on a HyperOS-inspired design system. No native protection, snapshot format, key storage or planning rules changed.",
+  "checks": [
+    {
+      "name": "dart analyze lib test",
+      "result": "pass",
+      "detail": "No issues found."
+    },
+    {
+      "name": "dart format lib",
+      "result": "pass",
+      "detail": "Formatted, 0 changed after the final pass."
+    },
+    {
+      "name": "flutter test",
+      "result": "pass",
+      "detail": "72 tests passed, including 360/1100 width and 1.3 text scale coverage."
+    },
+    {
+      "name": "flutter build web --release --no-web-resources-cdn",
+      "result": "pass",
+      "detail": "build/web produced; routes checked at 390 and 900 logical widths."
+    },
+    {
+      "name": "flutter build apk --release",
+      "result": "pass",
+      "detail": "52.4 MB release APK built from version 0.4.4+25."
+    },
+    {
+      "name": "Android 36.1 emulator UI walkthrough",
+      "result": "pass",
+      "detail": "Plans, AI, focus (idle/result), records, settings, goals and whitelist screens checked after a clean install; starting focus without the accessibility service shows the existing permission message."
+    }
+  ],
+  "notRun": [
+    "30-minute native focus duration and long lock screen",
+    "Swipe-away survival and incoming-call overlay (native code unchanged)",
+    "Physical Xiaomi 15 install of this build"
+  ]
+}
