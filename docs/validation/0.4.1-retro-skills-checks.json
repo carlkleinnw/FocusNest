@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-18",
+  "appVersionUnchanged": "0.4.1+16",
+  "applicationRebuilt": false,
+  "deviceOperated": false,
+  "newSkillNames": 0,
+  "newAlwaysLoadedDescriptions": 0,
+  "newConditionalReferences": 2,
+  "entryCharactersBefore": 10919,
+  "entryCharactersAfter": 10632,
+  "entryCharactersReduced": 287,
+  "skills": {
+    "diagnosing-bugs": {
+      "beforeCharacters": 8527,
+      "afterCharacters": 8922,
+      "frontmatterUnchanged": true,
+      "invocationMetadataUnchanged": true
+    },
+    "focusnest-product-rules": {
+      "beforeCharacters": 1025,
+      "afterCharacters": 751,
+      "frontmatterUnchanged": true,
+      "invocationMetadataUnchanged": true
+    },
+    "focusnest-evidence-first-delivery": {
+      "beforeCharacters": 1367,
+      "afterCharacters": 959,
+      "frontmatterUnchanged": true,
+      "invocationMetadataUnchanged": true
+    }
+  },
+  "quickValidate": {
+    "status": "passed",
+    "foldersChecked": 4,
+    "runtime": "existing E:/Conda/python.exe, UTF-8"
+  },
+  "relativeLinksChecked": 4,
+  "relativeLinks": "passed",
+  "projectAndUserDeliverySkillEqual": true,
+  "routingReview": "manual static scenarios; no independent cross-project runtime test",
+  "archive": {
+    "file": "FocusNest_Skill_Updates_2026-10-18.zip",
+    "bytes": 18376,
+    "sha256": "ef0480d685de96c12ce201367cee097871d32c8e58c28087bdcd118692a6210e",
+    "entries": 12,
+    "payloadHashes": "passed",
+    "crc": "passed",
+    "credentialPatternScan": "passed"
+  },
+  "privateArtifactsPackaged": false
+}
