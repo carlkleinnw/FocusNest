@@ -6,11 +6,10 @@ import 'focus_exit.dart';
 import 'theme.dart';
 
 const destinations = [
-  ('/plans', '计划', Icons.checklist_rounded),
-  ('/agent', 'AI 规划', Icons.auto_awesome_outlined),
-  ('/focus', '沉浸专注', Icons.timelapse_rounded),
-  ('/records', '复盘', Icons.auto_stories_outlined),
-  ('/settings', '设置', Icons.settings_outlined),
+  ('/plans', '日程', Icons.event_note_rounded),
+  ('/agent', 'AI', Icons.auto_awesome_outlined),
+  ('/focus', '沉浸', Icons.timelapse_rounded),
+  ('/me', '我的', Icons.person_outline_rounded),
 ];
 
 class AppShell extends ConsumerStatefulWidget {

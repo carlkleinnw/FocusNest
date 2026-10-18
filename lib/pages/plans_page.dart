@@ -178,54 +178,33 @@ class _PlansPageState extends ConsumerState<PlansPage> {
         .fold(0, (n, r) => n + r.minutes);
 
     return PageFrame(
-      title: '计划',
-      subtitle: '一次看清一个层级。完成后勾选，未完成自动顺延。',
-      action: TextButton.icon(
-        onPressed: s.focusing
-            ? null
-            : () {
-                if (level == 'day') {
-                  editPlan(
-                    context,
-                    ref,
-                    day: from.compareTo(s.dayKey) < 0 ? s.dayKey : from,
-                    goalId: goalFilter,
-                  );
-                } else if (level == 'goal') {
-                  editGoal(context, ref);
-                } else {
-                  editPeriod(context, ref, level, anchor(s));
-                }
-              },
-        icon: const Icon(Icons.add_rounded, size: 18),
-        label: Text('新增${planLevelNames[level]}'),
-        style: TextButton.styleFrom(
-          foregroundColor: NestColors.link,
-          visualDensity: VisualDensity.compact,
-        ),
+      title: '日程',
+      subtitle: level == 'day' ? '今天安排的任务，按时间排好。' : '查看周、月、季与总目标的安排。',
+      action: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton.icon(
+            key: const Key('open-views'),
+            onPressed: _openViews,
+            icon: const Icon(Icons.view_agenda_outlined, size: 18),
+            label: const Text('视图'),
+            style: TextButton.styleFrom(
+              foregroundColor: NestColors.link,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+          TextButton.icon(
+            onPressed: s.focusing ? null : () => _add(s, from),
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: const Text('新增'),
+            style: TextButton.styleFrom(
+              foregroundColor: NestColors.link,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ],
       ),
       children: [
-        _SummaryGroup(
-          now: s.now,
-          done: todayDone,
-          total: todays.length,
-          minutes: todayMinutes,
-        ),
-        const SizedBox(height: 10),
-        PillTabs(
-          labels: const ['日', '周', '月', '季', '目标'],
-          index: planLevelNames.keys.toList().indexOf(level),
-          keys: [for (final e in planLevelNames.entries) Key('view-${e.key}')],
-          onChanged: (i) {
-            setState(() {
-              level = planLevelNames.keys.elementAt(i);
-              query = '';
-              search.clear();
-              goalFilter = null;
-            });
-          },
-        ),
-        const SizedBox(height: 10),
         if (level == 'day' && !showAll)
           _WeekGroup(
             anchor: anchor(s),
@@ -247,13 +226,44 @@ class _PlansPageState extends ConsumerState<PlansPage> {
                 : '$from — $to',
             onPrev: () => move(s, -1),
             onNext: () => move(s, 1),
-            onPickDate: () => pickDate(s),
+            onToday: () => setState(() {
+              level = 'day';
+              selected = s.now;
+              all = false;
+            }),
+          )
+        else
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => setState(() {
+                level = 'day';
+                selected = s.now;
+                all = false;
+              }),
+              icon: const Icon(Icons.chevron_left_rounded, size: 18),
+              label: const Text('回到日程'),
+              style: TextButton.styleFrom(
+                foregroundColor: NestColors.link,
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                textStyle: const TextStyle(fontSize: 13),
+              ),
+            ),
           ),
+        if (level == 'day' && !showAll) ...[
+          const SizedBox(height: 10),
+          _TodayLine(
+            done: todayDone,
+            total: todays.length,
+            minutes: todayMinutes,
+          ),
+        ],
         if (level != 'goal') ...[
           const SizedBox(height: 10),
           _SearchBar(
             controller: search,
-            hint: '搜索${planLevelNames[level]}',
+            hint: level == 'day' ? '搜索日程' : '搜索${planLevelNames[level]}',
             showAll: showAll,
             onQuery: (v) => setState(() => query = v),
             onToggleAll: () => setState(() => all = !showAll),
@@ -264,11 +274,6 @@ class _PlansPageState extends ConsumerState<PlansPage> {
         ],
         const SizedBox(height: 14),
         if (level == 'day') ...[
-          _CountLine(
-            total: tasks.length,
-            done: tasks.where((p) => p.done).length,
-          ),
-          const SizedBox(height: 8),
           if (tasks.isEmpty)
             const EmptyPanel(
               title: '这个日期还没有任务',
@@ -276,7 +281,9 @@ class _PlansPageState extends ConsumerState<PlansPage> {
               icon: Icons.checklist_rounded,
             )
           else
-            _taskGroup([for (final p in tasks) taskTile(s, p)]),
+            _taskGroup([
+              for (final p in tasks) taskTile(s, p, agenda: !showAll),
+            ]),
         ] else if (level == 'goal') ...[
           if (goals.isEmpty)
             const EmptyPanel(
@@ -321,6 +328,73 @@ class _PlansPageState extends ConsumerState<PlansPage> {
     );
   }
 
+  Future<void> _openViews() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 4, bottom: 10),
+                child: Text(
+                  '查看视图',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: NestColors.ink,
+                  ),
+                ),
+              ),
+              PillTabs(
+                labels: const ['日', '周', '月', '季', '目标'],
+                index: planLevelNames.keys.toList().indexOf(level),
+                keys: [
+                  for (final e in planLevelNames.entries) Key('view-${e.key}'),
+                ],
+                scrollable: false,
+                onChanged: (i) {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    level = planLevelNames.keys.elementAt(i);
+                    query = '';
+                    search.clear();
+                    goalFilter = null;
+                  });
+                },
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 4, top: 10),
+                child: Text(
+                  '周、月、季与总目标用于查看长期安排。',
+                  style: TextStyle(fontSize: 12, color: NestColors.faint),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _add(AppState s, String from) {
+    if (level == 'day') {
+      editPlan(
+        context,
+        ref,
+        day: from.compareTo(s.dayKey) < 0 ? s.dayKey : from,
+        goalId: goalFilter,
+      );
+    } else if (level == 'goal') {
+      editGoal(context, ref);
+    } else {
+      editPeriod(context, ref, level, anchor(s));
+    }
+  }
+
   String _shortGoal(String title) {
     final chars = title.characters;
     return chars.length > 12 ? '${chars.take(12)}…' : title;
@@ -342,13 +416,39 @@ class _PlansPageState extends ConsumerState<PlansPage> {
     ),
   );
 
-  Widget taskTile(AppState s, Plan p) {
+  Widget taskTile(AppState s, Plan p, {bool agenda = false}) {
     final goal = _goalTitle(s, p);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (agenda)
+            SizedBox(
+              width: 46,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.time,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: NestColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${p.minutes} 分钟',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: NestColors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (agenda) const SizedBox(width: 8),
           Padding(
             padding: const EdgeInsets.only(top: 2),
             child: _CheckCircle(
@@ -387,8 +487,10 @@ class _PlansPageState extends ConsumerState<PlansPage> {
                   runSpacing: 4,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    MetaText('${p.date} ${p.time}'),
-                    MetaText('${p.minutes} 分钟'),
+                    if (!agenda) ...[
+                      MetaText('${p.date} ${p.time}'),
+                      MetaText('${p.minutes} 分钟'),
+                    ],
                     if (goal != null) TagLabel(_shortGoal(goal)),
                     if (p.units > 1)
                       TagLabel(
@@ -709,77 +811,44 @@ class _PlansPageState extends ConsumerState<PlansPage> {
   }
 }
 
-class _SummaryGroup extends StatelessWidget {
-  const _SummaryGroup({
-    required this.now,
+class _TodayLine extends StatelessWidget {
+  const _TodayLine({
     required this.done,
     required this.total,
     required this.minutes,
   });
-  final DateTime now;
   final int done, total, minutes;
-
   @override
   Widget build(BuildContext context) {
     final ratio = total == 0 ? 0.0 : done / total;
-    final week = _weekdayLabels[now.weekday - 1];
-    return SurfacePanel(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '今天 · ${shortDate(now)} 周$week',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: NestColors.muted,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '$done',
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w600,
-                              color: NestColors.ink,
-                            ),
-                          ),
-                          TextSpan(
-                            text: ' / $total 项已完成',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: NestColors.muted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '今天 $done / $total 项已完成',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: NestColors.muted),
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '专注 $minutes 分钟',
                 style: const TextStyle(fontSize: 13, color: NestColors.muted),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(2),
-            child: LinearProgressIndicator(value: ratio, minHeight: 4),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(2),
+          child: LinearProgressIndicator(value: ratio, minHeight: 3),
+        ),
+      ],
     );
   }
 }
@@ -955,10 +1024,10 @@ class _PeriodBar extends StatelessWidget {
     required this.label,
     required this.onPrev,
     required this.onNext,
-    required this.onPickDate,
+    required this.onToday,
   });
   final String label;
-  final VoidCallback onPrev, onNext, onPickDate;
+  final VoidCallback onPrev, onNext, onToday;
   @override
   Widget build(BuildContext context) => SurfacePanel(
     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -976,10 +1045,14 @@ class _PeriodBar extends StatelessWidget {
             style: const TextStyle(fontSize: 14, color: NestColors.ink),
           ),
         ),
-        IconButton(
-          tooltip: '选择日期',
-          onPressed: onPickDate,
-          icon: const Icon(Icons.calendar_today_outlined, size: 18),
+        TextButton(
+          onPressed: onToday,
+          style: TextButton.styleFrom(
+            foregroundColor: NestColors.link,
+            visualDensity: VisualDensity.compact,
+            textStyle: const TextStyle(fontSize: 13),
+          ),
+          child: const Text('日程'),
         ),
         IconButton(
           tooltip: '下一个周期',
@@ -1094,19 +1167,6 @@ class _SearchBar extends StatelessWidget {
       ],
     );
   }
-}
-
-class _CountLine extends StatelessWidget {
-  const _CountLine({required this.total, required this.done});
-  final int total, done;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-    child: Text(
-      '$total 项任务 · $done 项已完成',
-      style: const TextStyle(fontSize: 13, color: NestColors.muted),
-    ),
-  );
 }
 
 class _CheckCircle extends StatelessWidget {

@@ -1,0 +1,43 @@
+{
+  "version": "0.4.8+29",
+  "tag": "v0.4.8-demo",
+  "date": "2026-10-18",
+  "scope": "Information architecture follows the three core features: schedule, AI agent and immersive mode, plus a 'Me' tab that holds review, long-term goals, protection and settings. The schedule page becomes a today-centric agenda list; week/month/quarter/goal move into a secondary view sheet.",
+  "checks": [
+    {
+      "name": "dart analyze lib test",
+      "result": "pass",
+      "detail": "No issues found."
+    },
+    {
+      "name": "dart format lib",
+      "result": "pass",
+      "detail": "Formatted, 0 changed after the final pass."
+    },
+    {
+      "name": "flutter test",
+      "result": "pass",
+      "detail": "72 tests passed. The hierarchy test now opens the view sheet before switching levels; content and collapsed-state assertions are unchanged."
+    },
+    {
+      "name": "flutter build web --release --no-web-resources-cdn",
+      "result": "pass",
+      "detail": "build/web produced with the four-tab navigation and schedule view sheet."
+    },
+    {
+      "name": "flutter build apk --release",
+      "result": "pass",
+      "detail": "52.4 MB release APK built from version 0.4.8+29."
+    },
+    {
+      "name": "Android 36.1 emulator UI walkthrough",
+      "result": "pass",
+      "detail": "Installed over 0.4.7 (versionName 0.4.8, versionCode 29, data preserved). Schedule shows the time-column agenda; view sheet opens with day selected; Me tab lists review, goals, protection and settings; settings opens as a child page without the tab bar."
+    }
+  ],
+  "notRun": [
+    "Physical phone install (no phone connected to adb this round; it remains on 0.4.4+25)",
+    "30-minute native focus duration and long lock screen",
+    "Swipe-away survival and incoming-call overlay (native code unchanged)"
+  ]
+}

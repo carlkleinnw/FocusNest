@@ -19,6 +19,7 @@ import 'pages/adopt_page.dart';
 import 'pages/demo_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/agent_page.dart';
+import 'pages/me_page.dart';
 import 'ui/app_shell.dart';
 import 'ui/theme.dart';
 
@@ -93,6 +94,7 @@ final router = GoRouter(
       routes: [
         GoRoute(path: '/home', builder: (context, state) => const HomePage()),
         GoRoute(path: '/agent', builder: (context, state) => const AgentPage()),
+        GoRoute(path: '/me', builder: (context, state) => const MePage()),
         GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsPage(),

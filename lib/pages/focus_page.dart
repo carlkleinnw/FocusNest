@@ -116,7 +116,7 @@ class _FocusPageState extends ConsumerState<FocusPage> {
     final minutes = selectedMinutes ?? task?.minutes ?? 30;
     final running = session != null && s.focusing;
     return PageFrame(
-      title: '专注',
+      title: '沉浸模式',
       subtitle: session == null
           ? (task == null ? '自由安排一段不被打扰的时间。' : '这次只做 · ${task.title}')
           : running

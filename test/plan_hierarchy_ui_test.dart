@@ -40,11 +40,18 @@ void main() {
         );
         await tester.pumpAndSettle();
         for (final level in ['day', 'week', 'month', 'quarter', 'goal']) {
+          final opener = find.byKey(const Key('open-views'));
+          await tester.ensureVisible(opener);
+          await tester.tap(opener);
+          await tester.pumpAndSettle();
           final tab = find.byKey(Key('view-$level'));
-          await tester.ensureVisible(tab);
           await tester.tap(tab);
           await tester.pumpAndSettle();
-          expect(tester.widget<ChoiceChip>(tab).selected, true);
+          await tester.tap(opener);
+          await tester.pumpAndSettle();
+          expect(tester.widget<ChoiceChip>(find.byKey(Key('view-$level'))).selected, true);
+          await tester.tap(find.byKey(Key('view-$level')));
+          await tester.pumpAndSettle();
           if (level == 'day') {
             expect(find.text('解析公开页面标题'), findsOneWidget);
             expect(find.text('week 成果'), findsNothing);
