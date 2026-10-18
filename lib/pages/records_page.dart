@@ -71,8 +71,7 @@ class _RecordsPageState extends ConsumerState<RecordsPage> {
         : '有已结束的周期可以复盘。';
 
     return PageFrame(
-      title: '复盘',
-      subtitle: '周、月、季、年逐级压缩。统计由程序核算，建议由 AI 给出。',
+      subtitle: '周、月、季、年逐级压缩。',
       action: TextButton(
         onPressed: busy || s.focusing
             ? null

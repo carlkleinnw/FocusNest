@@ -178,7 +178,6 @@ class _PlansPageState extends ConsumerState<PlansPage> {
         .fold(0, (n, r) => n + r.minutes);
 
     return PageFrame(
-      title: '日程',
       subtitle: level == 'day' ? '今天安排的任务，按时间排好。' : '查看周、月、季与总目标的安排。',
       action: Row(
         mainAxisSize: MainAxisSize.min,

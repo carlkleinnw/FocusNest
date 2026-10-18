@@ -11,9 +11,7 @@ class RestPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appProvider);
     return PageFrame(
-      title: '也给休息留个位置',
       subtitle: '提前安排休息日。休息期间暂停饥饿，已经过去的日期不能补改。',
-      eyebrow: 'REST IS PART OF THE PLAN',
       children: [
         SurfacePanel(
           color: NestColors.softGreen,

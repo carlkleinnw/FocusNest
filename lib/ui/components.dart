@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import '../core/ports.dart';
 import 'theme.dart';
 
-/// Page body: grey canvas, one quiet title line, then white list groups.
+/// Page body: grey canvas, one short intro line with an optional action, then
+/// white list groups. The page name lives in the top bar.
 class PageFrame extends StatelessWidget {
   const PageFrame({
     super.key,
-    required this.title,
     required this.subtitle,
     required this.children,
-    this.eyebrow = '',
     this.action,
   });
-  final String title, subtitle, eyebrow;
+  final String subtitle;
   final List<Widget> children;
   final Widget? action;
 
@@ -32,28 +31,27 @@ class PageFrame extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                  ),
-                  if (action != null) ...[const SizedBox(width: 12), action!],
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 13,
-                  height: 1.5,
-                  color: NestColors.muted,
+              if (subtitle.isNotEmpty || action != null)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (subtitle.isNotEmpty)
+                      Expanded(
+                        child: Text(
+                          subtitle,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            height: 1.5,
+                            color: NestColors.muted,
+                          ),
+                        ),
+                      )
+                    else
+                      const Spacer(),
+                    if (action != null) ...[const SizedBox(width: 8), action!],
+                  ],
                 ),
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
               ...children,
             ],
           ),

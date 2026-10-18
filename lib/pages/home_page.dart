@@ -20,9 +20,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final state = ref.watch(appProvider);
     final controller = ref.read(appProvider.notifier);
     return PageFrame(
-      title: '${state.pet.name}的小屋',
       subtitle: '一点点专注，换来一起长大的日子。',
-      eyebrow: 'A LITTLE HOME, A LITTLE PROGRESS',
       action: StatusPill(
         state.focusing ? '安静陪伴中' : state.pet.condition,
         warning: state.pet.hungryDays > 0,

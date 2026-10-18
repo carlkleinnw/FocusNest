@@ -48,10 +48,7 @@ class _AgentPageState extends ConsumerState<AgentPage> {
     final w = s.workspace;
     final activity = ref.watch(agentActivityProvider);
     return PageFrame(
-      title: 'AI Agent',
-      subtitle: w.demoAgent
-          ? '演示模式 · 固定示例，没有调用 DeepSeek'
-          : '说目标或补充要求，也可以让 AI 查询和调整已有计划。',
+      subtitle: w.demoAgent ? '演示模式 · 固定示例，没有调用 DeepSeek' : '说目标，AI 拆成可执行的安排。',
       action: TextButton(
         onPressed: () => context.go('/settings'),
         child: const Text('模型设置'),

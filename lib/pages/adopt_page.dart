@@ -27,9 +27,7 @@ class _AdoptPageState extends ConsumerState<AdoptPage> {
     final state = ref.watch(appProvider);
     final controller = ref.read(appProvider.notifier);
     return PageFrame(
-      title: '新的陪伴，从这里开始',
       subtitle: '过去的努力留在记录里。准备好时，迎接下一位伙伴。',
-      eyebrow: 'A NEW BEGINNING',
       children: [
         if (!state.pet.dead)
           EmptyPanel(

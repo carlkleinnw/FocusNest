@@ -1,0 +1,43 @@
+{
+  "version": "0.4.9+30",
+  "tag": "v0.4.9-demo",
+  "date": "2026-10-18",
+  "scope": "Add Review as the fifth primary tab; move the page name into the top bar and remove the repeated content title; shorten the one-line intro on each page so its purpose is obvious at a glance. No route path, key, business logic, native protection, snapshot or key storage changes.",
+  "checks": [
+    {
+      "name": "dart analyze lib test",
+      "result": "pass",
+      "detail": "No issues found."
+    },
+    {
+      "name": "dart format lib",
+      "result": "pass",
+      "detail": "Formatted, 0 changed after the final pass."
+    },
+    {
+      "name": "flutter test",
+      "result": "pass",
+      "detail": "72 tests passed, including 360/1100 width and 1.3 text scale coverage."
+    },
+    {
+      "name": "flutter build web --release --no-web-resources-cdn",
+      "result": "pass",
+      "detail": "build/web produced; schedule, AI, focus, review, me and settings checked at 390 logical width."
+    },
+    {
+      "name": "flutter build apk --release",
+      "result": "pass",
+      "detail": "52.4 MB release APK built from version 0.4.9+30."
+    },
+    {
+      "name": "Android 36.1 emulator UI walkthrough",
+      "result": "pass",
+      "detail": "Installed over 0.4.8 (versionName 0.4.9, versionCode 30, data preserved). Five tabs render; the top bar shows 日程 and the schedule content starts with a one-line intro; review is reachable as a tab; settings remains a child page with a back arrow."
+    }
+  ],
+  "notRun": [
+    "Physical phone install (no phone connected to adb this round; it remains on 0.4.4+25)",
+    "30-minute native focus duration and long lock screen",
+    "Swipe-away survival and incoming-call overlay (native code unchanged)"
+  ]
+}

@@ -156,8 +156,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final s = ref.watch(appProvider);
     final locked = busy || s.focusing || !loaded;
     return PageFrame(
-      title: '设置',
-      subtitle: '配置学习助手和专注保护，所有数据保存在本机。',
+      subtitle: '密钥、模型与计划偏好。',
       children: [
         const SectionTitle('AI 助手'),
         SurfacePanel(
@@ -404,7 +403,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               title: '本地数据',
               subtitle: '计划与专注记录保存在手机私有数据库，密钥使用系统密钥库加密。',
             ),
-            SettingsRow(title: '版本', subtitle: '0.4.8 · 体验版'),
+            SettingsRow(title: '版本', subtitle: '0.4.9 · 体验版'),
           ],
         ),
         const SizedBox(height: 16),

@@ -9,8 +9,25 @@ const destinations = [
   ('/plans', '日程', Icons.event_note_rounded),
   ('/agent', 'AI', Icons.auto_awesome_outlined),
   ('/focus', '沉浸', Icons.timelapse_rounded),
+  ('/records', '复盘', Icons.auto_stories_outlined),
   ('/me', '我的', Icons.person_outline_rounded),
 ];
+
+String _pageTitle(String path) {
+  if (path.startsWith('/plans')) return '日程';
+  if (path == '/agent') return 'AI Agent';
+  if (path == '/focus') return '沉浸模式';
+  if (path == '/records') return '复盘';
+  if (path == '/me') return '我的';
+  if (path == '/settings') return '设置';
+  if (path.startsWith('/goals')) return '长期目标';
+  if (path == '/apps') return '专注保护';
+  if (path == '/rest') return '休息日';
+  if (path == '/adopt') return '领养';
+  if (path == '/demo') return '演示';
+  if (path == '/home') return '小屋';
+  return '伴学小屋';
+}
 
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.child, required this.path});
@@ -133,7 +150,7 @@ class _AppShellState extends ConsumerState<AppShell>
       child: Scaffold(
         backgroundColor: NestColors.bg,
         appBar: AppBar(
-          title: const Text('伴学小屋'),
+          title: Text(_pageTitle(widget.path)),
           leading: nested
               ? IconButton(
                   tooltip: '返回',

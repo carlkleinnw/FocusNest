@@ -13,8 +13,7 @@ class GoalsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appProvider);
     return PageFrame(
-      title: '长期目标',
-      subtitle: '长期目标拆成阶段，再安排到每天；完成量由每日任务累计。',
+      subtitle: '目标拆成阶段，再安排到每天。',
       action: TextButton(
         onPressed: state.focusing ? null : () => editGoal(context, ref),
         child: const Text('新增长期目标'),
@@ -108,11 +107,7 @@ class GoalDetailsPage extends ConsumerWidget {
     final state = ref.watch(appProvider);
     final goal = state.goals.where((g) => g.id == goalId).firstOrNull;
     if (goal == null) {
-      return const PageFrame(
-        title: '目标不存在',
-        subtitle: '请返回长期目标列表。',
-        children: [],
-      );
+      return const PageFrame(subtitle: '请返回长期目标列表。', children: []);
     }
     final tasks = state.plans.where((p) => p.goalId == goalId).toList();
     final stages = state.milestones.where((m) => m.goalId == goalId);
@@ -122,8 +117,7 @@ class GoalDetailsPage extends ConsumerWidget {
         ? 0.0
         : (done / goal.totalUnits).clamp(0.0, 1.0);
     return PageFrame(
-      title: goal.title,
-      subtitle: '截止 ${goal.deadline} · 按每日任务的实际完成量累计',
+      subtitle: '截止 ${goal.deadline}',
       action: TextButton(
         onPressed: state.focusing ? null : () => editGoal(context, ref, goal),
         child: const Text('编辑'),
@@ -141,6 +135,15 @@ class GoalDetailsPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 8),
+        Text(
+          goal.title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: NestColors.ink,
+          ),
+        ),
+        const SizedBox(height: 10),
         SurfacePanel(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           child: Column(

@@ -23,8 +23,7 @@ class _AppsPageState extends ConsumerState<AppsPage> {
     final catalog = ref.watch(appsProvider);
     final protection = ref.watch(protectionStatusProvider);
     return PageFrame(
-      title: '专注保护',
-      subtitle: '应用默认受限，只把专注时确实需要的应用加入白名单。',
+      subtitle: '应用默认受限，只放行需要的应用。',
       children: [
         if (state.focusing)
           Padding(

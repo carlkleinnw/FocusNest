@@ -14,7 +14,6 @@ class DemoPage extends ConsumerWidget {
     final controller = ref.read(appProvider.notifier);
     if (!controller.simulated) {
       return const PageFrame(
-        title: '手机体验说明',
         subtitle: '手机使用真实时间，计划和记录保存在本机。',
         children: [
           SurfacePanel(
@@ -31,9 +30,7 @@ class DemoPage extends ConsumerWidget {
     }
 
     return PageFrame(
-      title: '几分钟，体验一整个循环',
       subtitle: '这里控制虚拟时间。快进结果会标记为演示，刷新恢复初始数据。',
-      eyebrow: 'PLAY WITH THE DEMO',
       children: [
         SurfacePanel(
           color: NestColors.softGreen,
