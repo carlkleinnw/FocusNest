@@ -8,20 +8,20 @@ abstract final class NestColors {
   static const white = Color(0xFFFFFFFF);
 
   /// Canvas behind the white list groups.
-  static const bg = Color(0xFFF4F5F7);
+  static const bg = Color(0xFFF1F2F5);
   static const paper = bg;
-  static const paperDeep = Color(0xFFECEEF2);
+  static const paperDeep = Color(0xFFE9EBEF);
 
   static const surface = Color(0xFFFFFFFF);
   static const fill = Color(0xFFF7F8FA);
 
-  static const ink = Color(0xFF17181A);
-  static const inkSoft = Color(0xFF3B3E44);
-  static const muted = Color(0xFF8A8E96);
-  static const faint = Color(0xFFB9BDC5);
+  static const ink = Color(0xFF151619);
+  static const inkSoft = Color(0xFF34373D);
+  static const muted = Color(0xFF6F747C);
+  static const faint = Color(0xFF9CA1A9);
 
-  static const line = Color(0xFFEDEEF2);
-  static const lineStrong = Color(0xFFE2E4EA);
+  static const line = Color(0xFFE6E8EC);
+  static const lineStrong = Color(0xFFDCE0E6);
 
   /// Xiaomi orange: the accent for actions and selection.
   static const orange = Color(0xFFFF6900);
@@ -43,7 +43,7 @@ abstract final class NestColors {
   static const softDanger = Color(0xFFFDECEC);
   static const amber = Color(0xFFC77700);
 
-  static const tagBg = Color(0xFFF2F3F5);
+  static const tagBg = Color(0xFFF1F2F4);
 }
 
 abstract final class NestRadius {
@@ -101,7 +101,7 @@ ThemeData nestTheme() {
 
   final text = base.textTheme.copyWith(
     headlineLarge: const TextStyle(
-      fontSize: 22,
+      fontSize: 24,
       height: 1.3,
       fontWeight: FontWeight.w600,
       letterSpacing: -0.2,
@@ -228,7 +228,7 @@ ThemeData nestTheme() {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: NestColors.surface,
+      fillColor: NestColors.fill,
       isDense: false,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       hintStyle: const TextStyle(fontSize: 15, color: NestColors.faint),
@@ -238,8 +238,8 @@ ThemeData nestTheme() {
         color: NestColors.muted,
       ),
       helperStyle: const TextStyle(fontSize: 12, color: NestColors.muted),
-      border: fieldBorder(NestColors.line),
-      enabledBorder: fieldBorder(NestColors.line),
+      border: fieldBorder(NestColors.lineStrong),
+      enabledBorder: fieldBorder(NestColors.lineStrong),
       focusedBorder: fieldBorder(NestColors.orange),
       errorBorder: fieldBorder(NestColors.danger),
       focusedErrorBorder: fieldBorder(NestColors.danger),

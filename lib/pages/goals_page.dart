@@ -60,6 +60,7 @@ class _GoalRow extends ConsumerWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     height: 1.4,
+                    fontWeight: FontWeight.w500,
                     color: NestColors.ink,
                   ),
                 ),

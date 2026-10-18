@@ -86,6 +86,7 @@ class _AppsPageState extends ConsumerState<AppsPage> {
                             '白名单 · ${allowed.length} 个',
                             style: const TextStyle(
                               fontSize: 16,
+                              fontWeight: FontWeight.w500,
                               color: NestColors.ink,
                             ),
                           ),
@@ -434,7 +435,11 @@ class _AppRow extends StatelessWidget {
                 app.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 16, color: NestColors.ink),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: NestColors.ink,
+                ),
               ),
               const SizedBox(height: 1),
               Text(

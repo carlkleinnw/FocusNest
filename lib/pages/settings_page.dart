@@ -170,7 +170,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   const Expanded(
                     child: Text(
                       'DeepSeek 密钥',
-                      style: TextStyle(fontSize: 16, color: NestColors.ink),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: NestColors.ink,
+                      ),
                     ),
                   ),
                   Text(
@@ -400,7 +404,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               title: '本地数据',
               subtitle: '计划与专注记录保存在手机私有数据库，密钥使用系统密钥库加密。',
             ),
-            SettingsRow(title: '版本', subtitle: '0.4.5 · 体验版'),
+            SettingsRow(title: '版本', subtitle: '0.4.6 · 体验版'),
           ],
         ),
         const SizedBox(height: 16),

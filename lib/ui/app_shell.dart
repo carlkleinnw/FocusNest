@@ -277,7 +277,7 @@ class _NavItem extends StatelessWidget {
           Icon(
             icon,
             size: 23,
-            color: selected ? NestColors.orange : const Color(0xFF7A7A7A),
+            color: selected ? NestColors.orange : NestColors.muted,
           ),
           const SizedBox(height: 2),
           Text(
@@ -285,8 +285,8 @@ class _NavItem extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 10,
-              color: selected ? NestColors.orange : const Color(0xFF7A7A7A),
+              fontSize: 10.5,
+              color: selected ? NestColors.orange : NestColors.muted,
             ),
           ),
         ],
@@ -323,7 +323,7 @@ class _SideRail extends StatelessWidget {
                       size: 23,
                       color: i == selected
                           ? NestColors.orange
-                          : const Color(0xFF7A7A7A),
+                          : NestColors.muted,
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -332,7 +332,7 @@ class _SideRail extends StatelessWidget {
                         fontSize: 11,
                         color: i == selected
                             ? NestColors.orange
-                            : const Color(0xFF7A7A7A),
+                            : NestColors.muted,
                       ),
                     ),
                   ],

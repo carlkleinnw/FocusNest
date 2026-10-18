@@ -53,7 +53,7 @@ class PageFrame extends StatelessWidget {
                   color: NestColors.muted,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               ...children,
             ],
           ),
@@ -188,6 +188,7 @@ class SectionTitle extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 13,
                   height: 1.4,
+                  fontWeight: FontWeight.w500,
                   color: NestColors.muted,
                 ),
               ),
@@ -253,7 +254,7 @@ class SettingsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final row = Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 10 : 13),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 11 : 14),
       child: Row(
         children: [
           leading ??
@@ -272,6 +273,7 @@ class SettingsRow extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     height: 1.4,
+                    fontWeight: FontWeight.w500,
                     color: NestColors.ink,
                   ),
                 ),
@@ -325,7 +327,7 @@ class MetricTile extends StatelessWidget {
         RichText(
           text: TextSpan(
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 24,
               height: 1.2,
               fontWeight: FontWeight.w600,
               letterSpacing: -0.2,
@@ -370,7 +372,11 @@ class EmptyPanel extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           title,
-          style: const TextStyle(fontSize: 16, color: NestColors.ink),
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w500,
+            color: NestColors.ink,
+          ),
         ),
         const SizedBox(height: 6),
         ConstrainedBox(
@@ -406,7 +412,7 @@ class StatBlock extends StatelessWidget {
       RichText(
         text: TextSpan(
           style: const TextStyle(
-            fontSize: 22,
+            fontSize: 24,
             height: 1.2,
             fontWeight: FontWeight.w600,
             color: NestColors.ink,
@@ -428,7 +434,7 @@ class StatBlock extends StatelessWidget {
   );
 }
 
-/// Flat text tabs with a short green underline, used for level/filter switching.
+/// Flat text tabs with a short orange underline, used for level/filter switching.
 class PillTabs extends StatelessWidget {
   const PillTabs({
     super.key,
@@ -446,7 +452,7 @@ class PillTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final glyph = MediaQuery.textScalerOf(context).scale(14);
+    final glyph = MediaQuery.textScalerOf(context).scale(15);
     final tabs = <Widget>[];
     for (var i = 0; i < labels.length; i++) {
       final selected = i == index;
@@ -461,7 +467,7 @@ class PillTabs extends StatelessWidget {
               border: Border(
                 bottom: BorderSide(
                   color: selected ? NestColors.orange : Colors.transparent,
-                  width: 2,
+                  width: 2.5,
                 ),
               ),
             ),
@@ -484,11 +490,11 @@ class PillTabs extends StatelessWidget {
               side: BorderSide.none,
               shape: const RoundedRectangleBorder(),
               labelStyle: TextStyle(
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 color: selected ? NestColors.ink : NestColors.muted,
               ),
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.only(bottom: 11),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               visualDensity: VisualDensity.compact,
               pressElevation: 0,

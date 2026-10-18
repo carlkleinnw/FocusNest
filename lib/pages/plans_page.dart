@@ -375,6 +375,7 @@ class _PlansPageState extends ConsumerState<PlansPage> {
                   style: TextStyle(
                     fontSize: 16,
                     height: 1.4,
+                    fontWeight: FontWeight.w500,
                     color: p.done ? NestColors.faint : NestColors.ink,
                     decoration: p.done ? TextDecoration.lineThrough : null,
                     decorationColor: NestColors.faint,
@@ -636,6 +637,7 @@ class _PlansPageState extends ConsumerState<PlansPage> {
                   style: const TextStyle(
                     fontSize: 16,
                     height: 1.4,
+                    fontWeight: FontWeight.w500,
                     color: NestColors.ink,
                   ),
                 ),
@@ -649,7 +651,7 @@ class _PlansPageState extends ConsumerState<PlansPage> {
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(2),
-            child: LinearProgressIndicator(value: ratio, minHeight: 3),
+            child: LinearProgressIndicator(value: ratio, minHeight: 4),
           ),
           const SizedBox(height: 8),
           Text(
@@ -747,7 +749,7 @@ class _SummaryGroup extends StatelessWidget {
                           TextSpan(
                             text: '$done',
                             style: const TextStyle(
-                              fontSize: 22,
+                              fontSize: 26,
                               fontWeight: FontWeight.w600,
                               color: NestColors.ink,
                             ),
@@ -774,7 +776,7 @@ class _SummaryGroup extends StatelessWidget {
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(2),
-            child: LinearProgressIndicator(value: ratio, minHeight: 3),
+            child: LinearProgressIndicator(value: ratio, minHeight: 4),
           ),
         ],
       ),
@@ -910,15 +912,24 @@ class _DayCell extends StatelessWidget {
               style: const TextStyle(fontSize: 11, color: NestColors.muted),
             ),
             const SizedBox(height: 6),
-            Text(
-              '${date.day}',
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.2,
-                fontWeight: selected || isToday
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-                color: color,
+            Container(
+              width: 26,
+              height: 26,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? NestColors.softOrange : Colors.transparent,
+              ),
+              child: Text(
+                '${date.day}',
+                style: TextStyle(
+                  fontSize: 15,
+                  height: 1.2,
+                  fontWeight: selected || isToday
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                  color: color,
+                ),
               ),
             ),
             const SizedBox(height: 4),
@@ -1010,6 +1021,7 @@ class _SearchBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: NestColors.surface,
               borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: NestColors.line),
             ),
             child: TextField(
               controller: controller,
@@ -1064,6 +1076,11 @@ class _SearchBar extends StatelessWidget {
                     ? NestColors.surface
                     : NestColors.softOrange,
                 borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: goalFilter == null
+                      ? NestColors.line
+                      : NestColors.softOrange,
+                ),
               ),
               child: Icon(
                 Icons.filter_list_rounded,
@@ -1120,7 +1137,7 @@ class _CheckCircle extends StatelessWidget {
             shape: BoxShape.circle,
             color: done ? NestColors.green : Colors.transparent,
             border: Border.all(
-              color: done ? NestColors.green : NestColors.lineStrong,
+              color: done ? NestColors.green : NestColors.faint,
               width: 1.4,
             ),
           ),

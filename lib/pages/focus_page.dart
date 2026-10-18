@@ -219,9 +219,10 @@ class _IdleFocus extends StatelessWidget {
                 task!.title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 15,
                   height: 1.5,
-                  color: NestColors.muted,
+                  fontWeight: FontWeight.w500,
+                  color: NestColors.inkSoft,
                 ),
               ),
               const SizedBox(height: 18),
@@ -309,10 +310,10 @@ class _MinuteChip extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: NestColors.surface,
+        color: selected ? NestColors.softOrange : NestColors.surface,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: selected ? NestColors.orange : NestColors.line,
+          color: selected ? NestColors.orange : NestColors.lineStrong,
         ),
       ),
       child: Text(
@@ -320,6 +321,7 @@ class _MinuteChip extends StatelessWidget {
         style: TextStyle(
           fontSize: 13,
           color: selected ? NestColors.orangeDeep : NestColors.inkSoft,
+          fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
         ),
       ),
     ),
