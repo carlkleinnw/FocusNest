@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.telecom.TelecomManager
+import android.telecom.InCallService
 import android.os.Build
 import android.provider.Settings
 import android.net.Uri
@@ -30,7 +31,25 @@ object InstalledApps {
         val launcher = context.packageManager.resolveActivity(
             Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0
         )?.activityInfo?.packageName
-        val dialer = context.getSystemService(TelecomManager::class.java)?.defaultDialerPackage
+        val telecom = context.getSystemService(TelecomManager::class.java)
+        val dialer = telecom?.defaultDialerPackage
+        val systemDialer = if (Build.VERSION.SDK_INT >= 29) telecom?.systemDialerPackage else null
+        // Some ROMs host the incoming/in-call UI outside the default dialer.
+        // Discover actual UI services, accepting only the chosen/system dialer or
+        // platform-signed components. Declaring this intent alone grants no exemption.
+        val callUi = context.packageManager.queryIntentServices(
+            Intent(InCallService.SERVICE_INTERFACE), PackageManager.GET_META_DATA
+        ).mapNotNull { result ->
+            val service = result.serviceInfo
+            val pkg = service.packageName
+            pkg.takeIf {
+                service.permission == "android.permission.BIND_INCALL_SERVICE" &&
+                    service.metaData?.getBoolean(TelecomManager.METADATA_IN_CALL_SERVICE_UI) == true &&
+                    (pkg == dialer || pkg == systemDialer || platformSigned(context, pkg))
+            }
+        }.toSet()
+        val legacyCallUi = setOf("com.android.incallui", "com.android.server.telecom")
+            .filter { platformSigned(context, it) }
         val settingsHandlers = listOf(
             Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + context.packageName)),
@@ -44,10 +63,14 @@ object InstalledApps {
                 context.packageManager.checkSignatures("android", pkg) == PackageManager.SIGNATURE_MATCH
             }.getOrDefault(false)
         }
-        return setOfNotNull(context.packageName, launcher, dialer, "com.android.settings",
+        return setOfNotNull(context.packageName, launcher, dialer, systemDialer, "android", "com.android.settings",
             "com.android.systemui", "com.android.phone", "com.android.emergency",
-            "com.android.permissioncontroller", "com.google.android.permissioncontroller") + settingsHandlers + redirectedSettings
+            "com.android.permissioncontroller", "com.google.android.permissioncontroller") +
+            settingsHandlers + redirectedSettings + callUi + legacyCallUi
     }
+    private fun platformSigned(context: Context, pkg: String): Boolean = runCatching {
+        context.packageManager.checkSignatures("android", pkg) == PackageManager.SIGNATURE_MATCH
+    }.getOrDefault(false)
     fun list(context: Context): List<Map<String, Any>> {
         val pm = context.packageManager
         val protected = protectedPackages(context)

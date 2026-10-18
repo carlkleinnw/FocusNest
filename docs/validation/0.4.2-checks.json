@@ -1,0 +1,141 @@
+{
+  "version": "0.4.2+18",
+  "date": "2026-10-18",
+  "timezone": "Asia/Shanghai",
+  "scope": "Incoming cellular call UI and system power menu must be available during immersive focus; application protection resumes afterwards",
+  "reproduction": {
+    "baseline": "0.4.1+16 reminder retains focus above TYPE_SYSTEM Power menu; menu invisible and inaccessible",
+    "candidate17": "Power menu fixed; unfocused top incoming-call banner remains covered because it does not cross screen centre",
+    "final18": "Trusted system interaction surfaces, including unfocused call banners, yield the cover; restrictions resume when closed"
+  },
+  "staticAnalysis": {
+    "status": "passed",
+    "issues": 0
+  },
+  "flutterTests": {
+    "status": "passed",
+    "count": 72
+  },
+  "nativeRuleTests": {
+    "status": "passed",
+    "count": 35,
+    "initialRegression": "failed with power menu ignored on original selector",
+    "mutationCheck": "isolated source copy with system trust conjunction weakened is rejected; production sources unchanged"
+  },
+  "androidEmulator": {
+    "serial": "emulator-5580",
+    "avd": "DevPhone_API36_1",
+    "image": "android-36.1 google_apis_playstore x86_64",
+    "android": "16",
+    "sdk": 36,
+    "userPhoneOperated": false,
+    "freshFinalApkSession": true,
+    "scenariosPassed": 15,
+    "scenarios": [
+      {
+        "name": "persistent reminder",
+        "status": "passed",
+        "seconds": 5
+      },
+      {
+        "name": "acknowledge returns to verified launcher",
+        "status": "passed"
+      },
+      {
+        "name": "immediate reopening blocked",
+        "status": "passed"
+      },
+      {
+        "name": "power menu visible, Back works, restriction resumes",
+        "status": "passed"
+      },
+      {
+        "name": "incoming call banner replaces reminder",
+        "status": "passed"
+      },
+      {
+        "name": "Answer button connects native call",
+        "status": "passed"
+      },
+      {
+        "name": "power menu and Back during active call",
+        "status": "passed"
+      },
+      {
+        "name": "Hang up button works and restriction resumes",
+        "status": "passed"
+      },
+      {
+        "name": "repeat call Decline works, restriction resumes",
+        "status": "passed"
+      },
+      {
+        "name": "landscape reminder remains",
+        "status": "passed"
+      },
+      {
+        "name": "portrait reminder restored",
+        "status": "passed"
+      },
+      {
+        "name": "default dialer allowed",
+        "status": "passed"
+      },
+      {
+        "name": "system settings allowed",
+        "status": "passed"
+      },
+      {
+        "name": "same focus session continues after calls and system menus",
+        "status": "passed"
+      },
+      {
+        "name": "two-confirmation exit releases restricted app",
+        "status": "passed"
+      }
+    ],
+    "testInterruption": {
+      "stage": "first landscape sample",
+      "result": "failed before rotation settled; screenshot showed underlying test app",
+      "resolution": "kept failed log, waited for stable focused cover and repeated screenshots; reran landscape, portrait and remaining checks with same APK"
+    },
+    "observedFinalAccessibility": "bound, no crashed services",
+    "fullNaturalThirtyMinutes": false,
+    "longLockScreenRun": false,
+    "actualPowerOffOrReboot": false
+  },
+  "finalApk": {
+    "status": "passed",
+    "validationScope": "Android emulator only",
+    "file": "FocusNest_0.4.2_android.apk",
+    "bytes": 54595496,
+    "sha256": "8fb1b26f5d6bbdf538ae20497cb029f0bddcacfea935d88a977a7c8f13b4aa37",
+    "installedApkPulledAndHashMatched": true,
+    "signerSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "sameSignerAs041": true,
+    "versionCode": 18
+  },
+  "privacy": {
+    "sourceAndArtifactScan": "passed",
+    "scanType": "credential-pattern and forbidden-artifact scan, not exact matching of stored user keys",
+    "sourceFilesChecked": 154,
+    "apkArchiveEntriesChecked": 70,
+    "newPhoneOrOverlayPermissions": false,
+    "personalPhoneDataExported": false,
+    "databaseFormatChanged": false,
+    "runtimeDataAndScreenshotsExcludedFromGit": true
+  },
+  "review": {
+    "status": "no blocking issues found",
+    "independentReadOnlyReview": true,
+    "remainingCoverageGap": "InCallService metadata/signature discovery branches were reviewed but not directly exercised with untrusted service fixtures"
+  },
+  "limitations": [
+    "SystemUI notification panels and sufficiently large heads-up surfaces also yield protection; underlying restricted app may be visible or interactive until dismissal",
+    "Unfocused OEM banners smaller than 96dp or system windows without readable identity may still retain the cover",
+    "Xiaomi standalone call UI and other OEM ROMs not validated on physical devices",
+    "VoIP calls such as WeChat or QQ not tested; no blanket exemption for those apps",
+    "No actual power off/restart, full natural duration, or long lock-screen stability run this round"
+  ],
+  "research": "docs/research/2026-10-18-call-and-system-surfaces.md"
+}

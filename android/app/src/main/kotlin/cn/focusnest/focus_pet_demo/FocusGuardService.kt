@@ -9,6 +9,7 @@ import android.app.PendingIntent
 import android.content.pm.ServiceInfo
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
@@ -63,6 +64,7 @@ class FocusGuardService : AccessibilityService() {
     private var lastAttempt = 0L
     private var homePending = false
     private var necessaryPackages = emptySet<String>()
+    private var lastNecessaryRefresh = 0L
     private var lastFreshWindowRead = 0L
     private var foregroundRunning = false
     private val gate = FocusGate()
@@ -120,6 +122,10 @@ class FocusGuardService : AccessibilityService() {
             }
             // Upgrade an in-flight 0.2.2 session without discarding the user's selection.
             val allowed = InstalledApps.allowedForRule(this, rule!!)
+            if (SystemClock.elapsedRealtime()-lastNecessaryRefresh >= 5000) {
+                necessaryPackages = InstalledApps.protectedPackages(this)
+                lastNecessaryRefresh = SystemClock.elapsedRealtime()
+            }
             foregroundChecks++
             if (android.os.Build.VERSION.SDK_INT >= 33 &&
                 SystemClock.elapsedRealtime()-lastFreshWindowRead >= 200) {
@@ -129,14 +135,24 @@ class FocusGuardService : AccessibilityService() {
             val observed = windows
             val candidates = observed.map { window ->
                 val application = window.type == AccessibilityWindowInfo.TYPE_APPLICATION
+                val system = window.type == AccessibilityWindowInfo.TYPE_SYSTEM
                 // Only the root's package identifier is read. No text, child nodes or screenshots.
-                val root = if (application) window.root else null
-                val pkg = root?.packageName?.toString() ?: if (application &&
+                val root = if (application || system) window.root else null
+                val pkg = root?.packageName?.toString() ?: if ((application || system) &&
                     (window.isActive || window.isFocused) && window.id == event?.windowId)
                     event?.packageName?.toString() else null
                 @Suppress("DEPRECATION")
                 root?.recycle()
-                ForegroundWindow.Candidate(pkg, application, window.isActive, window.isFocused, window.layer)
+                val bounds = Rect().also { window.getBoundsInScreen(it) }
+                val metrics = resources.displayMetrics
+                // Passive status/navigation bars must not release a restriction. A trusted
+                // interactive system surface (power menu, notification/call UI, keyguard)
+                // takes priority even when the accessibility cover previously owned focus.
+                val systemControl = ForegroundWindow.isSystemControl(system, pkg in necessaryPackages,
+                    window.isActive, window.isFocused, bounds.width(), bounds.height(),
+                    (96*metrics.density).toInt())
+                ForegroundWindow.Candidate(pkg, application, systemControl,
+                    window.isActive, window.isFocused, window.layer)
             }
             val pkg = ForegroundWindow.select(candidates)
             @Suppress("DEPRECATION")

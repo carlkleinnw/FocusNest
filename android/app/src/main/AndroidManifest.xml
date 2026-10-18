@@ -52,6 +52,9 @@
     <queries>
         <!-- HyperOS may redirect app settings to this preinstalled system package. -->
         <package android:name="com.miui.securitycenter" />
+        <package android:name="com.android.incallui" />
+        <package android:name="com.android.server.telecom" />
+        <intent><action android:name="android.telecom.InCallService" /></intent>
         <intent><action android:name="android.settings.ACCESSIBILITY_SETTINGS" /></intent>
         <intent><action android:name="android.settings.APPLICATION_DETAILS_SETTINGS" /><data android:scheme="package" /></intent>
         <intent><action android:name="android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS" /></intent>

@@ -44,6 +44,36 @@ public final class FocusGateCheck {
         check("game".equals(ForegroundWindow.select(List.of(home,covered))),"own cover does not erase underlying foreground app");
         check("game".equals(ForegroundWindow.select(List.of(covered))),
             "visible game must be identified during a rotation before focus flags settle");
+        var power = new ForegroundWindow.Candidate("android",false,true,true,true,8);
+        check(ForegroundWindow.isSystemControl(true,true,false,false,664,368,168),
+            "incoming call heads-up must work without focus or centre coverage");
+        check(!ForegroundWindow.isSystemControl(true,true,false,false,720,132,168),
+            "passive top bar must not be treated as a system control");
+        check(!ForegroundWindow.isSystemControl(true,true,false,false,42,720,168),
+            "passive side navigation must not release a landscape reminder");
+        check(!ForegroundWindow.isSystemControl(true,false,true,true,720,1600,168),
+            "large untrusted overlays must not qualify as system controls");
+        check(!ForegroundWindow.isSystemControl(false,true,true,true,720,1600,168),
+            "a keyboard or accessibility overlay is not a system control");
+        check("android".equals(ForegroundWindow.select(List.of(covered,power))),
+            "power menu must take priority over the covered app");
+        var shade = new ForegroundWindow.Candidate("com.android.systemui",false,true,false,false,8);
+        check("com.android.systemui".equals(ForegroundWindow.select(List.of(covered,shade))),
+            "trusted system controls must work even while our overlay owns focus");
+        var statusBar = new ForegroundWindow.Candidate("com.android.systemui",false,false,false,false,9);
+        check("game".equals(ForegroundWindow.select(List.of(covered,statusBar))),
+            "passive status bar must not release app protection");
+        var fakeSystem = new ForegroundWindow.Candidate("untrusted.overlay",false,false,true,true,10);
+        check("game".equals(ForegroundWindow.select(List.of(covered,fakeSystem))),
+            "untrusted overlays must not release protection");
+        check("game".equals(ForegroundWindow.select(List.of(game,
+            new ForegroundWindow.Candidate("android",false,true,false,false,1)))),
+            "system controls behind the foreground app must not bypass it");
+        gate.onForeground("game",true,false,false,false);
+        check(gate.onForeground("android",true,false,true,false)==FocusGate.Decision.HIDE,
+            "system controls release the cover without ending the session");
+        check(gate.onForeground("game",true,false,false,false)==FocusGate.Decision.SHOW,
+            "dismissing system controls must immediately protect the app again");
         System.out.println("FocusGate/foreground: " + checks + " regression checks passed");
     }
 }
