@@ -18,6 +18,11 @@ public final class ForegroundWindow {
     }
 
     public static String select(List<Candidate> windows) {
+        Candidate best = selectCandidate(windows);
+        return best == null ? null : best.pkg();
+    }
+
+    public static Candidate selectCandidate(List<Candidate> windows) {
         Candidate best = null;
         for (Candidate window : windows) {
             if (!window.application() && !window.systemControl()) continue;
@@ -26,6 +31,6 @@ public final class ForegroundWindow {
             if (best == null || window.layer() > best.layer()) best = window;
         }
         // Never fall through an unreadable foreground window to a background app.
-        return best == null ? null : best.pkg();
+        return best;
     }
 }

@@ -1,0 +1,396 @@
+{
+  "version": "0.4.3+24",
+  "tag": "v0.4.3-demo",
+  "date": "2026-10-18",
+  "status": "passed within recorded device and feature scope",
+  "scope": "Call and system control overlay fix, user-authorized Xiaomi testing, data-preserving same-signature update",
+  "automated": {
+    "flutterAnalyze": "passed; no issues",
+    "flutterTests": 72,
+    "nativeChecks": 61,
+    "releaseBuild": "passed",
+    "independentReview": "Final focused review passed after fixing expiry-before-first-match; no new must-fix findings"
+  },
+  "physicalDevice": {
+    "model": "Xiaomi 15",
+    "android": 16,
+    "api": 36,
+    "rom": "HyperOS OS3.0.305.0.WOCCNXM",
+    "dataHandling": "Same-signature in-place update; no uninstall, clear-data, database export or caller capture",
+    "finalApkBuild": 24,
+    "scenarios": [
+      {
+        "name": "WeChat answered call",
+        "result": "passed; user confirmed controls usable, actual VideoActivity foreground without reminder and protection FGS active; audio-log substring from initial snapshot not used as independent current-mode proof"
+      },
+      {
+        "name": "WeChat hangup",
+        "result": "passed; observed LauncherUI covered and user confirmed reminder returned"
+      },
+      {
+        "name": "QQ incoming invitation",
+        "result": "passed; VideoInviteActivity foreground without cover, protection FGS active"
+      },
+      {
+        "name": "QQ answered call",
+        "result": "passed; user confirmed answered, AVActivity foreground without cover, protection FGS active and current Actual mode=MODE_IN_COMMUNICATION"
+      },
+      {
+        "name": "QQ hangup and ordinary page",
+        "result": "passed; user reported return to Home, observed Home and current MODE_NORMAL; explicitly opened manifest-verified QQ SplashActivity and observed ordinary overlay covering it"
+      },
+      {
+        "name": "physical power menu during QQ call",
+        "result": "passed by user confirmation; no simultaneous menu-window capture obtained, no automated visual pass claimed; no actual shutdown or reboot"
+      },
+      {
+        "name": "acknowledge and reopen",
+        "result": "passed; Home foreground, cover removed; QQ explicitly reopened and restricted again; cover sampled after4s"
+      },
+      {
+        "name": "notification shade",
+        "result": "passed; swipe focused NotificationShade, Back restored restriction; contents not read or retained"
+      },
+      {
+        "name": "true landscape and portrait",
+        "result": "passed; forced actual landscape2670x1200, cover frame[140,140][2670,1148], full cover and button visually verified; portrait frame[0,140][1200,2618]; original rotation and orientation override settings restored"
+      },
+      {
+        "name": "necessary system dialer and Settings",
+        "result": "passed; each foreground without cover"
+      },
+      {
+        "name": "two-confirmation exit",
+        "result": "passed; ended only synthetic SystemFinal23 session reused across candidate updates; canceled result shown, QQ ordinary page usable afterwards"
+      }
+    ],
+    "nativeOperatorCallBoundary": "Earlier build23 user confirmed native phone works; build22 also directly observed RINGING/ACTIVE/ended and in-call page. No additional operator redial on final24; final24 changes add only supported Tencent call-page matching to existing system mechanism.",
+    "rawAppScreenshots": "No caller, chat or contact screenshot evidence published; transient own-cover snapshots excluded from release",
+    "testSessionCleanup": "Only our SystemFinal23 synthetic session ended via normal two-confirmation exit on final24; existing user data retained",
+    "powerMenuEvidence": "User confirmation on final24, not a simultaneous automated screenshot"
+  },
+  "failedCandidates": [
+    {
+      "build": 18,
+      "result": "Real call and OEM power menu obscured despite emulator pass"
+    },
+    {
+      "build": 19,
+      "result": "In-call UI exemption passed; power menu still obscured"
+    },
+    {
+      "builds": [
+        20,
+        21
+      ],
+      "result": "Changed attribute type insufficient; accessibility service default token retained2032"
+    },
+    {
+      "build": 22,
+      "result": "Initial asynchronous user report still blocked; live observation then captured full power menu and user confirmed visible; no further APK change"
+    },
+    {
+      "build": 22,
+      "result": "Visual emulator rotation check found stale portrait-sized surface; phone initial settings-only test did not rotate calculator. Both earlier geometry-only landscape pass labels discarded. Final23 adds proper overlay WindowContext and uses it for every view."
+    },
+    {
+      "build": 23,
+      "result": "User confirmed native phone calls work, but WeChat/QQ UI still covered after answering; extends scope to third-party call pages. Phone final23 power menu not explicitly confirmed."
+    }
+  ],
+  "testInterference": [
+    "UIAutomator transiently pauses accessibility; one phone UI dump failed, stale XML rejected, retried fresh",
+    "Emulator cold-start first Chrome sample was splash without focus; later stable window checked separately",
+    "One phone rotation sample caught a transition without cover; excluded, retried after stable frame checks and visually verified. Rotation overrides restored in finally.",
+    "Initial generated emulator core script changed its helper split delimiter and unintentionally ran old GSM steps; excluded incoming-pass label, ended synthetic call, fixed harness and reran explicit final core checks.",
+    "Ordinary am start reused an old fixture task; explicit Activity reorder-to-front used to test actual foreground transitions.",
+    "QQ launcher intent did not resolve on this installation; used its manifest-verified exported SplashActivity, confirmed actual foreground."
+  ],
+  "notTested": [
+    "Other OEM ROMs",
+    "Other VoIP apps and group-call activities",
+    "Every separate voice/video-call variant",
+    "New operator call on final24",
+    "Actual power off or reboot",
+    "New full30-minute natural expiry or long lock",
+    "Android24-29 ordinary-overlay fallback",
+    "Service reconnect while already on a VoIP page without fresh Activity event"
+  ],
+  "finalApk": {
+    "status": "passed",
+    "path": "FocusNest_0.4.3_android.apk",
+    "sha256": "b930bac8e1856d5c2e543404f69c15a81980512b894f4a80595fea9c80a4fb7f",
+    "bytes": 54595572,
+    "signerSha256": "da273f8450af62e977ea17254ffa50d0bfab9d355f739ea45f51219c451725d6",
+    "matchesInstalledPhysical": true,
+    "matchesInstalledEmulator": "installed from final file; not pulled after user requested emulator stop",
+    "versionCode": 24
+  },
+  "privacy": {
+    "sourceAndArtifactScan": "passed",
+    "deviceScreenshotsPublished": false,
+    "phoneDatabaseExported": false,
+    "callerDataRetained": false,
+    "sourceExcludes": [
+      "credentials",
+      "APK",
+      "personal screenshots",
+      "phone database",
+      "installed app lists",
+      "private signing key",
+      "debug logs and caches"
+    ],
+    "temporaryPhoneScreenshots": "removed after visual verification; no phone screenshot in source or release",
+    "temporaryTencentApks": "pulled metadata copies removed; no app data exported"
+  },
+  "releaseBoundary": "Local checks are not remote publication; branch/tag/release verified after commit and push, default branch is separate",
+  "previousBuild22PhysicalEvidence": [
+    {
+      "name": "real ordinary window token",
+      "result": "passed; token2038, not2032"
+    },
+    {
+      "name": "physical power menu",
+      "result": "passed; full controls captured above reminder; user confirmed visible; Back dismissed without shutdown"
+    },
+    {
+      "name": "operator incoming call",
+      "result": "passed; RINGING observed; user confirmed Answer/Decline controls visible"
+    },
+    {
+      "name": "test call answer",
+      "result": "passed; ACTIVE and InCallActivity observed; subsequent sample confirmed no reminder; first transition sample still had old surface, not counted as stable pass"
+    },
+    {
+      "name": "test call ended",
+      "result": "passed; no active call, reminder restored on calculator"
+    },
+    {
+      "name": "status and notification bars",
+      "result": "passed; status visible; downward swipe focused NotificationShade, Back restored restriction; no notification contents retained"
+    },
+    {
+      "name": "acknowledge and reopen",
+      "result": "passed; Home verified and reminder removed, reopening calculator blocked, sustained cover sampled after5s"
+    },
+    {
+      "name": "landscape and portrait",
+      "result": "discarded; settings changed but screenshot remained portrait. True landscape verified separately on final24."
+    },
+    {
+      "name": "necessary apps",
+      "result": "passed; system dialer and Settings foreground without reminder"
+    },
+    {
+      "name": "two-confirmation exit",
+      "result": "passed on independent synthetic ExitFinal22 session; canceled result shown and calculator usable; original synthetic CallMenuFinal had already ended when checked, not counted as a continuous exit trace"
+    }
+  ],
+  "emulatorCallControl": {
+    "build": 22,
+    "result": "unavailable as call UI acceptance; GSM RINGING and ACTIVE observed but no heads-up banner and answering key did not open call activity; same absence reproduced on launcher without any reminder. No emulator incoming UI pass claimed. Actual operator call verified separately on phone."
+  },
+  "emulatorFinal23": {
+    "model": "Android16 API36 emulator",
+    "scenarios": [
+      {
+        "name": "persistent ordinary overlay token2038",
+        "status": "passed"
+      },
+      {
+        "name": "acknowledge returns Home",
+        "status": "passed"
+      },
+      {
+        "name": "repeat open blocked",
+        "status": "passed"
+      },
+      {
+        "name": "power controls visible",
+        "status": "passed"
+      },
+      {
+        "name": "power dismissal restores restriction",
+        "status": "passed"
+      },
+      {
+        "name": "landscape screenshot captured for visual verification",
+        "status": "passed"
+      },
+      {
+        "name": "landscape full cover visually checked; acknowledge Home works",
+        "status": "passed"
+      },
+      {
+        "name": "landscape repeat open blocked",
+        "status": "passed"
+      },
+      {
+        "name": "return portrait cover",
+        "status": "passed"
+      },
+      {
+        "name": "necessary dialer allowed",
+        "status": "passed"
+      },
+      {
+        "name": "necessary Settings allowed",
+        "status": "passed"
+      },
+      {
+        "name": "same final23 synthetic focus continues",
+        "status": "passed"
+      },
+      {
+        "name": "two-confirmation exit releases app",
+        "status": "passed"
+      }
+    ],
+    "callUi": "not counted; build22 no-overlay launcher control reproduced absent heads-up; operator-call acceptance performed separately on physical phone"
+  },
+  "previousBuild23PhysicalEvidence": [
+    {
+      "name": "true landscape and portrait",
+      "result": "passed; screenshot2670x1200 shows full application cover and visible button using WindowContext; returned portrait; ignoreOrientationRequestfalse, user-rotationfree, user_rotation0 restored"
+    }
+  ],
+  "voipPolicy": {
+    "matching": "registered Activity class + actual app window ID/root package; selected foreground only",
+    "packages": [
+      "com.tencent.mm",
+      "com.tencent.mobileqq"
+    ],
+    "classSource": "current installed APK manifest and actual WeChat call component history; no business code copied",
+    "permissionsAdded": false,
+    "contentRead": false,
+    "broadPackageWhitelist": false,
+    "pendingEventMs": 1500,
+    "normalPagesRemainBlocked": true,
+    "nativeChecks": 61,
+    "status": "passed real WeChat/QQ user-assisted calls on final24; caller/app content not read",
+    "testedCallTypes": "User test calls; do not infer separate coverage of every voice/video/group variant"
+  },
+  "emulatorFinal24": {
+    "core": [
+      {
+        "name": "persistent ordinary overlay token2038",
+        "status": "passed"
+      },
+      {
+        "name": "acknowledge returns Home",
+        "status": "passed"
+      },
+      {
+        "name": "repeat open blocked",
+        "status": "passed"
+      },
+      {
+        "name": "power controls visible",
+        "status": "passed"
+      },
+      {
+        "name": "power dismissal restores restriction",
+        "status": "passed"
+      },
+      {
+        "name": "landscape screenshot captured for visual verification",
+        "status": "passed"
+      },
+      {
+        "name": "landscape acknowledge Home works",
+        "status": "passed"
+      },
+      {
+        "name": "landscape repeat open blocked",
+        "status": "passed"
+      },
+      {
+        "name": "return portrait cover",
+        "status": "passed"
+      },
+      {
+        "name": "notification shade accessible",
+        "status": "passed"
+      },
+      {
+        "name": "notification dismissal restores restriction",
+        "status": "passed"
+      },
+      {
+        "name": "necessary dialer allowed",
+        "status": "passed"
+      },
+      {
+        "name": "necessary Settings allowed",
+        "status": "passed"
+      },
+      {
+        "name": "same final24 focus continues",
+        "status": "passed"
+      },
+      {
+        "name": "two-confirmation exit releases app",
+        "status": "passed"
+      }
+    ],
+    "syntheticActivityTransitions": [
+      {
+        "class": "com.tencent.mm.ui.LauncherUI",
+        "expectedCover": true,
+        "status": "passed",
+        "fixtureOnly": true
+      },
+      {
+        "class": "com.tencent.mm.plugin.voip.ui.VideoActivity",
+        "expectedCover": false,
+        "status": "passed",
+        "fixtureOnly": true
+      },
+      {
+        "class": "com.tencent.mm.ui.LauncherUI",
+        "expectedCover": true,
+        "status": "passed",
+        "fixtureOnly": true
+      },
+      {
+        "class": "com.tencent.mobileqq.activity.SplashActivity",
+        "expectedCover": true,
+        "status": "passed",
+        "fixtureOnly": true
+      },
+      {
+        "class": "com.tencent.av.ui.VideoInviteActivity",
+        "expectedCover": false,
+        "status": "passed",
+        "fixtureOnly": true
+      },
+      {
+        "class": "com.tencent.av.ui.AVActivity",
+        "expectedCover": false,
+        "status": "passed",
+        "fixtureOnly": true
+      },
+      {
+        "class": "com.tencent.mobileqq.activity.SplashActivity",
+        "expectedCover": true,
+        "status": "passed",
+        "fixtureOnly": true
+      },
+      {
+        "class": "com.tencent.mm.plugin.voip.ui.VideoActivity",
+        "expectedCover": false,
+        "status": "passed",
+        "fixtureOnly": true
+      },
+      {
+        "class": "com.tencent.mobileqq.activity.SplashActivity",
+        "expectedCover": true,
+        "status": "passed",
+        "fixtureOnly": true
+      }
+    ],
+    "fixtureBoundary": "Test-only generated packages with registered Activity classes, no real Tencent application or account; cannot substitute for phone calls",
+    "callUiBoundary": "No native GSM call UI pass; absent heads-up also reproduced on launcher without cover",
+    "userSteering": "Stopped emulator and performed no further emulator testing after user requested real-phone-only work"
+  }
+}

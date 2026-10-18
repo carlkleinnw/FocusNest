@@ -8,6 +8,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.pm.ServiceInfo
 import android.content.Intent
+import android.content.ComponentName
+import android.hardware.display.DisplayManager
 import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.Typeface
@@ -17,7 +19,9 @@ import android.os.Looper
 import android.os.SystemClock
 import android.os.PowerManager
 import android.view.Gravity
+import android.view.Display
 import android.view.WindowManager
+import android.view.WindowInsets
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityWindowInfo
 import android.widget.Button
@@ -58,6 +62,17 @@ class FocusGuardService : AccessibilityService() {
         @Volatile var lastHideReason = ""; private set
     }
     private val handler = Handler(Looper.getMainLooper())
+    // AccessibilityService's WindowManager carries a TYPE_ACCESSIBILITY_OVERLAY
+    // default token. Changing LayoutParams.type alone does not remove that token.
+    // A window context also follows overlay-area configuration when rotating.
+    private val reminderContext by lazy {
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            val display = getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY)
+            applicationContext.createDisplayContext(display)
+                .createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, null)
+        } else applicationContext
+    }
+    private val reminderWindowManager by lazy { reminderContext.getSystemService(WindowManager::class.java) }
     private lateinit var database: NestDatabase
     private var overlay: View? = null
     private var reminderDeadline = 0L
@@ -68,6 +83,7 @@ class FocusGuardService : AccessibilityService() {
     private var lastFreshWindowRead = 0L
     private var foregroundRunning = false
     private val gate = FocusGate()
+    private val voipCallWindows = VoipCallWindows()
     private val expiry = Runnable { gate.clear(); hideReminder("EXPIRED") }
     private val monitor = object : Runnable {
         override fun run() {
@@ -76,8 +92,9 @@ class FocusGuardService : AccessibilityService() {
         }
     }
     private val displayCheck = Runnable {
+        reminderVisible = isReminderShown()
         if (gate.visible() && !reminderVisible && System.currentTimeMillis() < reminderDeadline) {
-            lastError = "系统未让提醒获得前台焦点，已请求返回桌面"
+            lastError = "系统未让提醒正常显示，已请求返回桌面"
             lastErrorCode = "REMINDER_NOT_FOCUSED"
             homePending = requestHome()
         }
@@ -100,11 +117,26 @@ class FocusGuardService : AccessibilityService() {
         if (event == null || event.eventType !in setOf(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
                 AccessibilityEvent.TYPE_WINDOWS_CHANGED)) return
         windowEvents++
+        // Class metadata is useful only for the two supported VoIP apps. Verify it
+        // is a registered activity; widget/dialog events cannot widen an exemption.
+        val eventPackage = event.packageName?.toString()
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            VoipCallWindows.supportedPackage(eventPackage)) {
+            val activity = event.className?.toString()?.let {
+                if (it.startsWith(".")) eventPackage + it else it
+            }
+            val registered = activity != null && runCatching {
+                packageManager.getActivityInfo(ComponentName(eventPackage!!, activity), 0)
+                    .packageName == eventPackage
+            }.getOrDefault(false)
+            voipCallWindows.observe(event.windowId, eventPackage, activity, registered, SystemClock.elapsedRealtime())
+        }
         inspectForeground(event)
     }
 
     private fun inspectForeground(event: AccessibilityEvent? = null): Boolean {
         if (!::database.isInitialized || current !== this) return false
+        reminderVisible = isReminderShown()
         try {
             val rule = database.rule()
             val deadline = rule?.optLong("deadline", 0) ?: 0
@@ -133,6 +165,8 @@ class FocusGuardService : AccessibilityService() {
                 lastFreshWindowRead = SystemClock.elapsedRealtime()
             }
             val observed = windows
+            val callCandidates = mutableSetOf<ForegroundWindow.Candidate>()
+            val applicationIds = mutableSetOf<Int>()
             val candidates = observed.map { window ->
                 val application = window.type == AccessibilityWindowInfo.TYPE_APPLICATION
                 val system = window.type == AccessibilityWindowInfo.TYPE_SYSTEM
@@ -143,22 +177,33 @@ class FocusGuardService : AccessibilityService() {
                     event?.packageName?.toString() else null
                 @Suppress("DEPRECATION")
                 root?.recycle()
+                if (application) applicationIds.add(window.id)
                 val bounds = Rect().also { window.getBoundsInScreen(it) }
                 val metrics = resources.displayMetrics
                 // Passive status/navigation bars must not release a restriction. A trusted
                 // interactive system surface (power menu, notification/call UI, keyguard)
                 // takes priority even when the accessibility cover previously owned focus.
-                val systemControl = ForegroundWindow.isSystemControl(system, pkg in necessaryPackages,
+                // TYPE_APPLICATION_OVERLAY is itself reported as TYPE_SYSTEM. Never
+                // let our own reminder masquerade as a system control and dismiss itself.
+                val systemControl = ForegroundWindow.isSystemControl(system,
+                    pkg != packageName && pkg in necessaryPackages,
                     window.isActive, window.isFocused, bounds.width(), bounds.height(),
                     (96*metrics.density).toInt())
                 ForegroundWindow.Candidate(pkg, application, systemControl,
-                    window.isActive, window.isFocused, window.layer)
+                    window.isActive, window.isFocused, window.layer).also {
+                    if (application && voipCallWindows.isCallWindow(window.id, pkg, SystemClock.elapsedRealtime())) callCandidates.add(it)
+                }
             }
-            val pkg = ForegroundWindow.select(candidates)
+            voipCallWindows.retain(applicationIds, SystemClock.elapsedRealtime())
+            val foreground = ForegroundWindow.selectCandidate(candidates)
+            val pkg = foreground?.pkg()
+            // Exempt the selected call window, never a background call or an entire
+            // messaging package. Returning to its chat activity restores restriction.
+            val voipCall = foreground in callCandidates
             @Suppress("DEPRECATION")
             observed.forEach { it.recycle() }
             if (pkg == null) unknownWindows++
-            val necessary = pkg in necessaryPackages
+            val necessary = pkg in necessaryPackages || voipCall
             val permitted = pkg in allowed
             when (gate.onForeground(pkg, true, permitted, necessary, false)) {
                 FocusGate.Decision.SHOW -> {
@@ -170,7 +215,7 @@ class FocusGuardService : AccessibilityService() {
                         homeVerified++; lastHomeResult = "HOME_VERIFIED"
                     }
                     homePending = false
-                    hideReminder("ALLOWED_FOREGROUND")
+                    hideReminder(if (voipCall) "VOIP_CALL_UI" else "ALLOWED_FOREGROUND")
                 }
                 FocusGate.Decision.IGNORE -> {
                     // An OEM detachment/focus loss must not make a duplicate event bypass protection.
@@ -234,11 +279,11 @@ class FocusGuardService : AccessibilityService() {
         hideReminder("REPLACED")
         reminderAttempts++
         lastAttempt = SystemClock.elapsedRealtime()
-        val density = resources.displayMetrics.density
+        val density = reminderContext.resources.displayMetrics.density
         fun dp(value: Int) = (value*density).toInt()
         val displayMetrics = android.util.DisplayMetrics()
         @Suppress("DEPRECATION")
-        getSystemService(WindowManager::class.java).defaultDisplay.getRealMetrics(displayMetrics)
+        reminderWindowManager.defaultDisplay.getRealMetrics(displayMetrics)
         val compact = compactOverride ?: (displayMetrics.heightPixels/density < 480)
         val green = Color.rgb(68, 102, 79)
         val ink = Color.rgb(51, 45, 40)
@@ -247,18 +292,18 @@ class FocusGuardService : AccessibilityService() {
             setColor(color); cornerRadius = dp(radius).toFloat()
             if (stroke != null) setStroke(dp(1), stroke)
         }
-        val content = LinearLayout(this).apply {
+        val content = LinearLayout(reminderContext).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setPadding(dp(24), dp(if (compact) 8 else 40), dp(24), dp(if (compact) 8 else 40))
             setBackgroundColor(Color.rgb(248, 246, 240))
         }
-        val card = LinearLayout(this).apply {
+        val card = LinearLayout(reminderContext).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(24), dp(if (compact) 12 else 28), dp(24), dp(if (compact) 12 else 24))
             background = rounded(Color.rgb(255, 254, 250), 20, Color.rgb(232, 226, 214))
         }
-        fun line(text: String, size: Float, color: Int = ink) = TextView(this).apply {
+        fun line(text: String, size: Float, color: Int = ink) = TextView(reminderContext).apply {
             this.text = text; textSize = size; gravity = Gravity.START
             setTextColor(color); setPadding(0, dp(if (compact) 3 else 8), 0, dp(if (compact) 3 else 8))
             setLineSpacing(dp(3).toFloat(), 1f)
@@ -275,7 +320,7 @@ class FocusGuardService : AccessibilityService() {
         card.addView(line("正在专注：" + title.take(60), 15f, muted))
         val minutes = ((deadline-System.currentTimeMillis())/60000+1).coerceAtLeast(1)
         card.addView(line("还剩约" + minutes + "分钟。坚持完成眼前这一小步，你的伙伴在小屋等你。", 15f, muted))
-        card.addView(Button(this).apply {
+        card.addView(Button(reminderContext).apply {
             text = "知道了"; textSize = 16f; isAllCaps = false
             setTextColor(Color.WHITE)
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
@@ -287,7 +332,7 @@ class FocusGuardService : AccessibilityService() {
             if (compact) visibility = android.view.View.GONE
         })
         content.addView(card, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
-        val root = ScrollView(this).apply {
+        val root = ScrollView(reminderContext).apply {
             isFillViewport = true
             setBackgroundColor(Color.rgb(248, 246, 240))
             addView(content, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
@@ -303,36 +348,46 @@ class FocusGuardService : AccessibilityService() {
             }
         }
         var counted = false
-        root.viewTreeObserver.addOnWindowFocusChangeListener { focused ->
+        root.viewTreeObserver.addOnPreDrawListener {
             if (overlay === root) {
-                reminderVisible = focused && root.isAttachedToWindow
+                // A visible, touchable cover need not own keyboard/system focus.
+                reminderVisible = isReminderShown()
                 if (reminderVisible && !counted) { reminders++; counted = true }
             }
+            true
         }
-        root.setOnKeyListener { _, keyCode, keyEvent ->
-            if (keyCode == android.view.KeyEvent.KEYCODE_BACK) {
-                if (keyEvent.action == android.view.KeyEvent.ACTION_UP) acknowledge()
-                true
-            } else false
-        }
+        root.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(view: View) = Unit
+            override fun onViewDetachedFromWindow(view: View) {
+                if (overlay === view) reminderVisible = false
+            }
+        })
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
+            // Normal overlays stay below critical system controls even when the OEM
+            // exposes no accessible root/package for its power menu or call banner.
+            if (android.os.Build.VERSION.SDK_INT >= 26) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else {
+                @Suppress("DEPRECATION")
+                WindowManager.LayoutParams.TYPE_PHONE
+            },
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             android.graphics.PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.CENTER; setTitle("FocusNestLockReminder")
             if (android.os.Build.VERSION.SDK_INT >= 30) {
-                setFitInsetsTypes(0)
+                // Leave status/navigation bars visible and directly touchable, including
+                // notification shade access. Only app content needs an opaque cover.
+                setFitInsetsTypes(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
                 layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
             } else if (android.os.Build.VERSION.SDK_INT >= 28) {
                 layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
         try {
-            getSystemService(WindowManager::class.java).addView(root, params)
+            reminderWindowManager.addView(root, params)
             overlay = root
-            root.requestFocus()
             handler.postDelayed(expiry, (deadline-System.currentTimeMillis()).coerceAtLeast(0))
             handler.postDelayed(displayCheck, 700)
             lastError = ""
@@ -344,10 +399,14 @@ class FocusGuardService : AccessibilityService() {
             homePending = requestHome()
         }
     }
+    private fun isReminderShown(): Boolean = overlay?.let {
+        it.isAttachedToWindow && it.isShown && it.windowVisibility == View.VISIBLE &&
+            it.width > 0 && it.height > 0
+    } == true
     private fun hideReminder(reason: String) {
         handler.removeCallbacks(expiry)
         handler.removeCallbacks(displayCheck)
-        overlay?.let { runCatching { getSystemService(WindowManager::class.java).removeView(it) } }
+        overlay?.let { runCatching { reminderWindowManager.removeView(it) } }
         if (overlay != null) lastHideReason = reason
         overlay = null
         reminderVisible = false

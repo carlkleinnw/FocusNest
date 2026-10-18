@@ -77,8 +77,8 @@ class _AppShellState extends ConsumerState<AppShell>
           title: Text(recovery ? '专注保护已关闭' : '开启专注保护？'),
           content: Text(
             recovery
-                ? '专注计时仍在继续，但系统保护权限已关闭，暂时无法拦截非白名单应用。请到系统设置重新开启「伴学小屋专注保护」。'
-                : '专注期间，伴学小屋需要无障碍窗口访问权限识别正在打开的应用，并在非白名单应用上显示提醒。'
+                ? '专注计时仍在继续，但系统保护权限不完整，暂时无法完整拦截非白名单应用。请在系统设置补齐「显示悬浮窗」和「伴学小屋专注保护」。'
+                : '专注期间，伴学小屋需要无障碍窗口访问权限识别正在打开的应用，以及「显示悬浮窗」权限遮挡受限内容。系统电话、状态栏和电源菜单保持可用。'
                       '只读取应用标识，不读取页面文字、输入内容或截图。你可以暂不启用，之后在「应用锁定」里重新开启或前往系统设置关闭。',
           ),
           actions: [
@@ -106,7 +106,7 @@ class _AppShellState extends ConsumerState<AppShell>
           if (mounted) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(const SnackBar(content: Text('请从应用锁定页前往系统无障碍设置')));
+            ).showSnackBar(const SnackBar(content: Text('请从专注保护与白名单页面补齐系统保护权限')));
           }
         }
       }

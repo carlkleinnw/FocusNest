@@ -22,7 +22,8 @@ class MainActivity : FlutterActivity() {
                         "apps" -> result.success(InstalledApps.list(this))
                         "status" -> {
                             val rule = database.rule()
-                            result.success(mapOf("ready" to (FocusGuardService.connected && FocusGuardService.windowAccess),
+                            val overlayAccess = Settings.canDrawOverlays(this)
+                            result.success(mapOf("ready" to (FocusGuardService.connected && FocusGuardService.windowAccess && overlayAccess),
                                 "windowAccess" to FocusGuardService.windowAccess,
                                 "backgroundRunning" to FocusGuardService.backgroundRunning,
                                 "active" to ((rule?.optLong("deadline") ?: 0) > System.currentTimeMillis()),
@@ -39,11 +40,16 @@ class MainActivity : FlutterActivity() {
                                 "hideReason" to FocusGuardService.lastHideReason,
                                 "allowlistMode" to (rule?.optString("mode") == "allowlist"),
                                 "homeResult" to FocusGuardService.lastHomeResult,
-                                "error" to FocusGuardService.lastError,
-                                "errorCode" to FocusGuardService.lastErrorCode,
+                                "error" to if (overlayAccess) FocusGuardService.lastError else "请允许显示悬浮窗，专注提醒会避开系统电话、状态栏和电源菜单",
+                                "errorCode" to if (overlayAccess) FocusGuardService.lastErrorCode else "OVERLAY_PERMISSION_REQUIRED",
                                 "version" to packageManager.getPackageInfo(packageName, 0).versionName))
                         }
-                        "settings" -> { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)); result.success(null) }
+                        "settings" -> {
+                            val intent = if (!Settings.canDrawOverlays(this))
+                                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + packageName))
+                            else Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                            startActivity(intent); result.success(null)
+                        }
                         "backgroundSettings" -> {
                             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                                 Uri.parse("package:" + packageName)))
@@ -58,6 +64,7 @@ class MainActivity : FlutterActivity() {
                         }
                         "start" -> {
                             require(FocusGuardService.connected && FocusGuardService.windowAccess) { "先开启具备窗口识别能力的专注保护服务" }
+                            require(Settings.canDrawOverlays(this)) { "请先允许显示悬浮窗，再开始专注" }
                             val deadline = call.argument<Number>("deadline")?.toLong() ?: error("Missing deadline")
                             val started = call.argument<Number>("started")?.toLong() ?: error("Missing start")
                             require(deadline-started in 1_800_000L..10_800_000L)

@@ -2,6 +2,7 @@ package cn.focusnest.focus_pet_demo;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.List;
+import java.util.Set;
 
 /** Standalone JVM regression checks; run with JDK javac/java, no test dependency. */
 public final class FocusGateCheck {
@@ -12,6 +13,51 @@ public final class FocusGateCheck {
     }
     public static void main(String[] args) {
         FocusGate gate = new FocusGate();
+        String wx = "com.tencent.mm", qq = "com.tencent.mobileqq";
+        String wxCall = "com.tencent.mm.plugin.voip.ui.VideoActivity", qqCall = "com.tencent.av.ui.AVActivity";
+        check(VoipCallWindows.callActivity(wx, wxCall), "WeChat call activity must be exempt without exempting the whole app");
+        check(VoipCallWindows.callActivity(qq, qqCall), "QQ in-call activity must be exempt");
+        check(VoipCallWindows.callActivity(qq, "com.tencent.av.ui.VideoInviteActivity"), "QQ invitation activity must stay accessible");
+        check(!VoipCallWindows.callActivity(wx, "com.tencent.mm.ui.LauncherUI"), "WeChat chat list must remain restricted");
+        check(!VoipCallWindows.callActivity(wx, "com.tencent.mm.ui.chatting.ChattingUI"), "WeChat chat must remain restricted");
+        check(!VoipCallWindows.callActivity(qq, "com.tencent.mobileqq.activity.SplashActivity"), "QQ home must remain restricted");
+        check(!VoipCallWindows.callActivity("other.app", wxCall), "another package cannot spoof a call class name");
+        check(!VoipCallWindows.callActivity(wx, qqCall), "call classes cannot cross app identities");
+        check(!VoipCallWindows.callActivity(wx, null), "an unknown page is not a call");
+        var voip = new VoipCallWindows();
+        voip.observe(7, wx, wxCall, false, 0);
+        check(!voip.isCallWindow(7, wx, 0), "unregistered event classes cannot obtain an exemption");
+        voip.observe(7, wx, wxCall, true, 0);
+        check(!voip.isCallWindow(8, wx, 0), "a call event cannot exempt another window");
+        check(!voip.isCallWindow(7, qq, 0), "a call event cannot exempt another package");
+        voip.retain(Set.of(), 500);
+        check(voip.isCallWindow(7, wx, 500), "early window-state event survives a short window-list delay");
+        voip.observe(7, wx, "android.widget.FrameLayout", false, 700);
+        check(voip.isCallWindow(7, wx, 700), "widget events must not erase a verified activity");
+        voip.retain(Set.of(7), 90000);
+        check(voip.isCallWindow(7, wx, 90000), "a continuously visible call remains usable beyond a timeout");
+        voip.observe(7, wx, "com.tencent.mm.ui.LauncherUI", true, 90001);
+        check(!voip.isCallWindow(7, wx, 90001), "same-window return to chat must revoke the exemption");
+        voip.observe(7, wx, wxCall, true, 90002);voip.isCallWindow(7, wx, 90002);voip.retain(Set.of(), 90003);
+        check(!voip.isCallWindow(7, wx, 90003), "a removed call window cannot leave an exemption behind");
+        voip.observe(9, qq, qqCall, true, 0);voip.retain(Set.of(), 1501);
+        check(!voip.isCallWindow(9, qq, 1501), "an event that never matched an actual window expires");
+        voip.observe(10, qq, qqCall, true, 0);
+        check(!voip.isCallWindow(10, qq, 2000), "first matching window after pending deadline cannot revive an old event");
+        var callBehindChat = new ForegroundWindow.Candidate(wx,true,false,false,1);
+        var foregroundChat = new ForegroundWindow.Candidate(wx,true,true,true,2);
+        check(!Set.of(callBehindChat).contains(ForegroundWindow.selectCandidate(List.of(callBehindChat, foregroundChat))),
+            "a background call cannot exempt the same package's foreground chat window");
+        check(CallUiPolicy.trustedCompanion(true,false,true),
+            "preinstalled Xiaomi call UI signed like the dialer must be trusted without platform signature");
+        check(CallUiPolicy.trustedCompanion(true,true,false),
+            "platform-signed preinstalled call UI remains trusted");
+        check(!CallUiPolicy.trustedCompanion(true,false,false),
+            "a preinstalled flag without trusted signer must not grant phone access");
+        check(!CallUiPolicy.trustedCompanion(false,false,true),
+            "a downloaded dialer companion must not obtain an automatic system exemption");
+        check(!CallUiPolicy.trustedCompanion(false,false,false),
+            "a third-party app spoofing the call UI package must remain restricted");
         AtomicInteger homeRequests = new AtomicInteger();
         check(gate.onForeground("video",true,false,false,false)==FocusGate.Decision.SHOW,"restricted entry must show");
         check(homeRequests.get()==0 && gate.visible(),"wait for acknowledgement");
@@ -34,6 +80,9 @@ public final class FocusGateCheck {
         check(gate.onForeground("new-game",true,false,false,false)==FocusGate.Decision.SHOW,"apps absent from whitelist are blocked without category matching");
         var game = new ForegroundWindow.Candidate("game",true,true,true,4);
         var keyboard = new ForegroundWindow.Candidate("keyboard",false,true,true,9);
+        var ordinaryReminder = new ForegroundWindow.Candidate("self",false,false,false,false,12);
+        check("game".equals(ForegroundWindow.select(List.of(game, ordinaryReminder))),
+            "own normal overlay is not a trusted system control and must not dismiss itself");
         check("game".equals(ForegroundWindow.select(List.of(game,keyboard))),"keyboard must not masquerade as foreground app");
         check(ForegroundWindow.select(List.of(keyboard))==null,"system-only observations are unknown");
         var home = new ForegroundWindow.Candidate("home",true,false,false,1);

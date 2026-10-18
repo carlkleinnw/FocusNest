@@ -6,7 +6,9 @@ New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null
 $GatePath = Join-Path $PSScriptRoot 'app/src/main/java/cn/focusnest/focus_pet_demo/FocusGate.java'
 $CheckPath = Join-Path $PSScriptRoot 'app/src/test/java/cn/focusnest/focus_pet_demo/FocusGateCheck.java'
 $WindowPath = Join-Path $PSScriptRoot 'app/src/main/java/cn/focusnest/focus_pet_demo/ForegroundWindow.java'
-& (Join-Path $JavaHome 'bin/javac.exe') -d $OutputPath $GatePath $WindowPath $CheckPath
+$CallUiPath = Join-Path $PSScriptRoot 'app/src/main/java/cn/focusnest/focus_pet_demo/CallUiPolicy.java'
+$VoipPath = Join-Path $PSScriptRoot 'app/src/main/java/cn/focusnest/focus_pet_demo/VoipCallWindows.java'
+& (Join-Path $JavaHome 'bin/javac.exe') -d $OutputPath $GatePath $WindowPath $CallUiPath $VoipPath $CheckPath
 if ($LASTEXITCODE -ne 0) { throw 'Native guard regression checks did not compile' }
 & (Join-Path $JavaHome 'bin/java.exe') -cp $OutputPath cn.focusnest.focus_pet_demo.FocusGateCheck
 if ($LASTEXITCODE -ne 0) { throw 'Native guard regression checks failed' }

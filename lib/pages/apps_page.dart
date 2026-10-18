@@ -156,7 +156,7 @@ class _AppsPageState extends ConsumerState<AppsPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('提醒已获得前台焦点${p.reminders}次'),
+                                Text('提醒已显示${p.reminders}次'),
                                 Text('收到${p.windowEvents}次切换通知'),
                                 Text('已核对前台窗口${p.foregroundChecks}次'),
                                 if (p.homeResult.isNotEmpty) Text(p.homeResult),
@@ -199,7 +199,7 @@ class _AppsPageState extends ConsumerState<AppsPage> {
                     } catch (_) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('请在系统无障碍设置中找到伴学小屋')),
+                          const SnackBar(content: Text('请在系统设置中允许悬浮窗并开启伴学小屋专注保护')),
                         );
                       }
                     }
@@ -207,7 +207,7 @@ class _AppsPageState extends ConsumerState<AppsPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '在系统设置找到「伴学小屋专注保护」，可开启或关闭。系统需授予窗口访问能力，应用只取所属应用标识。拒绝或关闭后仍可使用计划和小屋，但无法开始受保护的专注。',
+                  '专注保护需要「显示悬浮窗」和「伴学小屋专注保护」两项权限。点击上方按钮先补齐缺少的权限，返回后可再次点击管理另一项。应用只取窗口所属应用标识，用提醒遮挡受限内容，保留系统状态栏、电话和电源菜单。拒绝或关闭后仍可使用计划，但无法开始受保护的专注。',
                 ),
                 const SizedBox(height: 16),
                 const Text(

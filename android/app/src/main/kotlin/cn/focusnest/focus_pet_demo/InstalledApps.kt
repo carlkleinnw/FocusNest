@@ -34,9 +34,20 @@ object InstalledApps {
         val telecom = context.getSystemService(TelecomManager::class.java)
         val dialer = telecom?.defaultDialerPackage
         val systemDialer = if (Build.VERSION.SDK_INT >= 29) telecom?.systemDialerPackage else null
+        fun signedLike(first: String?, second: String) = first != null && runCatching {
+            context.packageManager.checkSignatures(first, second) == PackageManager.SIGNATURE_MATCH
+        }.getOrDefault(false)
+        fun trustedCompanion(pkg: String): Boolean {
+            val preinstalled = runCatching {
+                context.packageManager.getApplicationInfo(pkg, 0).flags and ApplicationInfo.FLAG_SYSTEM != 0
+            }.getOrDefault(false)
+            return CallUiPolicy.trustedCompanion(preinstalled, platformSigned(context, pkg),
+                signedLike(dialer, pkg) || signedLike(systemDialer, pkg))
+        }
         // Some ROMs host the incoming/in-call UI outside the default dialer.
         // Discover actual UI services, accepting only the chosen/system dialer or
-        // platform-signed components. Declaring this intent alone grants no exemption.
+        // preinstalled components signed by the platform/dialer. An intent alone
+        // grants no exemption; OEM phone apps can use a separate signing key.
         val callUi = context.packageManager.queryIntentServices(
             Intent(InCallService.SERVICE_INTERFACE), PackageManager.GET_META_DATA
         ).mapNotNull { result ->
@@ -45,13 +56,14 @@ object InstalledApps {
             pkg.takeIf {
                 service.permission == "android.permission.BIND_INCALL_SERVICE" &&
                     service.metaData?.getBoolean(TelecomManager.METADATA_IN_CALL_SERVICE_UI) == true &&
-                    (pkg == dialer || pkg == systemDialer || platformSigned(context, pkg))
+                    (pkg == dialer || pkg == systemDialer || trustedCompanion(pkg))
             }
         }.toSet()
         val legacyCallUi = setOf("com.android.incallui", "com.android.server.telecom")
-            .filter { platformSigned(context, it) }
+            .filter { trustedCompanion(it) }
         val settingsHandlers = listOf(
             Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.packageName)),
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + context.packageName)),
             Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
         ).mapNotNull { context.packageManager.resolveActivity(it, 0)?.activityInfo?.packageName }
