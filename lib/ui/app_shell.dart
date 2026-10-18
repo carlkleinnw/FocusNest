@@ -10,6 +10,7 @@ const destinations = [
   ('/agent', 'AI 规划', Icons.auto_awesome_outlined),
   ('/focus', '沉浸专注', Icons.timelapse_rounded),
   ('/records', '复盘', Icons.auto_stories_outlined),
+  ('/settings', '设置', Icons.settings_outlined),
 ];
 
 class AppShell extends ConsumerStatefulWidget {
@@ -155,12 +156,6 @@ class _AppShellState extends ConsumerState<AppShell>
                   foregroundColor: NestColors.orangeDeep,
                 ),
                 child: const Text('专注中'),
-              ),
-            if (widget.path != '/settings')
-              IconButton(
-                tooltip: '设置',
-                onPressed: () => context.go('/settings'),
-                icon: const Icon(Icons.more_horiz_rounded),
               ),
             const SizedBox(width: 4),
           ],
@@ -340,11 +335,6 @@ class _SideRail extends StatelessWidget {
               ),
             ),
           const Spacer(),
-          IconButton(
-            tooltip: '设置',
-            onPressed: () => context.go('/settings'),
-            icon: const Icon(Icons.more_horiz_rounded),
-          ),
           const SizedBox(height: 8),
         ],
       ),
