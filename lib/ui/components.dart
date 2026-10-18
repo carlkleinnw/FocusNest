@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import '../core/models.dart';
 import '../core/ports.dart';
 import 'theme.dart';
 
-/// Scroll body shared by every page: an optional eyebrow, a large title,
-/// a supporting line, then the page content on a max-width column.
+/// Page body: grey canvas, one quiet title line, then white list groups.
 class PageFrame extends StatelessWidget {
   const PageFrame({
     super.key,
@@ -23,76 +21,39 @@ class PageFrame extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 600;
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
-        compact ? 20 : 36,
-        compact ? 8 : 16,
-        compact ? 20 : 36,
-        132,
+        compact ? 16 : 24,
+        compact ? 10 : 16,
+        compact ? 16 : 24,
+        108,
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1080),
+          constraints: const BoxConstraints(maxWidth: 860),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (eyebrow.isNotEmpty) ...[
-                Row(
-                  children: [
-                    Container(
-                      width: 16,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: NestColors.orange,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.headlineLarge,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      eyebrow,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.6,
-                        color: NestColors.muted,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-              ],
-              LayoutBuilder(
-                builder: (context, box) {
-                  final titleText = Text(
-                    title,
-                    style: Theme.of(context).textTheme.headlineLarge,
-                  );
-                  if (action == null || box.maxWidth < 560) {
-                    return titleText;
-                  }
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(child: titleText),
-                      const SizedBox(width: 16),
-                      action!,
-                    ],
-                  );
-                },
+                  ),
+                  if (action != null) ...[const SizedBox(width: 12), action!],
+                ],
               ),
-              const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
-                child: Text(
-                  subtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: NestColors.muted),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 13,
+                  height: 1.5,
+                  color: NestColors.muted,
                 ),
               ),
-              if (action != null && compact) ...[
-                const SizedBox(height: 16),
-                Align(alignment: Alignment.centerLeft, child: action!),
-              ],
-              SizedBox(height: compact ? 22 : 28),
+              const SizedBox(height: 16),
               ...children,
             ],
           ),
@@ -102,19 +63,17 @@ class PageFrame extends StatelessWidget {
   }
 }
 
-/// White card. [color] or [gradient] replaces the plain surface, [onTap] adds
-/// an ink response. Hairline border is opt-in so cards can sit quietly on the
-/// grey canvas.
+/// A white WeChat-style list group. No border, no shadow.
 class SurfacePanel extends StatelessWidget {
   const SurfacePanel({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(16),
     this.color,
     this.gradient,
     this.radius = NestRadius.card,
     this.border,
-    this.shadow = true,
+    this.shadow = false,
     this.onTap,
   });
   final Widget child;
@@ -136,9 +95,6 @@ class SurfacePanel extends StatelessWidget {
         gradient: gradient,
         border: border,
         borderRadius: BorderRadius.circular(radius),
-        boxShadow: shadow && (color == null || color == NestColors.surface)
-            ? NestShadow.card
-            : null,
       ),
       child: child,
     );
@@ -170,29 +126,23 @@ class StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = foreground ?? (warning ? NestColors.amber : NestColors.green);
-    final bg = background ?? (warning ? NestColors.sand : NestColors.softGreen);
+    final fg =
+        foreground ?? (warning ? NestColors.amber : NestColors.greenDeep);
+    final bg = background ?? NestColors.tagBg;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(NestRadius.pill),
+        borderRadius: BorderRadius.circular(3),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 13, color: fg),
-            const SizedBox(width: 5),
+            Icon(icon, size: 12, color: fg),
+            const SizedBox(width: 4),
           ],
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-              color: fg,
-            ),
-          ),
+          Text(text, style: TextStyle(fontSize: 11, height: 1.4, color: fg)),
         ],
       ),
     );
@@ -217,7 +167,7 @@ class MainButton extends StatelessWidget {
   );
 }
 
-/// Small uppercase section label used above grouped content.
+/// Grey section heading above a group, like WeChat settings sections.
 class SectionTitle extends StatelessWidget {
   const SectionTitle(this.text, {super.key, this.action, this.subtitle});
   final String text;
@@ -225,9 +175,9 @@ class SectionTitle extends StatelessWidget {
   final String? subtitle;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12, top: 4),
+    padding: const EdgeInsets.fromLTRB(4, 18, 4, 8),
     child: Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
           child: Column(
@@ -237,13 +187,12 @@ class SectionTitle extends StatelessWidget {
                 text,
                 style: const TextStyle(
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
+                  height: 1.4,
                   color: NestColors.muted,
                 ),
               ),
               if (subtitle != null) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   subtitle!,
                   style: const TextStyle(fontSize: 12, color: NestColors.faint),
@@ -258,35 +207,7 @@ class SectionTitle extends StatelessWidget {
   );
 }
 
-/// Rounded-square icon tile, the recurring Xiaomi list/settings ornament.
-class IconBadge extends StatelessWidget {
-  const IconBadge(
-    this.icon, {
-    super.key,
-    this.color = NestColors.orange,
-    this.background = NestColors.softOrange,
-    this.size = 40,
-    this.radius = 12,
-    this.iconSize,
-  });
-  final IconData icon;
-  final Color color, background;
-  final double size, radius;
-  final double? iconSize;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      color: background,
-      borderRadius: BorderRadius.circular(radius),
-    ),
-    child: Icon(icon, size: iconSize ?? size * 0.5, color: color),
-  );
-}
-
-/// Grouped settings list: one white card, hairline dividers between rows.
+/// One white group of rows with hairline separators inset from the left.
 class SettingsGroup extends StatelessWidget {
   const SettingsGroup({super.key, required this.children, this.padding});
   final List<Widget> children;
@@ -297,13 +218,13 @@ class SettingsGroup extends StatelessWidget {
     for (var i = 0; i < children.length; i++) {
       if (i > 0) {
         rows.add(
-          const Divider(height: 1, thickness: 1, indent: 68, endIndent: 16),
+          const Divider(height: 1, thickness: 1, indent: 16, endIndent: 0),
         );
       }
       rows.add(children[i]);
     }
     return SurfacePanel(
-      padding: padding ?? const EdgeInsets.symmetric(vertical: 4),
+      padding: padding ?? EdgeInsets.zero,
       child: Column(children: rows),
     );
   }
@@ -317,33 +238,31 @@ class SettingsRow extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.onTap,
-    this.iconColor = NestColors.orange,
-    this.iconBackground = NestColors.softOrange,
+    this.iconColor = NestColors.muted,
     this.leading,
+    this.dense = false,
   });
   final String title;
   final String? subtitle;
   final IconData? icon;
-  final Color iconColor, iconBackground;
+  final Color iconColor;
   final Widget? trailing, leading;
   final VoidCallback? onTap;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     final row = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 10 : 13),
       child: Row(
         children: [
           leading ??
               (icon == null
-                  ? const SizedBox(width: 4)
-                  : IconBadge(
-                      icon!,
-                      color: iconColor,
-                      background: iconBackground,
-                      size: 38,
+                  ? const SizedBox(width: 0)
+                  : Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Icon(icon, size: 22, color: iconColor),
                     )),
-          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,8 +270,8 @@ class SettingsRow extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    height: 1.4,
                     color: NestColors.ink,
                   ),
                 ),
@@ -361,8 +280,8 @@ class SettingsRow extends StatelessWidget {
                   Text(
                     subtitle!,
                     style: const TextStyle(
-                      fontSize: 12,
-                      height: 1.45,
+                      fontSize: 13,
+                      height: 1.5,
                       color: NestColors.muted,
                     ),
                   ),
@@ -370,21 +289,15 @@ class SettingsRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          ?trailing,
+          if (trailing != null) ...[const SizedBox(width: 10), trailing!],
         ],
       ),
     );
     if (onTap == null) return row;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: row,
-    );
+    return InkWell(onTap: onTap, child: row);
   }
 }
 
-/// Big number + label + tinted icon, used in dashboard grids.
 class MetricTile extends StatelessWidget {
   const MetricTile({
     super.key,
@@ -392,69 +305,40 @@ class MetricTile extends StatelessWidget {
     required this.value,
     this.unit = '',
     this.icon,
-    this.color = NestColors.orange,
-    this.background = NestColors.softOrange,
+    this.color = NestColors.ink,
   });
   final String label, value, unit;
   final IconData? icon;
-  final Color color, background;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
+    padding: const EdgeInsets.symmetric(vertical: 2),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            if (icon != null) ...[
-              IconBadge(
-                icon!,
-                color: color,
-                background: background,
-                size: 30,
-                radius: 9,
-                iconSize: 16,
-              ),
-              const SizedBox(width: 8),
-            ],
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: NestColors.muted,
-                ),
-              ),
-            ),
-          ],
+        Text(
+          label,
+          style: const TextStyle(fontSize: 13, color: NestColors.muted),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         RichText(
           text: TextSpan(
-            style: const TextStyle(
-              fontSize: 26,
-              height: 1.1,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.4,
-              color: NestColors.ink,
+            style: TextStyle(
+              fontSize: 22,
+              height: 1.2,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.2,
+              color: color,
             ),
             children: [
-              TextSpan(
-                text: value,
-                style: const TextStyle(
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
+              TextSpan(text: value),
               if (unit.isNotEmpty)
                 TextSpan(
                   text: ' $unit',
                   style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
                     color: NestColors.muted,
                   ),
                 ),
@@ -472,26 +356,23 @@ class EmptyPanel extends StatelessWidget {
     required this.title,
     required this.body,
     this.action,
-    this.icon = Icons.spa_outlined,
+    this.icon = Icons.inbox_outlined,
   });
   final String title, body;
   final Widget? action;
   final IconData icon;
   @override
   Widget build(BuildContext context) => SurfacePanel(
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 34),
     child: Column(
       children: [
-        IconBadge(
-          icon,
-          size: 60,
-          radius: 20,
-          color: NestColors.orange,
-          background: NestColors.softOrange,
+        Icon(icon, size: 36, color: NestColors.faint),
+        const SizedBox(height: 12),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16, color: NestColors.ink),
         ),
-        const SizedBox(height: 18),
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: Text(
@@ -504,7 +385,7 @@ class EmptyPanel extends StatelessWidget {
             ),
           ),
         ),
-        if (action != null) ...[const SizedBox(height: 20), action!],
+        if (action != null) ...[const SizedBox(height: 16), action!],
       ],
     ),
   );
@@ -519,23 +400,24 @@ class StatBlock extends StatelessWidget {
     children: [
       Text(
         label,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: NestColors.muted,
-        ),
+        style: const TextStyle(fontSize: 13, color: NestColors.muted),
       ),
-      const SizedBox(height: 6),
+      const SizedBox(height: 4),
       RichText(
         text: TextSpan(
-          style: Theme.of(context).textTheme.displaySmall,
+          style: const TextStyle(
+            fontSize: 22,
+            height: 1.2,
+            fontWeight: FontWeight.w600,
+            color: NestColors.ink,
+          ),
           children: [
             TextSpan(text: value),
             TextSpan(
               text: ' $unit',
               style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
                 color: NestColors.muted,
               ),
             ),
@@ -546,8 +428,7 @@ class StatBlock extends StatelessWidget {
   );
 }
 
-/// Segmented pill control. Keeps [ChoiceChip] as the underlying widget so
-/// existing keys/tests keep working while the visual becomes a Xiaomi track.
+/// Flat text tabs with a short green underline, used for level/filter switching.
 class PillTabs extends StatelessWidget {
   const PillTabs({
     super.key,
@@ -565,146 +446,73 @@ class PillTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chips = <Widget>[];
-    // Reserve the label width explicitly: on Flutter web the fallback CJK face
-    // can measure narrower than it paints, and Material's chip label fades
-    // with overflow. An explicit box keeps every segment legible.
-    final glyph = MediaQuery.textScalerOf(context).scale(13);
+    final glyph = MediaQuery.textScalerOf(context).scale(14);
+    final tabs = <Widget>[];
     for (var i = 0; i < labels.length; i++) {
       final selected = i == index;
-      final width = glyph * labels[i].runes.length + 6;
-      chips.add(
-        Padding(
-          padding: EdgeInsets.only(right: i == labels.length - 1 ? 0 : 4),
-          child: ChoiceChip(
-            key: keys?[i],
-            label: SizedBox(
-              width: width,
-              child: Text(
-                labels[i],
-                maxLines: 1,
-                softWrap: false,
-                textAlign: TextAlign.center,
+      final width = glyph * labels[i].runes.length + 16;
+      tabs.add(
+        InkWell(
+          onTap: () => onChanged(i),
+          child: Container(
+            width: width,
+            padding: const EdgeInsets.only(top: 10),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: selected ? NestColors.orange : Colors.transparent,
+                  width: 2,
+                ),
               ),
             ),
-            selected: selected,
-            showCheckmark: false,
-            onSelected: (_) => onChanged(i),
-            backgroundColor: Colors.transparent,
-            selectedColor: NestColors.surface,
-            side: BorderSide.none,
-            shape: const StadiumBorder(),
-            labelStyle: TextStyle(
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected ? NestColors.ink : NestColors.muted,
+            child: ChoiceChip(
+              key: keys?[i],
+              label: SizedBox(
+                width: width - 16,
+                child: Text(
+                  labels[i],
+                  maxLines: 1,
+                  softWrap: false,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              selected: selected,
+              showCheckmark: false,
+              onSelected: (_) => onChanged(i),
+              backgroundColor: Colors.transparent,
+              selectedColor: Colors.transparent,
+              side: BorderSide.none,
+              shape: const RoundedRectangleBorder(),
+              labelStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                color: selected ? NestColors.ink : NestColors.muted,
+              ),
+              padding: const EdgeInsets.only(bottom: 10),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              pressElevation: 0,
+              elevation: 0,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            elevation: selected ? 1 : 0,
-            shadowColor: const Color(0x1A101828),
-            pressElevation: 0,
           ),
         ),
       );
     }
-    final track = Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: NestColors.paperDeep,
-        borderRadius: BorderRadius.circular(NestRadius.pill),
+    return SurfacePanel(
+      padding: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: scrollable
+            ? SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(children: tabs),
+              )
+            : Row(mainAxisSize: MainAxisSize.min, children: tabs),
       ),
-      child: scrollable
-          ? SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: chips),
-            )
-          : Row(mainAxisSize: MainAxisSize.min, children: chips),
     );
-    return Align(alignment: Alignment.centerLeft, child: track);
   }
 }
 
-/// Circular progress. Pass [gradient] for the hero rings, or [color] for a
-/// flat arc.
-class ProgressRing extends StatelessWidget {
-  const ProgressRing({
-    super.key,
-    required this.value,
-    this.size = 64,
-    this.stroke = 7,
-    this.color = NestColors.orange,
-    this.trackColor = NestColors.paperDeep,
-    this.gradient,
-    this.child,
-  });
-  final double value, size, stroke;
-  final Color color, trackColor;
-  final Gradient? gradient;
-  final Widget? child;
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: size,
-    height: size,
-    child: CustomPaint(
-      painter: _RingPainter(
-        value: value.clamp(0, 1).toDouble(),
-        stroke: stroke,
-        color: color,
-        trackColor: trackColor,
-        gradient: gradient,
-      ),
-      child: Center(child: child),
-    ),
-  );
-}
-
-class _RingPainter extends CustomPainter {
-  _RingPainter({
-    required this.value,
-    required this.stroke,
-    required this.color,
-    required this.trackColor,
-    this.gradient,
-  });
-  final double value, stroke;
-  final Color color, trackColor;
-  final Gradient? gradient;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final arcRect = rect.deflate(stroke / 2);
-    final track = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round
-      ..color = trackColor;
-    canvas.drawArc(arcRect, 0, 6.2832, false, track);
-    if (value <= 0) return;
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round;
-    if (gradient != null) {
-      paint.shader = gradient!.createShader(rect);
-    } else {
-      paint.color = color;
-    }
-    canvas.drawArc(arcRect, -1.5708, 6.2832 * value, false, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _RingPainter old) =>
-      old.value != value ||
-      old.color != color ||
-      old.stroke != stroke ||
-      old.trackColor != trackColor;
-}
-
-/// Small meta line: icon + text.
 class MetaText extends StatelessWidget {
   const MetaText(this.text, {super.key, this.icon, this.color});
   final String text;
@@ -716,7 +524,7 @@ class MetaText extends StatelessWidget {
     children: [
       if (icon != null) ...[
         Icon(icon, size: 13, color: color ?? NestColors.faint),
-        const SizedBox(width: 5),
+        const SizedBox(width: 4),
       ],
       Flexible(
         child: Text(
@@ -724,9 +532,8 @@ class MetaText extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontSize: 12,
-            height: 1.4,
-            fontWeight: FontWeight.w500,
+            fontSize: 13,
+            height: 1.45,
             color: color ?? NestColors.muted,
           ),
         ),
@@ -735,13 +542,13 @@ class MetaText extends StatelessWidget {
   );
 }
 
-/// Tiny label chip for goal names / categories.
+/// Small grey label, WeChat tag style.
 class TagLabel extends StatelessWidget {
   const TagLabel(
     this.text, {
     super.key,
-    this.color = NestColors.blue,
-    this.background = NestColors.softBlue,
+    this.color = NestColors.muted,
+    this.background = NestColors.tagBg,
     this.icon,
   });
   final String text;
@@ -749,88 +556,27 @@ class TagLabel extends StatelessWidget {
   final IconData? icon;
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     decoration: BoxDecoration(
       color: background,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(3),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (icon != null) ...[
           Icon(icon, size: 11, color: color),
-          const SizedBox(width: 4),
+          const SizedBox(width: 3),
         ],
         Flexible(
           child: Text(
             text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
+            style: TextStyle(fontSize: 11, height: 1.4, color: color),
           ),
         ),
       ],
-    ),
-  );
-}
-
-class PlanCard extends StatelessWidget {
-  const PlanCard({
-    super.key,
-    required this.plan,
-    required this.onStart,
-    this.onEdit,
-    this.onDelete,
-  });
-  final Plan plan;
-  final VoidCallback? onStart, onEdit, onDelete;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: SurfacePanel(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              TagLabel(plan.category),
-              const Spacer(),
-              MetaText(plan.time, icon: Icons.schedule_rounded),
-              if (onEdit != null)
-                IconButton(
-                  tooltip: '编辑计划',
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                ),
-              if (onDelete != null)
-                IconButton(
-                  tooltip: '删除计划',
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(plan.title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              MetaText('${plan.minutes} 分钟', icon: Icons.timelapse_rounded),
-              const Spacer(),
-              FilledButton.tonalIcon(
-                onPressed: onStart,
-                icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                label: const Text('选择任务'),
-              ),
-            ],
-          ),
-        ],
-      ),
     ),
   );
 }

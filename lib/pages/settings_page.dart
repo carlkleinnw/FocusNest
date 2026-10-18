@@ -157,74 +157,45 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final locked = busy || s.focusing || !loaded;
     return PageFrame(
       title: '设置',
-      subtitle: '配置你的学习助手和专注保护。所有数据保存在本机。',
+      subtitle: '配置学习助手和专注保护，所有数据保存在本机。',
       children: [
-        _ProfileCard(configured: configured),
-        const SizedBox(height: 24),
         const SectionTitle('AI 助手'),
         SurfacePanel(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 children: [
-                  const IconBadge(
-                    Icons.key_rounded,
-                    size: 36,
-                    radius: 11,
-                    iconSize: 18,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'DeepSeek 密钥',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: NestColors.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          configured ? '已保存 · 可随时替换' : '未配置',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: NestColors.muted,
-                          ),
-                        ),
-                      ],
+                  const Expanded(
+                    child: Text(
+                      'DeepSeek 密钥',
+                      style: TextStyle(fontSize: 16, color: NestColors.ink),
                     ),
                   ),
-                  StatusPill(
-                    configured ? '已保存' : '未配置',
-                    icon: configured
-                        ? Icons.check_circle_rounded
-                        : Icons.info_outline_rounded,
-                    background: configured
-                        ? NestColors.softGreen
-                        : NestColors.paperDeep,
-                    foreground: configured
-                        ? NestColors.green
-                        : NestColors.muted,
+                  Text(
+                    configured ? '已保存' : '未设置',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: configured
+                          ? NestColors.greenDeep
+                          : NestColors.muted,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 6),
               Text(
                 kIsWeb
-                    ? '密钥只保存在本机服务内存中，不写入浏览器存储或文件，关闭服务后清除。保存不会调用 DeepSeek；测试连接或发送目标时才会联网并产生 API 费用。'
+                    ? '密钥只保存在本机服务内存中，不写入浏览器存储或文件，关闭服务后清除。测试连接或发送目标时才会联网并产生 API 费用。'
                     : '密钥仅在本机加密保存。调用 AI 时会把你输入的目标、对话或待复盘记录发给 DeepSeek，并产生 API 费用。应用名单不发送。',
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   height: 1.6,
                   color: NestColors.muted,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               TextField(
                 key: const Key('api-key'),
                 controller: keyInput,
@@ -232,7 +203,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 enableSuggestions: false,
                 autocorrect: false,
                 enabled: !locked,
+                style: const TextStyle(fontSize: 15),
                 decoration: InputDecoration(
+                  filled: true,
+                  fillColor: NestColors.fill,
                   labelText: configured ? 'API 密钥（留空保留原值）' : 'API 密钥',
                   hintText: configured ? '••••••••••••••••' : null,
                   helperText: configured ? '密钥已保存，点击眼睛查看；留空保存保留原值。' : null,
@@ -248,27 +222,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               const Text(
                 '模型',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: NestColors.muted,
-                ),
+                style: TextStyle(fontSize: 13, color: NestColors.muted),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               DropdownButtonFormField<String>(
                 key: ValueKey(model),
                 initialValue: model,
                 isExpanded: true,
-                icon: const Icon(Icons.expand_more_rounded),
+                icon: const Icon(Icons.expand_more_rounded, size: 20),
+                style: const TextStyle(fontSize: 15, color: NestColors.ink),
                 decoration: const InputDecoration(
+                  filled: true,
+                  fillColor: NestColors.fill,
                   hintText: '选择模型',
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
                 ),
                 items: const [
                   DropdownMenuItem(
@@ -286,18 +255,28 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ],
                 onChanged: locked ? null : (v) => setState(() => model = v!),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Wrap(
-                spacing: 10,
-                runSpacing: 10,
+                spacing: 8,
+                runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   FilledButton(
                     onPressed: locked ? null : () => _save(),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      textStyle: const TextStyle(fontSize: 14),
+                    ),
                     child: const Text('保存 API 配置'),
                   ),
                   OutlinedButton(
                     onPressed: locked || !configured ? null : _test,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      textStyle: const TextStyle(fontSize: 14),
+                    ),
                     child: const Text('测试连接'),
                   ),
                   TextButton(
@@ -306,94 +285,71 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                         : () => _save(remove: true),
                     style: TextButton.styleFrom(
                       foregroundColor: NestColors.muted,
+                      textStyle: const TextStyle(fontSize: 13),
                     ),
                     child: const Text('移除密钥'),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: _failed ? NestColors.softDanger : NestColors.paper,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Semantics(
-                  liveRegion: true,
-                  child: Row(
-                    children: [
-                      Icon(
-                        _failed
-                            ? Icons.error_outline_rounded
-                            : Icons.info_outline_rounded,
-                        size: 15,
-                        color: _failed ? NestColors.danger : NestColors.muted,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          status,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            height: 1.45,
-                            color: _failed
-                                ? NestColors.danger
-                                : NestColors.inkSoft,
-                          ),
-                        ),
-                      ),
-                    ],
+              const SizedBox(height: 10),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: _failed ? NestColors.danger : NestColors.muted,
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 24),
         const SectionTitle('计划与复盘'),
         SurfacePanel(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+          padding: EdgeInsets.zero,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextField(
-                controller: capacity,
-                enabled: !s.focusing,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-                decoration: const InputDecoration(
-                  labelText: '每日可用时间',
-                  suffixText: '分钟',
-                  helperText: '30—720 分钟，AI 安排每日任务时会参考这个上限。',
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: TextField(
+                  controller: capacity,
+                  enabled: !s.focusing,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(fontSize: 15),
+                  decoration: const InputDecoration(
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    labelText: '每日可用时间',
+                    suffixText: '分钟',
+                  ),
                 ),
               ),
               Align(
                 alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: s.focusing
-                      ? null
-                      : () => showResult(
-                          context,
-                          ref
-                              .read(appProvider.notifier)
-                              .setCapacity(int.tryParse(capacity.text) ?? 0),
-                        ),
-                  child: const Text('保存每日时间'),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: TextButton(
+                    onPressed: s.focusing
+                        ? null
+                        : () => showResult(
+                            context,
+                            ref
+                                .read(appProvider.notifier)
+                                .setCapacity(int.tryParse(capacity.text) ?? 0),
+                          ),
+                    child: const Text('保存每日时间'),
+                  ),
                 ),
               ),
-              const Divider(height: 1),
+              const Divider(height: 1, indent: 16, endIndent: 0),
               SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('自动复盘与压缩'),
-                subtitle: const Text(
-                  '开启后，使用应用时自动处理已结束的周、月、季、年。关闭应用期间的积压会在下次打开补做；联网失败保留明细。',
-                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                title: const Text('自动复盘与压缩', style: TextStyle(fontSize: 16)),
+                subtitle: const Text('开启后，使用应用时自动处理已结束的周、月、季、年。联网失败保留明细。'),
                 value: s.workspace.autoReview,
                 onChanged: s.focusing
                     ? null
@@ -404,13 +360,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             .setWorkspaceOptions(autoReview: v),
                       ),
               ),
-              const Divider(height: 1),
+              const Divider(height: 1, indent: 16, endIndent: 0),
               SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('AI 演示模式'),
-                subtitle: const Text(
-                  '使用固定的 Python 采集计划与模拟复盘，不联网、不计费。关闭后才调用你的 DeepSeek。',
-                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                title: const Text('AI 演示模式', style: TextStyle(fontSize: 16)),
+                subtitle: const Text('使用固定样例，不联网、不计费。关闭后才调用你的 DeepSeek。'),
                 value: s.workspace.demoAgent,
                 onChanged: s.focusing
                     ? null
@@ -421,129 +375,42 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             .setWorkspaceOptions(demoAgent: v),
                       ),
               ),
-              const SizedBox(height: 8),
             ],
           ),
         ),
-        const SizedBox(height: 24),
         const SectionTitle('专注保护'),
-        SurfacePanel(
-          padding: EdgeInsets.zero,
-          child: SettingsRow(
-            icon: Icons.shield_outlined,
-            iconColor: NestColors.green,
-            iconBackground: NestColors.softGreen,
-            title: '专注保护与白名单',
-            subtitle: '管理系统权限和专注期间允许使用的应用',
-            trailing: const Icon(
-              Icons.chevron_right_rounded,
-              color: NestColors.faint,
+        SettingsGroup(
+          children: [
+            SettingsRow(
+              title: '专注保护与白名单',
+              subtitle: '管理系统权限和专注期间允许使用的应用',
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: NestColors.faint,
+              ),
+              onTap: () => context.go('/apps'),
             ),
-            onTap: () => context.go('/apps'),
-          ),
+          ],
         ),
-        const SizedBox(height: 24),
         const SectionTitle('关于'),
-        SurfacePanel(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              SettingsRow(
-                icon: Icons.storage_rounded,
-                iconColor: NestColors.blue,
-                iconBackground: NestColors.softBlue,
-                title: '本地数据',
-                subtitle: '计划与专注记录保存在手机私有数据库，密钥使用系统密钥库加密。',
-              ),
-              const Divider(height: 1, indent: 68, endIndent: 16),
-              const SettingsRow(
-                icon: Icons.history_rounded,
-                title: '版本记录',
-                subtitle: '0.4.4 · 体验版 · 界面重塑',
-              ),
-            ],
-          ),
+        const SettingsGroup(
+          children: [
+            SettingsRow(
+              title: '本地数据',
+              subtitle: '计划与专注记录保存在手机私有数据库，密钥使用系统密钥库加密。',
+            ),
+            SettingsRow(title: '版本', subtitle: '0.4.5 · 体验版'),
+          ],
         ),
-        const SizedBox(height: 18),
-        const Text(
-          '复盘压缩后移除对应明细，只保留统计和选出的关键任务，无法恢复全部逐项内容。',
-          style: TextStyle(
-            fontSize: 11.5,
-            height: 1.6,
-            color: NestColors.faint,
+        const SizedBox(height: 16),
+        const Center(
+          child: Text(
+            '压缩后只保留统计和关键任务，逐项内容无法恢复',
+            style: TextStyle(fontSize: 12, color: NestColors.faint),
           ),
         ),
       ],
     );
   }
-}
-
-class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({required this.configured});
-  final bool configured;
-  @override
-  Widget build(BuildContext context) => SurfacePanel(
-    padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-    child: Row(
-      children: [
-        Container(
-          width: 58,
-          height: 58,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFF8A3D), NestColors.orange],
-            ),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: NestShadow.accentGlow,
-          ),
-          child: const Icon(
-            Icons.auto_stories_rounded,
-            size: 30,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    '伴学小屋',
-                    style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                      color: NestColors.ink,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const TagLabel(
-                    '体验版',
-                    color: NestColors.orangeDeep,
-                    background: NestColors.softOrange,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'FocusNest · 计划、专注与复盘',
-                style: TextStyle(fontSize: 12, color: NestColors.muted),
-              ),
-            ],
-          ),
-        ),
-        IconBadge(
-          configured ? Icons.link_rounded : Icons.link_off_rounded,
-          color: configured ? NestColors.green : NestColors.muted,
-          background: configured ? NestColors.softGreen : NestColors.paper,
-          size: 36,
-          iconSize: 18,
-        ),
-      ],
-    ),
-  );
 }

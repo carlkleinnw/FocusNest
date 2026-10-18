@@ -51,39 +51,30 @@ class _AgentPageState extends ConsumerState<AgentPage> {
       title: 'AI 规划',
       subtitle: w.demoAgent
           ? '演示模式 · 固定示例，没有调用 DeepSeek'
-          : '直接说目标、补充要求，或让 AI 查询和调整已有计划。只在必要时追问。',
-      action: OutlinedButton.icon(
+          : '说目标或补充要求，也可以让 AI 查询和调整已有计划。',
+      action: TextButton(
         onPressed: () => context.go('/settings'),
-        icon: const Icon(Icons.tune_rounded, size: 16),
-        label: const Text('模型设置'),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 40),
-          backgroundColor: NestColors.surface,
-          side: BorderSide.none,
-          textStyle: const TextStyle(fontSize: 12.5),
-        ),
+        child: const Text('模型设置'),
       ),
       children: [
         if (w.chat.isEmpty) ...[
-          _IntroCard(
+          _IntroGroup(
             onPick: (text) {
               input.text = text;
               input.selection = TextSelection.collapsed(offset: text.length);
               setState(() {});
             },
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
         ],
         for (final m in w.chat) _Bubble(message: m),
         if (w.draft != null) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           RoadmapPreview(draft: w.draft!),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           SizedBox(
-            height: 50,
-            child: FilledButton.icon(
-              icon: const Icon(Icons.playlist_add_check_rounded, size: 20),
-              label: Text(busy ? '正在保存…' : '确认并保存到计划表'),
+            width: double.infinity,
+            child: FilledButton(
               onPressed: busy || s.focusing
                   ? null
                   : () async {
@@ -97,9 +88,10 @@ class _AgentPageState extends ConsumerState<AgentPage> {
                         if (result.ok) context.go('/plans?all=true');
                       }
                     },
+              child: Text(busy ? '正在保存…' : '确认并保存到计划表'),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
         ],
         if (error.isNotEmpty)
           Padding(
@@ -107,33 +99,19 @@ class _AgentPageState extends ConsumerState<AgentPage> {
             child: Semantics(
               liveRegion: true,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: NestColors.softDanger,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.error_outline_rounded,
-                      size: 16,
-                      color: NestColors.danger,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        error,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          height: 1.45,
-                          color: NestColors.danger,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  error,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: NestColors.danger,
+                  ),
                 ),
               ),
             ),
@@ -143,24 +121,9 @@ class _AgentPageState extends ConsumerState<AgentPage> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Semantics(
               liveRegion: true,
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      activity,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: NestColors.muted,
-                      ),
-                    ),
-                  ),
-                ],
+              child: Text(
+                activity,
+                style: const TextStyle(fontSize: 13, color: NestColors.muted),
               ),
             ),
           ),
@@ -196,18 +159,18 @@ class _AgentPageState extends ConsumerState<AgentPage> {
             }
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         const Text(
           '按需追问，直到关键需求明确 · 已保存计划可直接用对话调整。',
-          style: TextStyle(fontSize: 11.5, color: NestColors.faint),
+          style: TextStyle(fontSize: 12, color: NestColors.faint),
         ),
       ],
     );
   }
 }
 
-class _IntroCard extends StatelessWidget {
-  const _IntroCard({required this.onPick});
+class _IntroGroup extends StatelessWidget {
+  const _IntroGroup({required this.onPick});
   final ValueChanged<String> onPick;
 
   static const suggestions = [
@@ -217,83 +180,51 @@ class _IntroCard extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFFFF6EF), Color(0xFFFFEFE2)],
-      ),
-      borderRadius: BorderRadius.circular(26),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1AFF6900),
-                blurRadius: 14,
-                offset: Offset(0, 6),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.auto_awesome_rounded,
-            size: 22,
-            color: NestColors.orange,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text('你想完成什么？', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 6),
-        const Text(
-          '说清目标和当前情况就够了。信息不足时，规划助手会继续追问，而不是直接给一份空泛的安排。',
-          style: TextStyle(
-            fontSize: 13,
-            height: 1.6,
-            color: NestColors.inkSoft,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SurfacePanel(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final text in suggestions)
-              InkWell(
-                borderRadius: BorderRadius.circular(NestRadius.pill),
-                onTap: () => onPick(text),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(NestRadius.pill),
-                    border: Border.all(color: const Color(0x1AFF6900)),
-                  ),
-                  child: Text(
-                    text,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: NestColors.inkSoft,
-                    ),
-                  ),
-                ),
+            const Text(
+              '你想完成什么？',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                color: NestColors.ink,
               ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              '说清目标和当前情况就够了。信息不足时，规划助手会继续追问，而不是直接给一份空泛的安排。',
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.6,
+                color: NestColors.muted,
+              ),
+            ),
           ],
         ),
-      ],
-    ),
+      ),
+      const SizedBox(height: 10),
+      SettingsGroup(
+        children: [
+          for (final text in suggestions)
+            SettingsRow(
+              title: text,
+              dense: true,
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: NestColors.faint,
+              ),
+              onTap: () => onPick(text),
+            ),
+        ],
+      ),
+    ],
   );
 }
 
@@ -304,69 +235,66 @@ class _Bubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final mine = message['role'] == 'user';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: mine
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!mine) ...[
-            const IconBadge(
-              Icons.auto_awesome_rounded,
-              size: 30,
-              radius: 10,
-              iconSize: 15,
-            ),
+            const _BubbleAvatar(label: 'AI', green: true),
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: Column(
-              crossAxisAlignment: mine
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                Text(
-                  mine ? '你' : '规划助手',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: NestColors.faint,
-                  ),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 560),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: mine ? NestColors.softOrange : NestColors.surface,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: SelectableText(
+                message['content'] ?? '',
+                style: const TextStyle(
+                  fontSize: 15,
+                  height: 1.6,
+                  color: NestColors.ink,
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 640),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: mine ? NestColors.softOrange : NestColors.surface,
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(18),
-                      topRight: const Radius.circular(18),
-                      bottomLeft: Radius.circular(mine ? 18 : 6),
-                      bottomRight: Radius.circular(mine ? 6 : 18),
-                    ),
-                  ),
-                  child: SelectableText(
-                    message['content'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      height: 1.6,
-                      color: NestColors.inkSoft,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-          if (mine) const SizedBox(width: 40),
+          if (mine) ...[
+            const SizedBox(width: 8),
+            const _BubbleAvatar(label: '我', green: false),
+          ],
         ],
       ),
     );
   }
+}
+
+class _BubbleAvatar extends StatelessWidget {
+  const _BubbleAvatar({required this.label, required this.green});
+  final String label;
+  final bool green;
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 30,
+    height: 30,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: green ? NestColors.softOrange : NestColors.line,
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+        fontSize: 11,
+        color: green ? NestColors.orangeDeep : NestColors.muted,
+      ),
+    ),
+  );
 }
 
 class _Composer extends StatelessWidget {
@@ -385,9 +313,7 @@ class _Composer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SurfacePanel(
-    padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-    shadow: false,
-    border: Border.all(color: NestColors.lineStrong),
+    padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -398,52 +324,39 @@ class _Composer extends StatelessWidget {
           minLines: 1,
           maxLines: 5,
           enabled: enabled,
-          style: const TextStyle(fontSize: 14, height: 1.6),
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            filled: false,
-            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          style: const TextStyle(fontSize: 15, height: 1.5),
+          decoration: const InputDecoration(
+            filled: true,
+            fillColor: NestColors.fill,
+            border: OutlineInputBorder(borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(borderSide: BorderSide.none),
             counterText: '',
-            hintText: hasChat ? '补充条件、查看安排，或直接要求增删改计划' : '想学什么、当前基础、期望成果…',
+            hintText: '想学什么、当前基础、期望成果…',
           ),
           onSubmitted: (_) => enabled ? onSend() : null,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         Row(
           children: [
             if (hasChat)
               TextButton(
                 onPressed: enabled ? onReset : null,
                 style: TextButton.styleFrom(
-                  foregroundColor: NestColors.muted,
+                  foregroundColor: NestColors.link,
                   visualDensity: VisualDensity.compact,
                 ),
                 child: const Text('新建对话'),
               ),
             const Spacer(),
-            FilledButton.icon(
+            FilledButton(
               onPressed: enabled ? onSend : null,
-              icon: busy
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.arrow_upward_rounded, size: 18),
-              label: Text(busy ? '正在思考…' : '发送给规划助手'),
               style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 42),
+                minimumSize: const Size(0, 38),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                textStyle: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
+                textStyle: const TextStyle(fontSize: 14),
               ),
+              child: Text(busy ? '正在思考…' : '发送给规划助手'),
             ),
           ],
         ),
@@ -457,41 +370,40 @@ class RoadmapPreview extends StatelessWidget {
   final Map<String, dynamic> draft;
   @override
   Widget build(BuildContext context) => SurfacePanel(
-    padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+    padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const TagLabel(
-              '计划草稿',
-              color: NestColors.orangeDeep,
-              background: NestColors.softOrange,
-              icon: Icons.edit_note_rounded,
-            ),
+            const TagLabel('计划草稿'),
             const Spacer(),
             Text(
               '${(draft['tasks'] as List).length} 项任务',
-              style: const TextStyle(fontSize: 11.5, color: NestColors.muted),
+              style: const TextStyle(fontSize: 12, color: NestColors.muted),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Text(
           draft['title'] as String,
-          style: Theme.of(context).textTheme.titleLarge,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: NestColors.ink,
+          ),
         ),
         for (final a in draft['assumptions'] as List)
           Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: 6),
             child: Text(
               '计划假设：$a',
-              style: const TextStyle(fontSize: 12, color: NestColors.muted),
+              style: const TextStyle(fontSize: 13, color: NestColors.muted),
             ),
           ),
         ExpansionTile(
           tilePadding: EdgeInsets.zero,
-          title: const Text('每月目标'),
+          title: const Text('每月目标', style: TextStyle(fontSize: 14)),
           initiallyExpanded: true,
           children: [
             for (final m in draft['months'] as List)
@@ -504,7 +416,7 @@ class RoadmapPreview extends StatelessWidget {
         ),
         ExpansionTile(
           tilePadding: EdgeInsets.zero,
-          title: const Text('每周安排'),
+          title: const Text('每周安排', style: TextStyle(fontSize: 14)),
           children: [
             for (final w in draft['weeks'] as List)
               ListTile(
@@ -516,7 +428,10 @@ class RoadmapPreview extends StatelessWidget {
         ),
         ExpansionTile(
           tilePadding: EdgeInsets.zero,
-          title: Text('每日任务 · ${(draft['tasks'] as List).length} 项'),
+          title: Text(
+            '每日任务 · ${(draft['tasks'] as List).length} 项',
+            style: const TextStyle(fontSize: 14),
+          ),
           children: [
             for (final t in draft['tasks'] as List)
               ListTile(

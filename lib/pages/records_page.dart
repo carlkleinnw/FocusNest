@@ -72,10 +72,8 @@ class _RecordsPageState extends ConsumerState<RecordsPage> {
 
     return PageFrame(
       title: '复盘',
-      subtitle: '周、月、季、年逐级压缩。统计由程序核算，建议由 AI 给出，不是已完成事实。',
-      action: MainButton(
-        busy ? '正在复盘…' : '复盘并压缩',
-        icon: Icons.auto_awesome_outlined,
+      subtitle: '周、月、季、年逐级压缩。统计由程序核算，建议由 AI 给出。',
+      action: TextButton(
         onPressed: busy || s.focusing
             ? null
             : () async {
@@ -90,86 +88,48 @@ class _RecordsPageState extends ConsumerState<RecordsPage> {
                   });
                 }
               },
+        child: Text(busy ? '正在复盘…' : '复盘并压缩'),
       ),
       children: [
         SurfacePanel(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: MetricTile(
-                      label: '累计专注',
-                      value: _duration(total),
-                      unit: _durationUnit(total),
-                      icon: Icons.timelapse_rounded,
-                    ),
-                  ),
-                  Container(width: 1, height: 50, color: NestColors.line),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: MetricTile(
-                      label: '已完成任务',
-                      value: '${tasks.length}',
-                      unit: '项',
-                      icon: Icons.task_alt_rounded,
-                      color: NestColors.green,
-                      background: NestColors.softGreen,
-                    ),
-                  ),
-                ],
+              _MetricRow(
+                left: ('累计专注', _duration(total), _durationUnit(total)),
+                right: ('已完成任务', '${tasks.length}', '项'),
               ),
-              const SizedBox(height: 14),
-              const Divider(height: 1),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: MetricTile(
-                      label: '本周专注',
-                      value: _duration(weekMinutes),
-                      unit: _durationUnit(weekMinutes),
-                      icon: Icons.date_range_rounded,
-                      color: NestColors.blue,
-                      background: NestColors.softBlue,
-                    ),
-                  ),
-                  Container(width: 1, height: 50, color: NestColors.line),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: MetricTile(
-                      label: '复盘记录',
-                      value: '${s.workspace.reviews.length}',
-                      unit: '份',
-                      icon: Icons.auto_stories_rounded,
-                      color: NestColors.orangeDeep,
-                      background: NestColors.softOrange,
-                    ),
-                  ),
-                ],
+              const Divider(height: 1, indent: 16, endIndent: 0),
+              _MetricRow(
+                left: (
+                  '本周专注',
+                  _duration(weekMinutes),
+                  _durationUnit(weekMinutes),
+                ),
+                right: ('复盘记录', '${s.workspace.reviews.length}', '份'),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         SurfacePanel(
-          padding: EdgeInsets.zero,
-          child: SettingsRow(
-            icon: Icons.insights_rounded,
-            iconColor: NestColors.orangeDeep,
-            iconBackground: NestColors.softOrange,
-            title: status,
-            subtitle: '周期结束后可手动复盘，或在设置中开启自动复盘。',
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Text(
+            status,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              color: NestColors.muted,
+            ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
         PillTabs(
           labels: filterLabels,
           index: filters.indexOf(filter),
           onChanged: (i) => setState(() => filter = filters[i]),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 14),
         if (reviews.isEmpty)
           const EmptyPanel(
             title: '复盘会在这里积累',
@@ -177,11 +137,11 @@ class _RecordsPageState extends ConsumerState<RecordsPage> {
             icon: Icons.auto_stories_outlined,
           ),
         for (final r in reviews) _ReviewCard(review: r),
-        const SizedBox(height: 26),
+        const SizedBox(height: 20),
         const SectionTitle('尚未压缩的完成任务'),
         if (tasks.isEmpty)
           const Padding(
-            padding: EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               '完成任务后，回到计划表勾选即可记录。',
               style: TextStyle(fontSize: 13, color: NestColors.muted),
@@ -192,9 +152,6 @@ class _RecordsPageState extends ConsumerState<RecordsPage> {
             children: [
               for (final p in tasks)
                 SettingsRow(
-                  icon: Icons.check_rounded,
-                  iconColor: NestColors.green,
-                  iconBackground: NestColors.softGreen,
                   title: p.title,
                   subtitle: p.completedAt == null
                       ? '旧版完成任务：完成日期未知，暂不压缩'
@@ -202,11 +159,11 @@ class _RecordsPageState extends ConsumerState<RecordsPage> {
                 ),
             ],
           ),
-        const SizedBox(height: 26),
+        const SizedBox(height: 20),
         const SectionTitle('专注计时明细'),
         if (s.records.isEmpty)
           const Padding(
-            padding: EdgeInsets.only(top: 4),
+            padding: EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               '还没有专注记录。',
               style: TextStyle(fontSize: 13, color: NestColors.muted),
@@ -217,29 +174,45 @@ class _RecordsPageState extends ConsumerState<RecordsPage> {
             children: [
               for (final r in s.records)
                 SettingsRow(
-                  icon: r.completed
-                      ? Icons.timelapse_rounded
-                      : Icons.pause_rounded,
-                  iconColor: r.completed
-                      ? NestColors.orangeDeep
-                      : NestColors.muted,
-                  iconBackground: r.completed
-                      ? NestColors.softOrange
-                      : NestColors.paper,
                   title: r.title,
                   subtitle:
                       '${dateKey(r.at)} · ${r.minutes} 分钟 · ${r.completed ? '完整完成' : '提前结束'}${r.virtual ? ' · 虚拟演示' : ''}',
                 ),
             ],
           ),
-        const SizedBox(height: 20),
-        const Text(
-          '压缩后只保留统计和最多 6 条关键任务原文，逐项明细无法恢复。',
-          style: TextStyle(fontSize: 11.5, color: NestColors.faint),
+        const SizedBox(height: 16),
+        const Center(
+          child: Text(
+            '压缩后只保留统计和最多 6 条关键任务原文',
+            style: TextStyle(fontSize: 12, color: NestColors.faint),
+          ),
         ),
       ],
     );
   }
+}
+
+class _MetricRow extends StatelessWidget {
+  const _MetricRow({required this.left, required this.right});
+  final (String, String, String) left, right;
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          child: MetricTile(label: left.$1, value: left.$2, unit: left.$3),
+        ),
+      ),
+      Container(width: 1, height: 44, color: NestColors.line),
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          child: MetricTile(label: right.$1, value: right.$2, unit: right.$3),
+        ),
+      ),
+    ],
+  );
 }
 
 class _ReviewCard extends StatelessWidget {
@@ -253,63 +226,45 @@ class _ReviewCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: SurfacePanel(
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 4),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                TagLabel(
-                  _levelLabels[review.level] ?? '复盘',
-                  color: NestColors.orangeDeep,
-                  background: NestColors.softOrange,
-                  icon: Icons.auto_stories_rounded,
-                ),
+                TagLabel(_levelLabels[review.level] ?? '复盘'),
                 const Spacer(),
                 Text(
                   '${review.start} — $end',
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    color: NestColors.muted,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: NestColors.muted),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               '${review.tasks} 项完成 · ${review.minutes} 分钟专注',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: NestColors.ink,
+              ),
             ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _Stat(
-                    '完整专注',
-                    '${review.sessions} 次',
-                    Icons.local_fire_department_rounded,
-                  ),
-                ),
-                Expanded(
-                  child: _Stat(
-                    '完成量',
-                    '${review.units}',
-                    Icons.functions_rounded,
-                  ),
-                ),
-                Expanded(
-                  child: _Stat(
-                    '提前结束',
-                    '${review.cancelledMinutes} 分',
-                    Icons.pause_circle_outline_rounded,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 4),
+            Text(
+              '完整专注 ${review.sessions} 次 · 完成量 ${review.units} · 提前结束 ${review.cancelledMinutes} 分钟',
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.5,
+                color: NestColors.muted,
+              ),
             ),
             ExpansionTile(
               tilePadding: EdgeInsets.zero,
-              childrenPadding: const EdgeInsets.only(bottom: 12),
-              title: const Text('查看复盘细节'),
+              title: const Text(
+                '查看复盘细节',
+                style: TextStyle(fontSize: 14, color: NestColors.link),
+              ),
+              childrenPadding: const EdgeInsets.only(bottom: 10),
               children: [
                 Align(
                   alignment: Alignment.centerLeft,
@@ -319,65 +274,42 @@ class _ReviewCard extends StatelessWidget {
                       Text(
                         '周期：${review.start} — $end',
                         style: const TextStyle(
-                          fontSize: 12.5,
+                          fontSize: 13,
                           color: NestColors.muted,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         '用户确认完成 ${review.tasks} 项 · 完成量 ${review.units} · 完整专注 ${review.sessions} 次 / ${review.minutes} 分钟 · 提前结束 ${review.cancelledMinutes} 分钟',
                         style: const TextStyle(
-                          fontSize: 12.5,
+                          fontSize: 13,
                           height: 1.6,
                           color: NestColors.inkSoft,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
                       const Text(
                         '关键记录（摘自原文）',
                         style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                           color: NestColors.ink,
                         ),
                       ),
                       for (final h in review.highlights)
                         Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(top: 7, right: 8),
-                                child: SizedBox(
-                                  width: 4,
-                                  height: 4,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: NestColors.orange,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  h,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    height: 1.6,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            h,
+                            style: const TextStyle(fontSize: 13, height: 1.6),
                           ),
                         ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
                       const Text(
                         '下一步建议',
                         style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                           color: NestColors.ink,
                         ),
                       ),
@@ -386,15 +318,15 @@ class _ReviewCard extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: NestColors.paper,
-                          borderRadius: BorderRadius.circular(12),
+                          color: NestColors.fill,
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           review.advice,
                           style: const TextStyle(fontSize: 13, height: 1.6),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       Text(
                         '基于 ${review.sources} 条来源 · SHA-256 ${review.digest.substring(0, 12)}…',
                         style: const TextStyle(
@@ -412,39 +344,4 @@ class _ReviewCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat(this.label, this.value, this.icon);
-  final String label, value;
-  final IconData icon;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        children: [
-          Icon(icon, size: 13, color: NestColors.faint),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: NestColors.muted),
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 4),
-      Text(
-        value,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: NestColors.ink,
-        ),
-      ),
-    ],
-  );
 }

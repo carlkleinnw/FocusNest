@@ -124,213 +124,85 @@ class _AppShellState extends ConsumerState<AppShell>
     final wide = width >= 900;
     final index = destinations.indexWhere((d) => d.$1 == widget.path);
     final selected = index < 0 ? -1 : index;
-    final nested = index < 0 && widget.path != '/settings';
+    final nested = index < 0;
     return PopScope(
       canPop: !state.focusing,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop && state.focusing) await requestFocusExit(context, ref);
       },
       child: Scaffold(
-        extendBody: true,
-        backgroundColor: NestColors.paper,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              _TopBar(
-                focusing: state.focusing,
-                nested: nested,
-                onBack: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/plans');
-                  }
-                },
-              ),
-              if (ref.read(deviceProvider).simulated) const _DemoBanner(),
-              if (state.storageError.isNotEmpty)
-                _StorageError(state.storageError),
-              Expanded(
-                child: Row(
-                  children: [
-                    if (wide) _SideRail(selected: selected),
-                    Expanded(child: widget.child),
-                  ],
+        backgroundColor: NestColors.bg,
+        appBar: AppBar(
+          title: const Text('伴学小屋'),
+          leading: nested
+              ? IconButton(
+                  tooltip: '返回',
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/plans');
+                    }
+                  },
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                )
+              : null,
+          actions: [
+            if (state.focusing)
+              TextButton(
+                onPressed: () => context.go('/focus'),
+                style: TextButton.styleFrom(
+                  foregroundColor: NestColors.orangeDeep,
                 ),
+                child: const Text('专注中'),
               ),
-            ],
+            if (widget.path != '/settings')
+              IconButton(
+                tooltip: '设置',
+                onPressed: () => context.go('/settings'),
+                icon: const Icon(Icons.more_horiz_rounded),
+              ),
+            const SizedBox(width: 4),
+          ],
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, thickness: 1),
           ),
         ),
-        bottomNavigationBar: wide ? null : _FloatingNavBar(selected: selected),
+        body: Column(
+          children: [
+            if (ref.read(deviceProvider).simulated) const _DemoBanner(),
+            if (state.storageError.isNotEmpty)
+              _StorageError(state.storageError),
+            Expanded(
+              child: Row(
+                children: [
+                  if (wide) _SideRail(selected: selected),
+                  Expanded(child: widget.child),
+                ],
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: wide || nested
+            ? null
+            : _BottomNavBar(selected: selected),
       ),
     );
   }
 }
 
-class _BrandMark extends StatelessWidget {
-  const _BrandMark({this.size = 30});
-  final double size;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFFF8A3D), NestColors.orange],
-      ),
-      borderRadius: BorderRadius.circular(size * 0.32),
-      boxShadow: NestShadow.accentGlow,
-    ),
-    child: Icon(
-      Icons.auto_stories_rounded,
-      size: size * 0.56,
-      color: Colors.white,
-    ),
-  );
-}
-
-class _TopBar extends StatelessWidget {
-  const _TopBar({
-    required this.focusing,
-    required this.nested,
-    required this.onBack,
-  });
-  final bool focusing, nested;
-  final VoidCallback onBack;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 10, 14, 8),
-    child: Row(
-      children: [
-        if (nested)
-          _CircleAction(
-            icon: Icons.arrow_back_rounded,
-            tooltip: '返回',
-            onPressed: onBack,
-          )
-        else
-          const _BrandMark(),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            '伴学小屋',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
-              color: NestColors.ink,
-            ),
-          ),
-        ),
-        if (focusing)
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(NestRadius.pill),
-              onTap: () => context.go('/focus'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: NestColors.softOrange,
-                  borderRadius: BorderRadius.circular(NestRadius.pill),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.lock_clock_rounded,
-                      size: 14,
-                      color: NestColors.orangeDeep,
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      '专注中',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: NestColors.orangeDeep,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        _CircleAction(
-          icon: Icons.settings_outlined,
-          tooltip: '设置',
-          onPressed: () => context.go('/settings'),
-        ),
-      ],
-    ),
-  );
-}
-
-class _CircleAction extends StatelessWidget {
-  const _CircleAction({
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
-  });
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onPressed;
-  @override
-  Widget build(BuildContext context) => Tooltip(
-    message: tooltip,
-    child: Material(
-      color: NestColors.surface,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onPressed,
-        child: SizedBox(
-          width: 38,
-          height: 38,
-          child: Icon(icon, size: 19, color: NestColors.inkSoft),
-        ),
-      ),
-    ),
-  );
-}
-
 class _DemoBanner extends StatelessWidget {
   const _DemoBanner();
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
-    child: Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: NestColors.softBlue,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.science_outlined, size: 14, color: NestColors.blue),
-          SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              '网页演示 · 虚拟数据，刷新重置 · 不会限制真实应用',
-              style: TextStyle(
-                fontSize: 11.5,
-                height: 1.4,
-                fontWeight: FontWeight.w500,
-                color: NestColors.blue,
-              ),
-            ),
-          ),
-        ],
-      ),
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    color: NestColors.softOrange,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+    child: const Text(
+      '网页演示 · 虚拟数据，刷新重置 · 不会限制真实应用',
+      textAlign: TextAlign.center,
+      style: TextStyle(fontSize: 12, color: NestColors.orangeDeep),
     ),
   );
 }
@@ -339,64 +211,43 @@ class _StorageError extends StatelessWidget {
   const _StorageError(this.message);
   final String message;
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: NestColors.softDanger,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            size: 16,
-            color: NestColors.danger,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                fontSize: 12.5,
-                color: NestColors.danger,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    color: NestColors.softDanger,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    child: Text(
+      message,
+      style: const TextStyle(fontSize: 13, color: NestColors.danger),
     ),
   );
 }
 
-class _FloatingNavBar extends StatelessWidget {
-  const _FloatingNavBar({required this.selected});
+class _BottomNavBar extends StatelessWidget {
+  const _BottomNavBar({required this.selected});
   final int selected;
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-    child: Container(
-      decoration: BoxDecoration(
-        color: NestColors.surface.withValues(alpha: 0.97),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: NestColors.line),
-        boxShadow: NestShadow.floating,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Row(
-        children: [
-          for (var i = 0; i < destinations.length; i++)
-            Expanded(
-              child: _NavItem(
-                label: destinations[i].$2,
-                icon: destinations[i].$3,
-                selected: i == selected,
-                onTap: () => context.go(destinations[i].$1),
+  Widget build(BuildContext context) => Container(
+    decoration: const BoxDecoration(
+      color: NestColors.surface,
+      border: Border(top: BorderSide(color: NestColors.line)),
+    ),
+    child: SafeArea(
+      top: false,
+      child: SizedBox(
+        height: 54,
+        child: Row(
+          children: [
+            for (var i = 0; i < destinations.length; i++)
+              Expanded(
+                child: _NavItem(
+                  label: destinations[i].$2,
+                  icon: destinations[i].$3,
+                  selected: i == selected,
+                  onTap: () => context.go(destinations[i].$1),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     ),
   );
@@ -419,37 +270,26 @@ class _NavItem extends StatelessWidget {
     button: true,
     label: label,
     child: InkWell(
-      borderRadius: BorderRadius.circular(22),
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(vertical: 7),
-        decoration: BoxDecoration(
-          color: selected ? NestColors.softOrange : Colors.transparent,
-          borderRadius: BorderRadius.circular(22),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 22,
-              color: selected ? NestColors.orangeDeep : NestColors.muted,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 23,
+            color: selected ? NestColors.orange : const Color(0xFF7A7A7A),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              color: selected ? NestColors.orange : const Color(0xFF7A7A7A),
             ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? NestColors.orangeDeep : NestColors.muted,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     ),
   );
@@ -460,73 +300,54 @@ class _SideRail extends StatelessWidget {
   final int selected;
   @override
   Widget build(BuildContext context) => Container(
-    width: 104,
-    margin: const EdgeInsets.fromLTRB(12, 4, 0, 20),
-    padding: const EdgeInsets.symmetric(vertical: 16),
-    decoration: BoxDecoration(
+    width: 88,
+    decoration: const BoxDecoration(
       color: NestColors.surface,
-      borderRadius: BorderRadius.circular(26),
-      border: Border.all(color: NestColors.line),
-      boxShadow: NestShadow.card,
+      border: Border(right: BorderSide(color: NestColors.line)),
     ),
-    child: Column(
-      children: [
-        _BrandMark(size: 36),
-        const SizedBox(height: 26),
-        for (var i = 0; i < destinations.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(18),
+    child: SafeArea(
+      right: false,
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          for (var i = 0; i < destinations.length; i++)
+            InkWell(
               onTap: () => context.go(destinations[i].$1),
               child: Container(
-                width: 74,
+                width: 88,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: i == selected
-                      ? NestColors.softOrange
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(18),
-                ),
                 child: Column(
                   children: [
                     Icon(
                       destinations[i].$3,
-                      size: 22,
+                      size: 23,
                       color: i == selected
-                          ? NestColors.orangeDeep
-                          : NestColors.muted,
+                          ? NestColors.orange
+                          : const Color(0xFF7A7A7A),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 3),
                     Text(
                       destinations[i].$2,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: i == selected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
                         color: i == selected
-                            ? NestColors.orangeDeep
-                            : NestColors.muted,
+                            ? NestColors.orange
+                            : const Color(0xFF7A7A7A),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+          const Spacer(),
+          IconButton(
+            tooltip: '设置',
+            onPressed: () => context.go('/settings'),
+            icon: const Icon(Icons.more_horiz_rounded),
           ),
-        const Spacer(),
-        IconButton(
-          tooltip: '设置',
-          onPressed: () => context.go('/settings'),
-          icon: Icon(
-            Icons.settings_outlined,
-            color: selected == -1 ? NestColors.orange : NestColors.muted,
-          ),
-        ),
-      ],
+          const SizedBox(height: 8),
+        ],
+      ),
     ),
   );
 }

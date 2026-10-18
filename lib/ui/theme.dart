@@ -1,81 +1,68 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
-/// HyperOS-inspired design tokens.
-///
-/// The palette is a near-white canvas with pure white cards, ink text and a
-/// single warm accent (orange) reserved for action and progress. Green and blue
-/// only appear as semantic states (done / info), never as decoration.
+/// WeChat-inspired layout with a Xiaomi (HyperOS) palette: a soft near-white
+/// canvas, white list groups, hairline separators, near-black text and one
+/// warm orange accent. Green is reserved for completion.
 abstract final class NestColors {
   static const white = Color(0xFFFFFFFF);
+
+  /// Canvas behind the white list groups.
+  static const bg = Color(0xFFF4F5F7);
+  static const paper = bg;
+  static const paperDeep = Color(0xFFECEEF2);
+
+  static const surface = Color(0xFFFFFFFF);
+  static const fill = Color(0xFFF7F8FA);
+
   static const ink = Color(0xFF17181A);
   static const inkSoft = Color(0xFF3B3E44);
   static const muted = Color(0xFF8A8E96);
   static const faint = Color(0xFFB9BDC5);
 
-  /// Canvas behind cards.
-  static const paper = Color(0xFFF4F5F7);
-  static const paperDeep = Color(0xFFE9EBF0);
-
-  /// Card surface.
-  static const surface = Color(0xFFFFFFFF);
-
-  /// Hairlines and outlines.
   static const line = Color(0xFFEDEEF2);
   static const lineStrong = Color(0xFFE2E4EA);
 
-  /// Accent: Xiaomi orange.
+  /// Xiaomi orange: the accent for actions and selection.
   static const orange = Color(0xFFFF6900);
   static const orangeDeep = Color(0xFFE85A00);
   static const softOrange = Color(0xFFFFF1E6);
-  static const orangeGlow = Color(0x33FF6900);
+  static const sand = softOrange;
 
-  /// Semantic green (completion, healthy progress).
+  /// Xiaomi green: completion only.
   static const green = Color(0xFF0F9D58);
+  static const greenDeep = Color(0xFF0C8A4C);
   static const softGreen = Color(0xFFEAF7EF);
 
-  /// Semantic blue (informational).
+  /// Text actions share the warm accent.
+  static const link = orangeDeep;
   static const blue = Color(0xFF2F7CF6);
   static const softBlue = Color(0xFFEDF3FF);
 
-  /// Warning amber.
-  static const sand = Color(0xFFFFF4DC);
+  static const danger = Color(0xFFE5484D);
+  static const softDanger = Color(0xFFFDECEC);
   static const amber = Color(0xFFC77700);
 
-  /// Dark hero surfaces.
-  static const heroStart = Color(0xFF1D1E22);
-  static const heroEnd = Color(0xFF2C2E35);
-
-  static const danger = Color(0xFFE5484D);
-  static const softDanger = Color(0xFFFDEDED);
+  static const tagBg = Color(0xFFF2F3F5);
 }
 
 abstract final class NestRadius {
-  static const card = 22.0;
-  static const sheet = 28.0;
-  static const tile = 12.0;
-  static const pill = 999.0;
+  static const card = 8.0;
+  static const sheet = 12.0;
+  static const tile = 4.0;
+  static const pill = 6.0;
 }
 
 abstract final class NestShadow {
-  static const card = [
-    BoxShadow(color: Color(0x0A101828), blurRadius: 20, offset: Offset(0, 8)),
-  ];
-  static const floating = [
-    BoxShadow(color: Color(0x14101828), blurRadius: 28, offset: Offset(0, 12)),
-  ];
-  static const accentGlow = [
-    BoxShadow(color: Color(0x40FF6900), blurRadius: 26, offset: Offset(0, 10)),
-  ];
+  static const card = <BoxShadow>[];
+  static const floating = <BoxShadow>[];
+  static const accentGlow = <BoxShadow>[];
 }
 
 ThemeData nestTheme() {
   final base = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    // MiSans ships with HyperOS, so Xiaomi phones get the real system face.
-    // On the web an unavailable family breaks CJK text measurement, so the
-    // browser default (Roboto + system CJK fallback) is used instead.
     fontFamily: kIsWeb ? null : 'MiSans',
     fontFamilyFallback: kIsWeb
         ? null
@@ -85,135 +72,107 @@ ThemeData nestTheme() {
             'Noto Sans SC',
             'Microsoft YaHei',
           ],
-    scaffoldBackgroundColor: NestColors.paper,
+    scaffoldBackgroundColor: NestColors.bg,
     colorScheme: const ColorScheme(
       brightness: Brightness.light,
       primary: NestColors.orange,
       onPrimary: Colors.white,
       primaryContainer: NestColors.softOrange,
       onPrimaryContainer: NestColors.orangeDeep,
-      secondary: NestColors.green,
+      secondary: NestColors.link,
       onSecondary: Colors.white,
-      secondaryContainer: NestColors.softGreen,
-      onSecondaryContainer: NestColors.green,
-      tertiary: NestColors.blue,
+      secondaryContainer: NestColors.softBlue,
+      onSecondaryContainer: NestColors.link,
+      tertiary: NestColors.link,
       onTertiary: Colors.white,
       tertiaryContainer: NestColors.softBlue,
-      onTertiaryContainer: NestColors.blue,
+      onTertiaryContainer: NestColors.link,
       error: NestColors.danger,
       onError: Colors.white,
       errorContainer: NestColors.softDanger,
       onErrorContainer: NestColors.danger,
       surface: NestColors.surface,
       onSurface: NestColors.ink,
-      surfaceContainerHighest: NestColors.paperDeep,
+      surfaceContainerHighest: NestColors.fill,
       outline: NestColors.line,
       outlineVariant: NestColors.line,
     ),
   );
 
   final text = base.textTheme.copyWith(
-    displayLarge: const TextStyle(
-      fontSize: 56,
-      height: 1.05,
-      fontWeight: FontWeight.w600,
-      letterSpacing: -1.2,
-      color: NestColors.ink,
-      fontFeatures: [FontFeature.tabularFigures()],
-    ),
-    displayMedium: const TextStyle(
-      fontSize: 44,
-      height: 1.1,
-      fontWeight: FontWeight.w600,
-      letterSpacing: -0.8,
-      color: NestColors.ink,
-      fontFeatures: [FontFeature.tabularFigures()],
-    ),
-    displaySmall: const TextStyle(
-      fontSize: 34,
-      height: 1.15,
-      fontWeight: FontWeight.w700,
-      letterSpacing: -0.4,
-      color: NestColors.ink,
-      fontFeatures: [FontFeature.tabularFigures()],
-    ),
     headlineLarge: const TextStyle(
-      fontSize: 28,
-      height: 1.22,
-      fontWeight: FontWeight.w700,
-      letterSpacing: -0.4,
-      color: NestColors.ink,
-    ),
-    headlineMedium: const TextStyle(
       fontSize: 22,
-      height: 1.28,
-      fontWeight: FontWeight.w700,
+      height: 1.3,
+      fontWeight: FontWeight.w600,
       letterSpacing: -0.2,
       color: NestColors.ink,
     ),
+    headlineMedium: const TextStyle(
+      fontSize: 18,
+      height: 1.35,
+      fontWeight: FontWeight.w600,
+      color: NestColors.ink,
+    ),
     headlineSmall: const TextStyle(
-      fontSize: 19,
-      height: 1.3,
+      fontSize: 17,
+      height: 1.4,
       fontWeight: FontWeight.w600,
       color: NestColors.ink,
     ),
     titleLarge: const TextStyle(
       fontSize: 17,
-      height: 1.35,
-      fontWeight: FontWeight.w600,
+      height: 1.4,
+      fontWeight: FontWeight.w500,
       color: NestColors.ink,
     ),
     titleMedium: const TextStyle(
-      fontSize: 15,
+      fontSize: 16,
       height: 1.4,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
       color: NestColors.ink,
     ),
     titleSmall: const TextStyle(
-      fontSize: 13,
+      fontSize: 14,
       height: 1.4,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
       color: NestColors.inkSoft,
     ),
     bodyLarge: const TextStyle(
-      fontSize: 15,
+      fontSize: 16,
       height: 1.6,
-      color: NestColors.inkSoft,
+      color: NestColors.ink,
     ),
     bodyMedium: const TextStyle(
-      fontSize: 14,
+      fontSize: 15,
       height: 1.6,
-      color: NestColors.inkSoft,
+      color: NestColors.ink,
     ),
     bodySmall: const TextStyle(
-      fontSize: 12,
-      height: 1.55,
+      fontSize: 13,
+      height: 1.6,
       color: NestColors.muted,
     ),
     labelLarge: const TextStyle(
-      fontSize: 14,
+      fontSize: 15,
       height: 1.2,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w500,
       color: NestColors.ink,
     ),
     labelMedium: const TextStyle(
-      fontSize: 12,
+      fontSize: 13,
       height: 1.2,
-      fontWeight: FontWeight.w600,
       color: NestColors.muted,
     ),
     labelSmall: const TextStyle(
       fontSize: 11,
       height: 1.2,
-      fontWeight: FontWeight.w500,
-      letterSpacing: 0.2,
       color: NestColors.muted,
     ),
   );
 
   OutlineInputBorder fieldBorder(Color color, [double width = 1]) =>
       OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(NestRadius.pill),
         borderSide: BorderSide(color: color, width: width),
       );
 
@@ -221,18 +180,20 @@ ThemeData nestTheme() {
     textTheme: text,
     primaryTextTheme: text,
     appBarTheme: const AppBarTheme(
-      backgroundColor: NestColors.paper,
+      backgroundColor: NestColors.surface,
       surfaceTintColor: Colors.transparent,
       foregroundColor: NestColors.ink,
       elevation: 0,
       scrolledUnderElevation: 0,
-      centerTitle: false,
+      centerTitle: true,
+      titleSpacing: 0,
+      toolbarHeight: 48,
       titleTextStyle: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
         color: NestColors.ink,
       ),
+      iconTheme: IconThemeData(color: NestColors.ink, size: 22),
     ),
     cardTheme: CardThemeData(
       color: NestColors.surface,
@@ -248,55 +209,50 @@ ThemeData nestTheme() {
       thickness: 1,
       space: 1,
     ),
-    iconTheme: const IconThemeData(color: NestColors.inkSoft, size: 22),
+    iconTheme: const IconThemeData(color: NestColors.ink, size: 22),
     listTileTheme: const ListTileThemeData(
       iconColor: NestColors.muted,
       textColor: NestColors.ink,
       titleTextStyle: TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
         color: NestColors.ink,
       ),
       subtitleTextStyle: TextStyle(
-        fontSize: 12,
-        height: 1.45,
+        fontSize: 13,
+        height: 1.5,
         color: NestColors.muted,
       ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       minVerticalPadding: 10,
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: NestColors.surface,
       isDense: false,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      hintStyle: const TextStyle(fontSize: 14, color: NestColors.faint),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      hintStyle: const TextStyle(fontSize: 15, color: NestColors.faint),
       labelStyle: const TextStyle(fontSize: 14, color: NestColors.muted),
       floatingLabelStyle: const TextStyle(
         fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: NestColors.orangeDeep,
+        color: NestColors.muted,
       ),
       helperStyle: const TextStyle(fontSize: 12, color: NestColors.muted),
       border: fieldBorder(NestColors.line),
       enabledBorder: fieldBorder(NestColors.line),
-      focusedBorder: fieldBorder(NestColors.orange, 1.6),
+      focusedBorder: fieldBorder(NestColors.orange),
       errorBorder: fieldBorder(NestColors.danger),
-      focusedErrorBorder: fieldBorder(NestColors.danger, 1.6),
+      focusedErrorBorder: fieldBorder(NestColors.danger),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: NestColors.orange,
         foregroundColor: Colors.white,
-        disabledBackgroundColor: NestColors.paperDeep,
-        disabledForegroundColor: NestColors.faint,
-        minimumSize: const Size(0, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-        textStyle: const TextStyle(
-          fontSize: 14.5,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.1,
-        ),
+        disabledBackgroundColor: const Color(0xFFF6D8C4),
+        disabledForegroundColor: Colors.white,
+        minimumSize: const Size(0, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(NestRadius.pill),
         ),
@@ -305,10 +261,11 @@ ThemeData nestTheme() {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: NestColors.ink,
-        minimumSize: const Size(0, 46),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        backgroundColor: NestColors.surface,
+        minimumSize: const Size(0, 42),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         side: const BorderSide(color: NestColors.lineStrong),
-        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(NestRadius.pill),
         ),
@@ -316,76 +273,73 @@ ThemeData nestTheme() {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: NestColors.orangeDeep,
-        textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        minimumSize: const Size(0, 38),
+        foregroundColor: NestColors.link,
+        textStyle: const TextStyle(fontSize: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        minimumSize: const Size(0, 34),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(NestRadius.pill),
+          borderRadius: BorderRadius.circular(NestRadius.tile),
         ),
       ),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: NestColors.surface,
+      backgroundColor: NestColors.tagBg,
       selectedColor: NestColors.softOrange,
-      disabledColor: NestColors.paperDeep,
+      disabledColor: NestColors.tagBg,
       side: BorderSide.none,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(NestRadius.pill),
+        borderRadius: BorderRadius.circular(NestRadius.tile),
       ),
       labelStyle: const TextStyle(
         fontSize: 13,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w400,
         color: NestColors.inkSoft,
       ),
       secondaryLabelStyle: const TextStyle(
         fontSize: 13,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: NestColors.orangeDeep,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       showCheckmark: false,
       checkmarkColor: NestColors.orange,
     ),
     switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith(
-        (states) =>
-            states.contains(WidgetState.selected) ? Colors.white : Colors.white,
-      ),
+      thumbColor: const WidgetStatePropertyAll(Colors.white),
       trackColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
             ? NestColors.orange
-            : NestColors.paperDeep,
+            : NestColors.lineStrong,
       ),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
     checkboxTheme: CheckboxThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
-      side: const BorderSide(color: NestColors.faint, width: 1.6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+      side: const BorderSide(color: NestColors.lineStrong, width: 1.4),
       fillColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
-            ? NestColors.orange
+            ? NestColors.green
             : Colors.transparent,
       ),
       checkColor: const WidgetStatePropertyAll(Colors.white),
     ),
     progressIndicatorTheme: const ProgressIndicatorThemeData(
       color: NestColors.orange,
-      linearTrackColor: NestColors.paperDeep,
-      circularTrackColor: NestColors.paperDeep,
-      linearMinHeight: 6,
+      linearTrackColor: NestColors.line,
+      circularTrackColor: NestColors.line,
+      linearMinHeight: 3,
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      backgroundColor: NestColors.ink,
+      backgroundColor: const Color(0xFF4C4C4C),
       contentTextStyle: const TextStyle(
-        fontSize: 13.5,
+        fontSize: 14,
         color: Colors.white,
         height: 1.4,
       ),
-      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 6,
+      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      elevation: 0,
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: NestColors.surface,
@@ -395,16 +349,16 @@ ThemeData nestTheme() {
         borderRadius: BorderRadius.circular(NestRadius.sheet),
       ),
       titleTextStyle: const TextStyle(
-        fontSize: 19,
-        fontWeight: FontWeight.w700,
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
         color: NestColors.ink,
       ),
       contentTextStyle: const TextStyle(
-        fontSize: 14,
+        fontSize: 15,
         height: 1.6,
         color: NestColors.inkSoft,
       ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: NestColors.surface,
@@ -421,15 +375,17 @@ ThemeData nestTheme() {
       color: NestColors.surface,
       surfaceTintColor: Colors.transparent,
       elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      textStyle: const TextStyle(fontSize: 14, color: NestColors.ink),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(NestRadius.sheet),
+      ),
+      textStyle: const TextStyle(fontSize: 15, color: NestColors.ink),
     ),
     expansionTileTheme: const ExpansionTileThemeData(
       iconColor: NestColors.muted,
       collapsedIconColor: NestColors.muted,
       textColor: NestColors.ink,
       collapsedTextColor: NestColors.ink,
-      childrenPadding: EdgeInsets.only(bottom: 8),
+      childrenPadding: EdgeInsets.only(bottom: 4),
       tilePadding: EdgeInsets.symmetric(horizontal: 16),
       shape: Border(),
       collapsedShape: Border(),
@@ -442,8 +398,7 @@ ThemeData nestTheme() {
       ),
       dayShape: const WidgetStatePropertyAll(CircleBorder()),
       todayBorder: const BorderSide(color: NestColors.orange),
-      headerBackgroundColor: NestColors.paper,
+      headerBackgroundColor: NestColors.surface,
     ),
-    splashFactory: InkSparkle.splashFactory,
   );
 }
